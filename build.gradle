@@ -1,0 +1,45 @@
+// Top-level build file where you can add configuration options common to all sub-projects/modules.
+
+buildscript {
+    
+    repositories {
+        google()
+        jcenter()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:3.0.1'
+        
+
+        // NOTE: Do not place your application dependencies here; they belong
+        // in the individual module build.gradle files
+    }
+}
+
+allprojects {
+    repositories {
+        google()
+        jcenter()
+    }
+}
+
+task clean(type: Delete) {
+    delete rootProject.buildDir
+}
+
+ext {
+    configuration = [
+            package          : "com.zhenl.crawler",
+            buildToolsVersion: "27.0.1",
+            compileVersion   : 26,
+            minSdk           : 15,
+            targetSdk        : 26,
+            version_code     : 1,
+            version_name     : "1.0.0",
+            baidu_api_key    : "nwrwRPDxIVZUMqco7p7r8YgdHqw8Lmvu",
+            rong_app_key     : "p5tvi9dsphv14",
+    ]
+
+    libraries = [
+            supportVersion    : "26.0.1"
+    ]
+}
