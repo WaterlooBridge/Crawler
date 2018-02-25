@@ -18,6 +18,7 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.io.ByteArrayInputStream;
 
@@ -42,6 +43,7 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnInf
     private VideoView mVideoView;
     private ProgressBar pb;
     private TextView downloadRateView, loadRateView;
+    private String m3u8Url;
 
     @Override
     public void onCreate(Bundle icicle) {
@@ -55,7 +57,7 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnInf
         downloadRateView = (TextView) findViewById(R.id.download_rate);
         loadRateView = (TextView) findViewById(R.id.load_rate);
 
-        url = Constants.API_HOST + getIntent().getStringExtra("url");
+        url = Constants.API_HOST + getIntent().getStringExtra("url").replace("movie4", "movieplay4");
         Log.e(TAG, url);
         load();
 
@@ -68,11 +70,11 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnInf
             @Override
             public void onPageFinished(WebView view, String url) {
                 Log.e(TAG, "onPageFinished");
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT)
-                    view.evaluateJavascript("javascript:(function(){return document.getElementsByName('CopyAddr1')[0].value})()", new ValueCallback<String>() {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                    view.evaluateJavascript("javascript:(function(){return downurl})()", new ValueCallback<String>() {
                         @Override
                         public void onReceiveValue(String value) {
-                            Log.e(TAG, "path:" + value);
+                            Log.e(TAG, "mp4 path:" + value);
                             if (TextUtils.isEmpty(value) || "null".equals(value))
                                 handler.sendEmptyMessage(0);
                             else {
@@ -83,6 +85,15 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnInf
                             }
                         }
                     });
+                    view.evaluateJavascript("javascript:(function(){return playurl})()", new ValueCallback<String>() {
+                        @Override
+                        public void onReceiveValue(String value) {
+                            Log.e(TAG, "m3u8 path:" + value);
+                            if (!TextUtils.isEmpty(value) && !"null".equals(value))
+                                m3u8Url = value.substring(1, value.length() - 1);
+                        }
+                    });
+                }
             }
 
             @Override
@@ -128,6 +139,18 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnInf
             public void onPrepared(MediaPlayer mediaPlayer) {
                 // optional need Vitamio 4.0
                 mediaPlayer.setPlaybackSpeed(1.0f);
+            }
+        });
+        mVideoView.setOnErrorListener(new MediaPlayer.OnErrorListener() {
+            @Override
+            public boolean onError(MediaPlayer mp, int what, int extra) {
+                if (what == 1 && extra == -104 && m3u8Url != null) {
+                    Toast.makeText(getApplicationContext(), "连接被重置，正在尝试m3u8地址播放", Toast.LENGTH_SHORT).show();
+                    mVideoView.setVideoURI(Uri.parse(m3u8Url));
+                    m3u8Url = null;
+                    return true;
+                }
+                return false;
             }
         });
 
