@@ -3,6 +3,8 @@ package com.zhenl.crawler;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
+import android.content.res.Configuration;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -18,7 +20,6 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import java.io.ByteArrayInputStream;
 
@@ -27,7 +28,8 @@ import io.vov.vitamio.Vitamio;
 import io.vov.vitamio.widget.MediaController;
 import io.vov.vitamio.widget.VideoView;
 
-public class MainActivity extends AppCompatActivity implements MediaPlayer.OnInfoListener, MediaPlayer.OnBufferingUpdateListener {
+public class MainActivity extends AppCompatActivity implements MediaPlayer.OnInfoListener, MediaPlayer.OnBufferingUpdateListener,
+        View.OnClickListener {
 
     public static void start(Context context, String url) {
         Intent intent = new Intent(context, MainActivity.class);
@@ -42,8 +44,8 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnInf
     private Uri uri;
     private VideoView mVideoView;
     private ProgressBar pb;
-    private TextView downloadRateView, loadRateView;
-    private String m3u8Url;
+    private TextView rateView;
+    private int extra, percent;
 
     @Override
     public void onCreate(Bundle icicle) {
@@ -54,8 +56,7 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnInf
         mVideoView = (VideoView) findViewById(R.id.buffer);
         pb = (ProgressBar) findViewById(R.id.probar);
 
-        downloadRateView = (TextView) findViewById(R.id.download_rate);
-        loadRateView = (TextView) findViewById(R.id.load_rate);
+        rateView = (TextView) findViewById(R.id.rate);
 
         url = Constants.API_HOST + getIntent().getStringExtra("url").replace("movie4", "movieplay4");
         Log.e(TAG, url);
@@ -71,10 +72,10 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnInf
             public void onPageFinished(WebView view, String url) {
                 Log.e(TAG, "onPageFinished");
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                    view.evaluateJavascript("javascript:(function(){return downurl})()", new ValueCallback<String>() {
+                    view.evaluateJavascript("javascript:(function(){return playurl})()", new ValueCallback<String>() {
                         @Override
                         public void onReceiveValue(String value) {
-                            Log.e(TAG, "mp4 path:" + value);
+                            Log.e(TAG, "m3u8 path:" + value);
                             if (TextUtils.isEmpty(value) || "null".equals(value))
                                 handler.sendEmptyMessage(0);
                             else {
@@ -83,14 +84,6 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnInf
                                 msg.obj = value.substring(1, value.length() - 1);
                                 msg.sendToTarget();
                             }
-                        }
-                    });
-                    view.evaluateJavascript("javascript:(function(){return playurl})()", new ValueCallback<String>() {
-                        @Override
-                        public void onReceiveValue(String value) {
-                            Log.e(TAG, "m3u8 path:" + value);
-                            if (!TextUtils.isEmpty(value) && !"null".equals(value))
-                                m3u8Url = value.substring(1, value.length() - 1);
                         }
                     });
                 }
@@ -130,7 +123,9 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnInf
     private void play(String path) {
         uri = Uri.parse(path);
         mVideoView.setVideoURI(uri);
-        mVideoView.setMediaController(new MediaController(this));
+        MediaController controller = new MediaController(this);
+        controller.setFullscreenListener(this);
+        mVideoView.setMediaController(controller);
         mVideoView.requestFocus();
         mVideoView.setOnInfoListener(this);
         mVideoView.setOnBufferingUpdateListener(this);
@@ -139,18 +134,6 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnInf
             public void onPrepared(MediaPlayer mediaPlayer) {
                 // optional need Vitamio 4.0
                 mediaPlayer.setPlaybackSpeed(1.0f);
-            }
-        });
-        mVideoView.setOnErrorListener(new MediaPlayer.OnErrorListener() {
-            @Override
-            public boolean onError(MediaPlayer mp, int what, int extra) {
-                if (what == 1 && extra == -104 && m3u8Url != null) {
-                    Toast.makeText(getApplicationContext(), "连接被重置，正在尝试m3u8地址播放", Toast.LENGTH_SHORT).show();
-                    mVideoView.setVideoURI(Uri.parse(m3u8Url));
-                    m3u8Url = null;
-                    return true;
-                }
-                return false;
             }
         });
 
@@ -163,21 +146,20 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnInf
                 if (mVideoView.isPlaying()) {
                     mVideoView.pause();
                     pb.setVisibility(View.VISIBLE);
-                    downloadRateView.setText("");
-                    loadRateView.setText("");
-                    downloadRateView.setVisibility(View.VISIBLE);
-                    loadRateView.setVisibility(View.VISIBLE);
+                    this.extra = percent = 0;
+                    rateView.setText("");
+                    rateView.setVisibility(View.VISIBLE);
 
                 }
                 break;
             case MediaPlayer.MEDIA_INFO_BUFFERING_END:
                 mVideoView.start();
                 pb.setVisibility(View.GONE);
-                downloadRateView.setVisibility(View.GONE);
-                loadRateView.setVisibility(View.GONE);
+                rateView.setVisibility(View.GONE);
                 break;
             case MediaPlayer.MEDIA_INFO_DOWNLOAD_RATE_CHANGED:
-                downloadRateView.setText("" + extra + "kb/s" + "  ");
+                this.extra = extra;
+                rateView.setText(extra + "kb/s" + "  " + percent + "%");
                 break;
         }
         return true;
@@ -185,6 +167,27 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnInf
 
     @Override
     public void onBufferingUpdate(MediaPlayer mp, int percent) {
-        loadRateView.setText(percent + "%");
+        this.percent = percent;
+        rateView.setText(extra + "kb/s" + "  " + percent + "%");
+    }
+
+    @Override
+    public void onClick(View v) {
+        int id = v.getId();
+        if (id == R.id.mediacontroller_fullscreen) {
+            if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
+                setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+                getSupportActionBar().show();
+            } else {
+                setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+                getSupportActionBar().hide();
+            }
+        }
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        mVideoView.setVideoLayout(VideoView.VIDEO_LAYOUT_SCALE, 0);
     }
 }

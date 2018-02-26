@@ -1,15 +1,13 @@
 package com.zhenl.crawler;
 
 import android.annotation.SuppressLint;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
-import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -20,7 +18,6 @@ import com.bumptech.glide.Glide;
 import com.zhenl.crawler.models.MovieModel;
 import com.zhenl.violet.base.RecyclerAdapter;
 import com.zhenl.violet.core.Dispatcher;
-import com.zhenl.violet.widget.SwipeAdapter;
 import com.zhenl.violet.widget.SwipeFooterFactory;
 import com.zhenl.violet.widget.SwipeRecyclerView;
 
@@ -29,7 +26,6 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 

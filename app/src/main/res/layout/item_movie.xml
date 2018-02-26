@@ -22,19 +22,20 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent" />
 
-            <TextView
+            <com.zhenl.violet.widget.ShapeTextView
                 android:id="@+id/tv_date"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="bottom"
                 android:layout_margin="5dp"
-                android:background="@drawable/bg_date_item_movie"
                 android:paddingBottom="3dp"
                 android:paddingLeft="10dp"
                 android:paddingRight="10dp"
                 android:paddingTop="3dp"
                 android:textColor="@color/white"
-                android:textSize="10sp" />
+                android:textSize="10sp"
+                app:ShapeTextView_corner="10dp"
+                app:ShapeTextView_solid="#88000000" />
         </FrameLayout>
 
         <TextView

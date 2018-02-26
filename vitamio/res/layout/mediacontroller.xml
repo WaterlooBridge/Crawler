@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="74dp"
+    android:layout_height="50dp"
     android:background="@color/mediacontroller_bg"
-    android:orientation="vertical" >
+    android:orientation="vertical">
 
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal" >
+        android:orientation="horizontal">
 
         <ImageButton
             android:id="@+id/mediacontroller_play_pause"
@@ -20,13 +20,23 @@
             android:contentDescription="@string/mediacontroller_play_pause"
             android:src="@drawable/mediacontroller_pause" />
 
+        <ImageButton
+            android:id="@+id/mediacontroller_fullscreen"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:layout_marginLeft="5dp"
+            android:layout_marginRight="5dp"
+            android:src="@drawable/ic_fullscreen_black_24dp" />
+
         <TextView
             android:id="@+id/mediacontroller_time_current"
             style="@style/MediaController_Text"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerVertical="true"
-            android:layout_marginLeft="5dp"
+            android:layout_marginRight="5dp"
             android:layout_toRightOf="@id/mediacontroller_play_pause" />
 
         <TextView
@@ -34,9 +44,9 @@
             style="@style/MediaController_Text"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignParentRight="true"
             android:layout_centerVertical="true"
-            android:layout_marginRight="5dp" />
+            android:layout_marginRight="5dp"
+            android:layout_toLeftOf="@id/mediacontroller_fullscreen" />
 
         <SeekBar
             android:id="@+id/mediacontroller_seekbar"
@@ -49,14 +59,5 @@
             android:focusable="true"
             android:max="1000" />
     </RelativeLayout>
-
-    <TextView
-        android:id="@+id/mediacontroller_file_name"
-        style="@style/MediaController_Text"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginLeft="5dp"
-        android:ellipsize="marquee"
-        android:singleLine="true" />
 
 </LinearLayout>
