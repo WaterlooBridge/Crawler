@@ -14,6 +14,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
+import android.view.WindowManager;
 import android.webkit.ValueCallback;
 import android.webkit.WebResourceResponse;
 import android.webkit.WebView;
@@ -177,10 +178,8 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnInf
         if (id == R.id.mediacontroller_fullscreen) {
             if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
                 setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-                getSupportActionBar().show();
             } else {
                 setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
-                getSupportActionBar().hide();
             }
         }
     }
@@ -189,5 +188,35 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnInf
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
         mVideoView.setVideoLayout(VideoView.VIDEO_LAYOUT_SCALE, 0);
+        if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            getWindow().addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
+            actionBarHandler.obtainMessage(0).sendToTarget();
+        } else {
+            getWindow().clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
+            actionBarHandler.obtainMessage(1).sendToTarget();
+        }
+    }
+
+    @SuppressLint("HandlerLeak")
+    Handler actionBarHandler = new Handler() {
+        @Override
+        public void handleMessage(Message msg) {
+            switch (msg.what) {
+                case 0:
+                    getSupportActionBar().hide();
+                    break;
+                case 1:
+                    getSupportActionBar().show();
+                    break;
+            }
+        }
+    };
+
+    @Override
+    public void onBackPressed() {
+        if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE)
+            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+        else
+            super.onBackPressed();
     }
 }
