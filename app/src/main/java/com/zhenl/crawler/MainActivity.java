@@ -136,7 +136,7 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnInf
             @Override
             public void onPrepared(MediaPlayer mediaPlayer) {
                 // optional need Vitamio 4.0
-                mediaPlayer.setPlaybackSpeed(1.0f);
+//                mediaPlayer.setPlaybackSpeed(1.0f);
             }
         });
 
@@ -234,5 +234,11 @@ public class MainActivity extends AppCompatActivity implements MediaPlayer.OnInf
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
             enterPictureInPictureMode();
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void finish() {
+        mVideoView.release(true);
+        super.finish();
     }
 }
