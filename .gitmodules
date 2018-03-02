@@ -1,3 +1,6 @@
 [submodule "Violet"]
 	path = Violet
 	url = https://github.com/WaterlooBridge/Violet.git
+[submodule "Player"]
+	path = Player
+	url = https://github.com/WaterlooBridge/Player.git

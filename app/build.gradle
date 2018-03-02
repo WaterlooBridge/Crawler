@@ -12,9 +12,6 @@ android {
         targetSdkVersion cfg.targetSdk
         versionCode cfg.version_code
         versionName cfg.version_name
-        ndk {
-            abiFilters "armeabi-v7a"
-        }
     }
     buildTypes {
         release {
@@ -41,7 +38,7 @@ dependencies {
     implementation 'com.android.support.constraint:constraint-layout:1.0.2'
     implementation 'org.jsoup:jsoup:1.11.2'
     implementation project(':Violet')
-    implementation project(':vitamio')
+    implementation project(':Player')
     implementation "com.android.support:cardview-v7:${libs.supportVersion}"
 //    implementation 'net.sourceforge.htmlunit:htmlunit:2.29'
 }

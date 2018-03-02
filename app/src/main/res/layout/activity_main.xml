@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#000">
 
-    <io.vov.vitamio.widget.VideoView
+    <tv.danmaku.ijk.media.widget.VideoView
         android:id="@+id/buffer"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -23,19 +22,6 @@
             style="?android:attr/progressBarStyleLarge"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
-
-        <com.zhenl.violet.widget.ShapeTextView
-            android:id="@+id/rate"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:paddingBottom="3dp"
-            android:paddingLeft="10dp"
-            android:paddingRight="10dp"
-            android:paddingTop="3dp"
-            android:textColor="@color/white"
-            android:textSize="12dp"
-            app:ShapeTextView_corner="5dp"
-            app:ShapeTextView_solid="#88000000" />
 
     </LinearLayout>
 
