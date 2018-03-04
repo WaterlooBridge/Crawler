@@ -1,6 +1,7 @@
 package com.zhenl.crawler;
 
 import android.annotation.SuppressLint;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -79,24 +80,34 @@ public class HomeActivity extends AppCompatActivity {
             @Override
             public void run() {
                 try {
-                    Document document = Jsoup.connect(Constants.API_HOST + "/htm/movielist4/" + page + ".htm").get();
-                    Elements elements = document.select("li");
-                    if (page++ == 1)
-                        list.clear();
-                    for (Element element : elements) {
-                        MovieModel model = new MovieModel();
-                        model.url = element.select("a").attr("href");
-                        model.img = element.select("img").attr("src");
-                        model.title = element.select("h3").text();
-                        model.date = element.select(".movie_date").text();
-                        list.add(model);
-                    }
-                    handler.sendEmptyMessage(0);
+                    loadData();
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
         });
+    }
+
+    private void loadData() throws Exception {
+        Document document = Jsoup.connect(Constants.API_HOST + "/htm/movielist4/" + page + ".htm").get();
+        if (document.location().startsWith(Constants.API_HOST)) {
+            Elements elements = document.select("li");
+            if (page++ == 1)
+                list.clear();
+            for (Element element : elements) {
+                MovieModel model = new MovieModel();
+                model.url = element.select("a").attr("href");
+                model.img = element.select("img").attr("src");
+                model.title = element.select("h3").text();
+                model.date = element.select(".movie_date").text();
+                list.add(model);
+            }
+            handler.sendEmptyMessage(0);
+        } else {
+            Uri uri = Uri.parse(document.location());
+            Constants.API_HOST = uri.getScheme() + "://" + uri.getHost();
+            loadData();
+        }
     }
 
     @SuppressLint("HandlerLeak")

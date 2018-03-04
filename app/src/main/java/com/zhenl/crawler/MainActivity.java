@@ -16,6 +16,7 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.OrientationEventListener;
 import android.view.View;
 import android.view.WindowManager;
 import android.webkit.ValueCallback;
@@ -55,6 +56,7 @@ public class MainActivity extends AppCompatActivity implements IMediaPlayer.OnIn
         IjkMediaPlayer.loadLibrariesOnce(null);
         IjkMediaPlayer.native_profileBegin("libijkplayer.so");
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
+        mOrientationListener = new OrientationListener(this);
 
         setContentView(R.layout.activity_main);
         getSupportActionBar().setBackgroundDrawable(new ColorDrawable(0x99000000));
@@ -192,14 +194,56 @@ public class MainActivity extends AppCompatActivity implements IMediaPlayer.OnIn
     }
 
     @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            mOrientationListener.enable();
+        } else {
+            mOrientationListener.disable();
+        }
+    }
+
+    @Override
     public void finish() {
         mVideoView.release(true);
         super.finish();
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            mOrientationListener.enable();
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        mOrientationListener.disable();
+        super.onPause();
+    }
+
+    @Override
     protected void onStop() {
         mVideoView.pause();
         super.onStop();
+    }
+
+    OrientationEventListener mOrientationListener;
+
+    class OrientationListener extends OrientationEventListener {
+        public OrientationListener(Context context) {
+            super(context);
+        }
+
+        @Override
+        public void onOrientationChanged(int orientation) {
+            Log.e(TAG, "Orientation changed to " + orientation);
+            if (orientation > 80 && orientation < 100) { //90度
+                setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE);
+            } else if (orientation > 260 && orientation < 280) { //270度
+                setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+            }
+        }
     }
 }
