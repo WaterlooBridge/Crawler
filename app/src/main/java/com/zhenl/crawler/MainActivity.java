@@ -162,9 +162,10 @@ public class MainActivity extends AppCompatActivity implements IMediaPlayer.OnIn
 
     @Override
     public void onBackPressed() {
-        if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE)
+        if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            mOrientationListener.disable();
             setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-        else
+        } else
             super.onBackPressed();
     }
 
@@ -185,6 +186,7 @@ public class MainActivity extends AppCompatActivity implements IMediaPlayer.OnIn
                 enterPictureInPictureMode();
         } else if (id == 2) {
             if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
+                mOrientationListener.disable();
                 setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
             } else {
                 setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
