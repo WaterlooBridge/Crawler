@@ -51,6 +51,8 @@ public class SplashActivity extends AppCompatActivity {
                     URL url = new URL("https://waterloobridge.github.io/smile/config.json");
                     connection = (HttpURLConnection) url.openConnection();
                     connection.setRequestMethod("GET");
+                    connection.setConnectTimeout(5000);
+                    connection.setReadTimeout(5000);
 
                     if (connection.getResponseCode() == 200) {
                         InputStream is = connection.getInputStream();

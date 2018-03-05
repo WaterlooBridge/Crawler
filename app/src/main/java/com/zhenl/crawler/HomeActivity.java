@@ -83,6 +83,8 @@ public class HomeActivity extends AppCompatActivity {
                     loadData();
                 } catch (Exception e) {
                     e.printStackTrace();
+                } finally {
+                    handler.sendEmptyMessage(0);
                 }
             }
         });
@@ -102,7 +104,6 @@ public class HomeActivity extends AppCompatActivity {
                 model.date = element.select(".movie_date").text();
                 list.add(model);
             }
-            handler.sendEmptyMessage(0);
         } else {
             Uri uri = Uri.parse(document.location());
             Constants.API_HOST = uri.getScheme() + "://" + uri.getHost();
