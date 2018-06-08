@@ -55,7 +55,7 @@ public class HomeActivity extends AppCompatActivity {
             @Override
             public void onItemClick(Object object, View view, int position) {
                 MovieModel model = (MovieModel) object;
-                MainActivity.start(view.getContext(), model.url);
+                MovieDetailActivity.start(view.getContext(), model.title, model.url);
             }
         });
         refreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
@@ -91,17 +91,17 @@ public class HomeActivity extends AppCompatActivity {
     }
 
     private void loadData() throws Exception {
-        Document document = Jsoup.connect(Constants.API_HOST + "/htm/movielist4/" + page + ".htm").get();
+        Document document = Jsoup.connect(Constants.API_HOST + "/type/7/" + page + ".html").get();
         if (document.location().startsWith(Constants.API_HOST)) {
-            Elements elements = document.select("li");
+            Elements elements = document.select(".movie-item");
             if (page++ == 1)
                 list.clear();
             for (Element element : elements) {
                 MovieModel model = new MovieModel();
                 model.url = element.select("a").attr("href");
                 model.img = element.select("img").attr("src");
-                model.title = element.select("h3").text();
-                model.date = element.select(".movie_date").text();
+                model.title = element.select(".movie-name").text();
+                model.date = element.select(".hdtag").text();
                 list.add(model);
             }
         } else {

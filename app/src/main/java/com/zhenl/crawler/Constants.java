@@ -6,5 +6,5 @@ package com.zhenl.crawler;
 
 public class Constants {
 
-    public static String API_HOST = "https://www.191cf.com";
+    public static String API_HOST = "http://www.15yc.com";
 }

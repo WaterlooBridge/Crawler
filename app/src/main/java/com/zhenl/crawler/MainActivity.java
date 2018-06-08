@@ -19,7 +19,9 @@ import android.view.MenuItem;
 import android.view.OrientationEventListener;
 import android.view.View;
 import android.view.WindowManager;
+import android.webkit.JavascriptInterface;
 import android.webkit.ValueCallback;
+import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -34,8 +36,9 @@ import tv.danmaku.ijk.media.widget.VideoView;
 
 public class MainActivity extends AppCompatActivity implements IMediaPlayer.OnInfoListener {
 
-    public static void start(Context context, String url) {
+    public static void start(Context context, String title, String url) {
         Intent intent = new Intent(context, MainActivity.class);
+        intent.putExtra("title", title);
         intent.putExtra("url", url);
         intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         context.startActivity(intent);
@@ -48,6 +51,9 @@ public class MainActivity extends AppCompatActivity implements IMediaPlayer.OnIn
     private VideoView mVideoView;
     private AndroidMediaController controller;
     private ProgressBar pb;
+    private WebView wv;
+
+    private String iframeSrc;
 
     @Override
     public void onCreate(Bundle icicle) {
@@ -65,40 +71,37 @@ public class MainActivity extends AppCompatActivity implements IMediaPlayer.OnIn
         controller.setSupportActionBar(getSupportActionBar());
         pb = (ProgressBar) findViewById(R.id.probar);
 
-        url = Constants.API_HOST + getIntent().getStringExtra("url").replace("movie4", "movieplay4");
+        setTitle(getIntent().getStringExtra("title"));
+        url = Constants.API_HOST + getIntent().getSerializableExtra("url");
         Log.e(TAG, url);
         load();
 
     }
 
     private void load() {
-        WebView wv = new WebView(this);
+        wv = new WebView(this);
         wv.getSettings().setJavaScriptEnabled(true);
+        wv.addJavascriptInterface(new JsBridge(), "bridge");
         wv.setWebViewClient(new WebViewClient() {
+
             @Override
             public void onPageFinished(WebView view, String url) {
-                Log.e(TAG, "onPageFinished");
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                    view.evaluateJavascript("javascript:(function(){return playurl})()", new ValueCallback<String>() {
-                        @Override
-                        public void onReceiveValue(String value) {
-                            Log.e(TAG, "m3u8 path:" + value);
-                            if (TextUtils.isEmpty(value) || "null".equals(value))
-                                handler.sendEmptyMessage(0);
-                            else {
-                                Message msg = handler.obtainMessage();
-                                msg.what = 1;
-                                msg.obj = value.substring(1, value.length() - 1);
-                                msg.sendToTarget();
-                            }
-                        }
-                    });
+                Log.e(TAG, "onPageFinished" + ":::" + url);
+                if (iframeSrc != null && !iframeSrc.equals(url)) {
+                    view.loadUrl(iframeSrc);
+                    iframeSrc = null;
+                } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                    view.evaluateJavascript("window.ckplayerLoad=function(data){window.bridge.loadVideo(data.url);}", null);
                 }
             }
 
             @Override
             public WebResourceResponse shouldInterceptRequest(WebView view, String url) {
-                if (url.equals(MainActivity.this.url) || url.endsWith(".js"))
+                if (iframeSrc != null && iframeSrc.startsWith("http://api.tianxianle.com/guhuo/?v="))
+                    return super.shouldInterceptRequest(view, url);
+                if (url.startsWith("http://api.tianxianle.com/jx/sapi.php?id=") || url.startsWith("http://api.tianxianle.com/guhuo/?v="))
+                    iframeSrc = url;
+                if (url.equals(MainActivity.this.url) || url.equals(iframeSrc) || url.endsWith(".js"))
                     return super.shouldInterceptRequest(view, url);
                 else
                     return new WebResourceResponse("text/html", "utf-8", new ByteArrayInputStream("".getBytes()));
@@ -118,6 +121,8 @@ public class MainActivity extends AppCompatActivity implements IMediaPlayer.OnIn
                 case 1:
                     String path = (String) msg.obj;
                     play(path);
+                    wv.destroy();
+                    wv = null;
                     break;
             }
         }
@@ -207,6 +212,8 @@ public class MainActivity extends AppCompatActivity implements IMediaPlayer.OnIn
 
     @Override
     public void finish() {
+        if (wv != null)
+            wv.destroy();
         mVideoView.release(true);
         super.finish();
     }
@@ -246,6 +253,16 @@ public class MainActivity extends AppCompatActivity implements IMediaPlayer.OnIn
             } else if (orientation > 260 && orientation < 280) { //270度
                 setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
             }
+        }
+    }
+
+    public class JsBridge {
+
+        @JavascriptInterface
+        public void loadVideo(String url) {
+            Message msg = handler.obtainMessage(1);
+            msg.obj = url;
+            msg.sendToTarget();
         }
     }
 }

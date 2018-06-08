@@ -3,9 +3,8 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="5dp"
-    app:cardCornerRadius="5dp"
-    app:contentPadding="5dp">
+    android:layout_margin="10dp"
+    app:cardCornerRadius="10dp">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -14,13 +13,13 @@
         android:orientation="vertical">
 
         <FrameLayout
-            android:layout_width="150dp"
-            android:layout_height="210dp">
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
 
-            <ImageView
+            <com.zhenl.crawler.views.RatioImageView
                 android:id="@+id/iv"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent" />
+                android:layout_height="wrap_content" />
 
             <com.zhenl.violet.widget.ShapeTextView
                 android:id="@+id/tv_date"
@@ -34,7 +33,7 @@
                 android:paddingTop="3dp"
                 android:textColor="@color/white"
                 android:textSize="10sp"
-                app:ShapeTextView_corner="10dp"
+                app:ShapeTextView_corner="5dp"
                 app:ShapeTextView_solid="#88000000" />
         </FrameLayout>
 
@@ -42,7 +41,7 @@
             android:id="@+id/tv_title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_margin="5px" />
+            android:layout_margin="10dp" />
 
     </LinearLayout>
 
