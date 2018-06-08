@@ -12,7 +12,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
-import android.text.TextUtils;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -20,14 +19,19 @@ import android.view.OrientationEventListener;
 import android.view.View;
 import android.view.WindowManager;
 import android.webkit.JavascriptInterface;
-import android.webkit.ValueCallback;
-import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.ProgressBar;
 
+import com.zhenl.violet.core.Dispatcher;
+
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.select.Elements;
+
 import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 
 import tv.danmaku.ijk.media.player.IMediaPlayer;
 import tv.danmaku.ijk.media.player.IjkMediaPlayer;
@@ -53,7 +57,7 @@ public class MainActivity extends AppCompatActivity implements IMediaPlayer.OnIn
     private ProgressBar pb;
     private WebView wv;
 
-    private String iframeSrc;
+    private String js;
 
     @Override
     public void onCreate(Bundle icicle) {
@@ -73,12 +77,42 @@ public class MainActivity extends AppCompatActivity implements IMediaPlayer.OnIn
 
         setTitle(getIntent().getStringExtra("title"));
         url = Constants.API_HOST + getIntent().getSerializableExtra("url");
-        Log.e(TAG, url);
+        Log.e(TAG, "[INFO:CONSOLE]" + url);
         load();
 
     }
 
     private void load() {
+        Dispatcher.getInstance().enqueue(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    loadData();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                } finally {
+                    handler.sendEmptyMessage(0);
+                }
+            }
+        });
+    }
+
+    private void loadData() throws Exception {
+        InputStream inputStream = getResources().openRawResource(R.raw.inject);
+        byte[] bytes = new byte[inputStream.available()];
+        inputStream.read(bytes);
+        js = new String(bytes);
+        Document document = Jsoup.connect(url).userAgent(Constants.USER_AGENT).get();
+        url = document.select("iframe").attr("src");
+        document = Jsoup.connect(url).get();
+        Elements elements = document.select("iframe");
+        if (elements != null && elements.size() > 0)
+            url = document.select("iframe").attr("src");
+    }
+
+    private void load(String url) {
+        if (isFinishing())
+            return;
         wv = new WebView(this);
         wv.getSettings().setJavaScriptEnabled(true);
         wv.addJavascriptInterface(new JsBridge(), "bridge");
@@ -86,22 +120,15 @@ public class MainActivity extends AppCompatActivity implements IMediaPlayer.OnIn
 
             @Override
             public void onPageFinished(WebView view, String url) {
-                Log.e(TAG, "onPageFinished" + ":::" + url);
-                if (iframeSrc != null && !iframeSrc.equals(url)) {
-                    view.loadUrl(iframeSrc);
-                    iframeSrc = null;
-                } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                    view.evaluateJavascript("window.ckplayerLoad=function(data){window.bridge.loadVideo(data.url);}", null);
+                Log.e(TAG, "[INFO:CONSOLE]" + url);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                    view.evaluateJavascript("javascript:" + js, null);
                 }
             }
 
             @Override
             public WebResourceResponse shouldInterceptRequest(WebView view, String url) {
-                if (iframeSrc != null && iframeSrc.startsWith("http://api.tianxianle.com/guhuo/?v="))
-                    return super.shouldInterceptRequest(view, url);
-                if (url.startsWith("http://api.tianxianle.com/jx/sapi.php?id=") || url.startsWith("http://api.tianxianle.com/guhuo/?v="))
-                    iframeSrc = url;
-                if (url.equals(MainActivity.this.url) || url.equals(iframeSrc) || url.endsWith(".js"))
+                if (true)
                     return super.shouldInterceptRequest(view, url);
                 else
                     return new WebResourceResponse("text/html", "utf-8", new ByteArrayInputStream("".getBytes()));
@@ -116,13 +143,17 @@ public class MainActivity extends AppCompatActivity implements IMediaPlayer.OnIn
         public void handleMessage(Message msg) {
             switch (msg.what) {
                 case 0:
-                    finish();
+                    load(url);
                     break;
                 case 1:
                     String path = (String) msg.obj;
                     play(path);
+                    wv.removeAllViews();
                     wv.destroy();
                     wv = null;
+                    break;
+                case 2:
+                    finish();
                     break;
             }
         }
@@ -212,8 +243,10 @@ public class MainActivity extends AppCompatActivity implements IMediaPlayer.OnIn
 
     @Override
     public void finish() {
-        if (wv != null)
+        if (wv != null) {
+            wv.removeAllViews();
             wv.destroy();
+        }
         mVideoView.release(true);
         super.finish();
     }
@@ -263,6 +296,11 @@ public class MainActivity extends AppCompatActivity implements IMediaPlayer.OnIn
             Message msg = handler.obtainMessage(1);
             msg.obj = url;
             msg.sendToTarget();
+        }
+
+        @JavascriptInterface
+        public void destroy() {
+            handler.obtainMessage(2).sendToTarget();
         }
     }
 }
