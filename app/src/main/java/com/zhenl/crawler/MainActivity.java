@@ -20,6 +20,7 @@ import android.view.View;
 import android.view.WindowManager;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebResourceResponse;
+import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.ProgressBar;
@@ -58,6 +59,7 @@ public class MainActivity extends AppCompatActivity implements IMediaPlayer.OnIn
     private WebView wv;
 
     private String js;
+    private boolean intercept;
 
     @Override
     public void onCreate(Bundle icicle) {
@@ -102,9 +104,10 @@ public class MainActivity extends AppCompatActivity implements IMediaPlayer.OnIn
         byte[] bytes = new byte[inputStream.available()];
         inputStream.read(bytes);
         js = new String(bytes);
+        String referer = url;
         Document document = Jsoup.connect(url).userAgent(Constants.USER_AGENT).get();
         url = document.select("iframe").attr("src");
-        document = Jsoup.connect(url).get();
+        document = Jsoup.connect(url).referrer(referer).get();
         Elements elements = document.select("iframe");
         if (elements != null && elements.size() > 0)
             url = document.select("iframe").attr("src");
@@ -115,6 +118,8 @@ public class MainActivity extends AppCompatActivity implements IMediaPlayer.OnIn
             return;
         wv = new WebView(this);
         wv.getSettings().setJavaScriptEnabled(true);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
+            wv.getSettings().setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
         wv.addJavascriptInterface(new JsBridge(), "bridge");
         wv.setWebViewClient(new WebViewClient() {
 
@@ -128,9 +133,14 @@ public class MainActivity extends AppCompatActivity implements IMediaPlayer.OnIn
 
             @Override
             public WebResourceResponse shouldInterceptRequest(WebView view, String url) {
-                if (true)
+                if (true) {
+                    if (intercept && url.contains("/m3u8?")) {
+                        Message msg = handler.obtainMessage(1);
+                        msg.obj = url;
+                        msg.sendToTarget();
+                    }
                     return super.shouldInterceptRequest(view, url);
-                else
+                } else
                     return new WebResourceResponse("text/html", "utf-8", new ByteArrayInputStream("".getBytes()));
             }
         });
@@ -148,9 +158,7 @@ public class MainActivity extends AppCompatActivity implements IMediaPlayer.OnIn
                 case 1:
                     String path = (String) msg.obj;
                     play(path);
-                    wv.removeAllViews();
-                    wv.destroy();
-                    wv = null;
+                    destroyWebView();
                     break;
                 case 2:
                     finish();
@@ -243,12 +251,17 @@ public class MainActivity extends AppCompatActivity implements IMediaPlayer.OnIn
 
     @Override
     public void finish() {
+        destroyWebView();
+        mVideoView.release(true);
+        super.finish();
+    }
+
+    private void destroyWebView() {
         if (wv != null) {
             wv.removeAllViews();
             wv.destroy();
+            wv = null;
         }
-        mVideoView.release(true);
-        super.finish();
     }
 
     @Override
@@ -301,6 +314,11 @@ public class MainActivity extends AppCompatActivity implements IMediaPlayer.OnIn
         @JavascriptInterface
         public void destroy() {
             handler.obtainMessage(2).sendToTarget();
+        }
+
+        @JavascriptInterface
+        public void intercept() {
+            intercept = true;
         }
     }
 }
