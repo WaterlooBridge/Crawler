@@ -33,6 +33,10 @@ import org.jsoup.select.Elements;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
 
 import tv.danmaku.ijk.media.player.IMediaPlayer;
 import tv.danmaku.ijk.media.player.IjkMediaPlayer;
@@ -81,7 +85,6 @@ public class MainActivity extends AppCompatActivity implements IMediaPlayer.OnIn
         url = Constants.API_HOST + getIntent().getSerializableExtra("url");
         Log.e(TAG, "[INFO:CONSOLE]" + url);
         load();
-
     }
 
     private void load() {
@@ -134,10 +137,31 @@ public class MainActivity extends AppCompatActivity implements IMediaPlayer.OnIn
             @Override
             public WebResourceResponse shouldInterceptRequest(WebView view, String url) {
                 if (true) {
-                    if (intercept && url.contains("/m3u8?")) {
+                    if (intercept && url.contains("m3u8?")) {
                         Message msg = handler.obtainMessage(1);
                         msg.obj = url;
                         msg.sendToTarget();
+                    }
+                    String suffix = "package=" + BuildConfig.APPLICATION_ID;
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && url.endsWith(suffix)) {
+                        try {
+                            URL uri = new URL(url.substring(0, url.length() - suffix.length() - 1));
+                            HttpURLConnection connection = (HttpURLConnection) uri.openConnection();
+                            connection.setRequestMethod("GET");
+                            connection.setConnectTimeout(5000);
+                            connection.setReadTimeout(5000);
+
+                            if (connection.getResponseCode() == 200) {
+                                InputStream is = connection.getInputStream();
+                                Map<String, String> map = new HashMap<>();
+                                map.put("Access-Control-Allow-Origin", "*");
+                                WebResourceResponse response = new WebResourceResponse("application/json", "utf-8", is);
+                                response.setResponseHeaders(map);
+                                return response;
+                            }
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
                     }
                     return super.shouldInterceptRequest(view, url);
                 } else
