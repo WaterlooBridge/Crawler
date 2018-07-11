@@ -16,6 +16,9 @@ if(window.vid && (vid.indexOf('.mp4') > 0 || vid.indexOf('.m3u8') > 0)) {
             if (data.ext && (data.ext == 'xml' || data.ext == 'xml_client')) {
                 console.log("type=5")
                 window.bridge.intercept();
+            } else if (data.ext && data.ext == 'link') {
+                console.log("type=6;" + data.url);
+                window.bridge.loadUrl(data.url);
             } else if (data.url) {
                 console.log('type=3;' + data.url);
                 window.bridge.loadVideo(data.url);

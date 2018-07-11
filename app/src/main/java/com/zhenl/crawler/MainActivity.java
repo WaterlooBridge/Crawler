@@ -7,6 +7,7 @@ import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
+import android.net.http.SslError;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -19,6 +20,7 @@ import android.view.OrientationEventListener;
 import android.view.View;
 import android.view.WindowManager;
 import android.webkit.JavascriptInterface;
+import android.webkit.SslErrorHandler;
 import android.webkit.WebResourceResponse;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
@@ -167,6 +169,11 @@ public class MainActivity extends AppCompatActivity implements IMediaPlayer.OnIn
                 } else
                     return new WebResourceResponse("text/html", "utf-8", new ByteArrayInputStream("".getBytes()));
             }
+
+            @Override
+            public void onReceivedSslError(WebView view, SslErrorHandler handler, SslError error) {
+                handler.proceed();
+            }
         });
         wv.loadUrl(url);
     }
@@ -186,6 +193,9 @@ public class MainActivity extends AppCompatActivity implements IMediaPlayer.OnIn
                     break;
                 case 2:
                     finish();
+                    break;
+                case 3:
+                    wv.loadUrl((String) msg.obj);
                     break;
             }
         }
@@ -343,6 +353,13 @@ public class MainActivity extends AppCompatActivity implements IMediaPlayer.OnIn
         @JavascriptInterface
         public void intercept() {
             intercept = true;
+        }
+
+        @JavascriptInterface
+        public void loadUrl(String url) {
+            Message msg = handler.obtainMessage(3);
+            msg.obj = url;
+            msg.sendToTarget();
         }
     }
 }
