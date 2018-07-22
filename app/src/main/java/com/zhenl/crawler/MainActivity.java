@@ -104,12 +104,16 @@ public class MainActivity extends AppCompatActivity implements IMediaPlayer.OnIn
         });
     }
 
+    private String referer;
+
     private void loadData() throws Exception {
-        InputStream inputStream = getResources().openRawResource(R.raw.inject);
-        byte[] bytes = new byte[inputStream.available()];
-        inputStream.read(bytes);
-        js = new String(bytes);
-        String referer = url;
+        if (js == null) {
+            InputStream inputStream = getResources().openRawResource(R.raw.inject);
+            byte[] bytes = new byte[inputStream.available()];
+            inputStream.read(bytes);
+            js = new String(bytes);
+        }
+        referer = url;
         Document document = Jsoup.connect(url).userAgent(Constants.USER_AGENT).get();
         url = document.select("iframe").attr("src");
         document = Jsoup.connect(url).referrer(referer).get();
@@ -121,61 +125,65 @@ public class MainActivity extends AppCompatActivity implements IMediaPlayer.OnIn
     private void load(String url) {
         if (isFinishing())
             return;
-        wv = new WebView(this);
-        wv.getSettings().setJavaScriptEnabled(true);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
-            wv.getSettings().setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
-        wv.addJavascriptInterface(new JsBridge(), "bridge");
-        wv.setWebViewClient(new WebViewClient() {
+        if (wv == null) {
+            wv = new WebView(this);
+            wv.getSettings().setJavaScriptEnabled(true);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
+                wv.getSettings().setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
+            wv.addJavascriptInterface(new JsBridge(), "bridge");
+            wv.setWebViewClient(new WebViewClient() {
 
-            @Override
-            public void onPageFinished(WebView view, String url) {
-                Log.e(TAG, "[INFO:CONSOLE]" + url);
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                    view.evaluateJavascript("javascript:" + js, null);
+                @Override
+                public void onPageFinished(WebView view, String url) {
+                    Log.e(TAG, "[INFO:CONSOLE]" + url);
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                        view.evaluateJavascript("javascript:" + js, null);
+                    }
                 }
-            }
 
-            @Override
-            public WebResourceResponse shouldInterceptRequest(WebView view, String url) {
-                if (true) {
-                    if (intercept && url.contains("m3u8?")) {
-                        Message msg = handler.obtainMessage(1);
-                        msg.obj = url;
-                        msg.sendToTarget();
-                    }
-                    String suffix = "package=" + BuildConfig.APPLICATION_ID;
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && url.endsWith(suffix)) {
-                        try {
-                            URL uri = new URL(url.substring(0, url.length() - suffix.length() - 1));
-                            HttpURLConnection connection = (HttpURLConnection) uri.openConnection();
-                            connection.setRequestMethod("GET");
-                            connection.setConnectTimeout(5000);
-                            connection.setReadTimeout(5000);
-
-                            if (connection.getResponseCode() == 200) {
-                                InputStream is = connection.getInputStream();
-                                Map<String, String> map = new HashMap<>();
-                                map.put("Access-Control-Allow-Origin", "*");
-                                WebResourceResponse response = new WebResourceResponse("application/json", "utf-8", is);
-                                response.setResponseHeaders(map);
-                                return response;
-                            }
-                        } catch (Exception e) {
-                            e.printStackTrace();
+                @Override
+                public WebResourceResponse shouldInterceptRequest(WebView view, String url) {
+                    if (true) {
+                        if (intercept && url.contains("m3u8?")) {
+                            Message msg = handler.obtainMessage(1);
+                            msg.obj = url;
+                            msg.sendToTarget();
                         }
-                    }
-                    return super.shouldInterceptRequest(view, url);
-                } else
-                    return new WebResourceResponse("text/html", "utf-8", new ByteArrayInputStream("".getBytes()));
-            }
+                        String suffix = "package=" + BuildConfig.APPLICATION_ID;
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && url.endsWith(suffix)) {
+                            try {
+                                URL uri = new URL(url.substring(0, url.length() - suffix.length() - 1));
+                                HttpURLConnection connection = (HttpURLConnection) uri.openConnection();
+                                connection.setRequestMethod("GET");
+                                connection.setConnectTimeout(5000);
+                                connection.setReadTimeout(5000);
 
-            @Override
-            public void onReceivedSslError(WebView view, SslErrorHandler handler, SslError error) {
-                handler.proceed();
-            }
-        });
-        wv.loadUrl(url);
+                                if (connection.getResponseCode() == 200) {
+                                    InputStream is = connection.getInputStream();
+                                    Map<String, String> map = new HashMap<>();
+                                    map.put("Access-Control-Allow-Origin", "*");
+                                    WebResourceResponse response = new WebResourceResponse("application/json", "utf-8", is);
+                                    response.setResponseHeaders(map);
+                                    return response;
+                                }
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        }
+                        return super.shouldInterceptRequest(view, url);
+                    } else
+                        return new WebResourceResponse("text/html", "utf-8", new ByteArrayInputStream("".getBytes()));
+                }
+
+                @Override
+                public void onReceivedSslError(WebView view, SslErrorHandler handler, SslError error) {
+                    handler.proceed();
+                }
+            });
+        }
+        Map<String, String> map = new HashMap<>();
+        map.put("referer", referer);
+        wv.loadUrl(url, map);
     }
 
     @SuppressLint("HandlerLeak")
@@ -196,6 +204,10 @@ public class MainActivity extends AppCompatActivity implements IMediaPlayer.OnIn
                     break;
                 case 3:
                     wv.loadUrl((String) msg.obj);
+                    break;
+                case 4:
+                    url = (String) msg.obj;
+                    load();
                     break;
             }
         }
@@ -358,6 +370,13 @@ public class MainActivity extends AppCompatActivity implements IMediaPlayer.OnIn
         @JavascriptInterface
         public void loadUrl(String url) {
             Message msg = handler.obtainMessage(3);
+            msg.obj = url;
+            msg.sendToTarget();
+        }
+
+        @JavascriptInterface
+        public void reload(String url) {
+            Message msg = handler.obtainMessage(4);
             msg.obj = url;
             msg.sendToTarget();
         }
