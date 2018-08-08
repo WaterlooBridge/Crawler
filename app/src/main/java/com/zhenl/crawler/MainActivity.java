@@ -27,6 +27,7 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.ProgressBar;
 
+import com.zhenl.crawler.core.RecordAgent;
 import com.zhenl.violet.core.Dispatcher;
 
 import org.jsoup.Jsoup;
@@ -41,7 +42,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import tv.danmaku.ijk.media.player.IMediaPlayer;
-import tv.danmaku.ijk.media.player.IjkMediaPlayer;
 import tv.danmaku.ijk.media.widget.AndroidMediaController;
 import tv.danmaku.ijk.media.widget.VideoView;
 
@@ -70,9 +70,6 @@ public class MainActivity extends AppCompatActivity implements IMediaPlayer.OnIn
     @Override
     public void onCreate(Bundle icicle) {
         super.onCreate(icicle);
-        // init player
-        IjkMediaPlayer.loadLibrariesOnce(null);
-        IjkMediaPlayer.native_profileBegin("libijkplayer.so");
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
         mOrientationListener = new OrientationListener(this);
 
@@ -81,6 +78,14 @@ public class MainActivity extends AppCompatActivity implements IMediaPlayer.OnIn
         mVideoView = (VideoView) findViewById(R.id.buffer);
         controller = new AndroidMediaController(this, false);
         controller.setSupportActionBar(getSupportActionBar());
+        controller.setOnFullscreenClickListener((View v) -> {
+            if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
+                mOrientationListener.disable();
+                setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+            } else {
+                setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+            }
+        });
         pb = (ProgressBar) findViewById(R.id.probar);
 
         setTitle(getIntent().getStringExtra("title"));
@@ -231,6 +236,9 @@ public class MainActivity extends AppCompatActivity implements IMediaPlayer.OnIn
             }
         });
 
+        int pos = RecordAgent.getInstance().getRecord(url);
+        if (pos > 0)
+            mVideoView.seekTo(pos);
     }
 
     @Override
@@ -262,9 +270,7 @@ public class MainActivity extends AppCompatActivity implements IMediaPlayer.OnIn
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuItem moreItem = menu.add(Menu.NONE, Menu.FIRST, Menu.FIRST, "PIP");
-        MenuItem moreItem2 = menu.add(Menu.NONE, 2, 2, "ROTATE");
         moreItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
-        moreItem2.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -274,13 +280,6 @@ public class MainActivity extends AppCompatActivity implements IMediaPlayer.OnIn
         if (id == Menu.FIRST) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
                 enterPictureInPictureMode();
-        } else if (id == 2) {
-            if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
-                mOrientationListener.disable();
-                setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-            } else {
-                setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
-            }
         }
         return super.onOptionsItemSelected(item);
     }
@@ -288,6 +287,7 @@ public class MainActivity extends AppCompatActivity implements IMediaPlayer.OnIn
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
+        controller.onConfigurationChanged(newConfig);
         if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
             mOrientationListener.enable();
         } else {
@@ -298,6 +298,7 @@ public class MainActivity extends AppCompatActivity implements IMediaPlayer.OnIn
     @Override
     public void finish() {
         destroyWebView();
+        RecordAgent.getInstance().record(url, mVideoView.getCurrentPosition());
         mVideoView.release(true);
         super.finish();
     }
