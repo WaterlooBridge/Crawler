@@ -8,19 +8,18 @@ import android.os.Handler;
 import android.os.Message;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.GridLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.BaseAdapter;
-import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
 import com.zhenl.crawler.models.DramasModel;
+import com.zhenl.violet.base.RecyclerAdapter;
 import com.zhenl.violet.core.Dispatcher;
-import com.zhenl.violet.utils.VHUtil;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -51,7 +50,8 @@ public class MovieDetailActivity extends AppCompatActivity {
 
     private ImageView iv;
     private TextView tvSummary;
-    private GridView gv;
+    private RecyclerView gv;
+    private DramasAdapter adapter;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -59,10 +59,14 @@ public class MovieDetailActivity extends AppCompatActivity {
         url = getIntent().getStringExtra("url");
         setContentView(R.layout.activity_movie_detail);
         setTitle(getIntent().getStringExtra("title"));
-        iv = (ImageView) findViewById(R.id.iv);
-        tvSummary = (TextView) findViewById(R.id.tv_summary);
-        gv = (GridView) findViewById(R.id.gv);
-        gv.setOnItemClickListener((AdapterView<?> parent, View view, int position, long id) -> {
+        iv = findViewById(R.id.iv);
+        tvSummary = findViewById(R.id.tv_summary);
+        gv = findViewById(R.id.gv);
+        gv.setLayoutManager(new GridLayoutManager(this, 4));
+        gv.setNestedScrollingEnabled(false);
+        adapter = new DramasAdapter(dsList);
+        gv.setAdapter(adapter);
+        adapter.setOnItemClickListener((Object object, View view, int position) -> {
             DramasModel model = dsList.get(position);
             MainActivity.start(view.getContext(), model.text, model.url);
         });
@@ -70,18 +74,16 @@ public class MovieDetailActivity extends AppCompatActivity {
     }
 
     private void load() {
-        Dispatcher.getInstance().enqueue(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    loadData();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                } finally {
-                    handler.sendEmptyMessage(0);
+        Dispatcher.getInstance().enqueue(() -> {
+                    try {
+                        loadData();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    } finally {
+                        handler.sendEmptyMessage(0);
+                    }
                 }
-            }
-        });
+        );
     }
 
     private void loadData() throws Exception {
@@ -105,11 +107,11 @@ public class MovieDetailActivity extends AppCompatActivity {
                 return;
             Glide.with(MovieDetailActivity.this).load(img).into(iv);
             tvSummary.setText(summary);
-            gv.setAdapter(new DramasAdapter(dsList));
+            adapter.notifyDataSetChanged();
         }
     };
 
-    private static class DramasAdapter extends BaseAdapter {
+    private static class DramasAdapter extends RecyclerAdapter {
 
         private List<DramasModel> list;
 
@@ -118,8 +120,20 @@ public class MovieDetailActivity extends AppCompatActivity {
         }
 
         @Override
-        public int getCount() {
+        public RecyclerView.ViewHolder onCreateHolder(ViewGroup parent, int viewType) {
+            return new DramasHolder(LayoutInflater.from(parent.getContext()).inflate(R.layout.item_movie_dramas, parent, false));
+        }
+
+        @Override
+        public int getContentItemCount() {
             return list == null ? 0 : list.size();
+        }
+
+        @Override
+        public void onBindViewHolder(RecyclerView.ViewHolder viewHolder, int position) {
+            DramasHolder holder = (DramasHolder) viewHolder;
+            DramasModel model = list.get(position);
+            holder.tv.setText(model.text);
         }
 
         @Override
@@ -127,19 +141,14 @@ public class MovieDetailActivity extends AppCompatActivity {
             return list.get(position);
         }
 
-        @Override
-        public long getItemId(int position) {
-            return 0;
-        }
+        class DramasHolder extends RecyclerHolder {
 
-        @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-            if (convertView == null)
-                convertView = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_movie_dramas, parent, false);
-            TextView tv = VHUtil.get(convertView, R.id.tv);
-            DramasModel model = list.get(position);
-            tv.setText(model.text);
-            return convertView;
+            TextView tv;
+
+            public DramasHolder(View itemView) {
+                super(itemView);
+                tv = itemView.findViewById(R.id.tv);
+            }
         }
     }
 }

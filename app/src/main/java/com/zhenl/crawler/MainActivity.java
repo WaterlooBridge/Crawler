@@ -74,7 +74,7 @@ public class MainActivity extends AppCompatActivity implements IMediaPlayer.OnIn
         mOrientationListener = new OrientationListener(this);
 
         setContentView(R.layout.activity_main);
-        getSupportActionBar().setBackgroundDrawable(new ColorDrawable(0x99000000));
+        getSupportActionBar().setBackgroundDrawable(new ColorDrawable(0x40000000));
         mVideoView = (VideoView) findViewById(R.id.buffer);
         controller = new AndroidMediaController(this, false);
         controller.setSupportActionBar(getSupportActionBar());
@@ -298,7 +298,10 @@ public class MainActivity extends AppCompatActivity implements IMediaPlayer.OnIn
     @Override
     public void finish() {
         destroyWebView();
-        RecordAgent.getInstance().record(url, mVideoView.getCurrentPosition());
+        int pos = mVideoView.getCurrentPosition();
+        if (mVideoView.getDuration() - pos < 5000)
+            pos = 0;
+        RecordAgent.getInstance().record(url, pos);
         mVideoView.release(true);
         super.finish();
     }
