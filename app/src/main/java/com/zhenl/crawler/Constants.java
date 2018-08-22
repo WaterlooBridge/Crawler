@@ -7,6 +7,7 @@ package com.zhenl.crawler;
 public class Constants {
 
     public static String API_HOST = "http://www.15yc.com";
+    public static String API_HOST2 = "http://kanbo8.com";
 
     public static String USER_AGENT = "Mozilla/5.0 (Linux; U; Android 8.0.0; zh-CN; ONEPLUS A3010 Build/OPR1.170623.032)" +
             " AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/57.0.2987.108 UCBrowser/12.0.2.982 Mobile Safari/537.36";

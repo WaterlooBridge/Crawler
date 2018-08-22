@@ -14,6 +14,8 @@ import android.view.View;
 import android.widget.EditText;
 
 import com.zhenl.crawler.adapter.MovieAdapter;
+import com.zhenl.crawler.engines.SearchEngine;
+import com.zhenl.crawler.engines.SearchEngineFactory;
 import com.zhenl.crawler.models.MovieModel;
 import com.zhenl.violet.core.Dispatcher;
 
@@ -22,6 +24,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -34,8 +37,7 @@ public class SearchActivity extends AppCompatActivity {
     private RecyclerView rv;
 
     private MovieAdapter adapter;
-    private int seqNum;
-    private volatile int recSeqNum;
+    private SearchEngine engine;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -63,9 +65,10 @@ public class SearchActivity extends AppCompatActivity {
 
             @Override
             public void afterTextChanged(Editable s) {
-                load(seqNum++);
+                load(handler.seqNum++);
             }
         });
+        engine = SearchEngineFactory.create();
     }
 
     private void load(final int seqNum) {
@@ -79,33 +82,29 @@ public class SearchActivity extends AppCompatActivity {
     }
 
     private void loadData(int seqNum) throws Exception {
-        Document document = Jsoup.connect(Constants.API_HOST + "/search?wd=" + et.getText()).get();
-        if (recSeqNum > seqNum)
-            return;
-        recSeqNum = seqNum;
-        Elements elements = document.select(".movie-item");
-        List<MovieModel> list = new ArrayList<>();
-        for (Element element : elements) {
-            MovieModel model = new MovieModel();
-            model.url = element.select("a").attr("href");
-            model.img = element.select("img").attr("src");
-            model.title = element.select(".movie-name").text();
-            model.date = element.select(".hdtag").text();
-            list.add(model);
-        }
-        Message msg = handler.obtainMessage(0);
-        msg.obj = list;
-        msg.sendToTarget();
+        engine.search(et.getText().toString(), handler);
     }
 
-    @SuppressLint("HandlerLeak")
-    Handler handler = new Handler() {
+    SearchHandler handler = new SearchHandler(this);
+
+    public static class SearchHandler extends Handler {
+
+        public int seqNum;
+        public volatile int recSeqNum;
+
+        WeakReference<SearchActivity> reference;
+
+        public SearchHandler(SearchActivity activity) {
+            reference = new WeakReference<>(activity);
+        }
+
         @Override
         public void handleMessage(Message msg) {
-            if (isFinishing())
+            SearchActivity activity = reference.get();
+            if (activity == null || activity.isFinishing())
                 return;
             List<MovieModel> list = (List<MovieModel>) msg.obj;
-            adapter.refresh(list);
+            activity.adapter.refresh(list);
         }
-    };
+    }
 }

@@ -3,6 +3,7 @@ package com.zhenl.crawler;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -17,14 +18,10 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
+import com.zhenl.crawler.engines.SearchEngineFactory;
 import com.zhenl.crawler.models.DramasModel;
 import com.zhenl.violet.base.RecyclerAdapter;
 import com.zhenl.violet.core.Dispatcher;
-
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -87,23 +84,19 @@ public class MovieDetailActivity extends AppCompatActivity {
     }
 
     private void loadData() throws Exception {
-        Document document = Jsoup.connect(Constants.API_HOST + url).get();
-        img = document.select(".img-thumbnail").attr("src");
-        summary = document.select(".summary").text();
-        Elements elements = document.select(".dslist-group a");
-        for (Element element : elements) {
-            DramasModel model = new DramasModel();
-            model.text = element.text();
-            model.url = element.attr("href");
-            dsList.add(model);
-        }
+        SearchEngineFactory.create().detail(url, (String img, String summary, List<DramasModel> list) -> {
+            this.img = img;
+            this.summary = summary;
+            if (list != null)
+                dsList.addAll(list);
+        });
     }
 
     @SuppressLint("HandlerLeak")
     Handler handler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
-            if (isFinishing())
+            if (isFinishing() || Build.VERSION.SDK_INT >= 17 && isDestroyed())
                 return;
             Glide.with(MovieDetailActivity.this).load(img).into(iv);
             tvSummary.setText(summary);

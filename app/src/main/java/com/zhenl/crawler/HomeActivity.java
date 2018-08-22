@@ -1,12 +1,14 @@
 package com.zhenl.crawler;
 
 import android.annotation.SuppressLint;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.view.Menu;
@@ -14,6 +16,7 @@ import android.view.MenuItem;
 import android.view.View;
 
 import com.zhenl.crawler.adapter.MovieAdapter;
+import com.zhenl.crawler.engines.SearchEngineFactory;
 import com.zhenl.crawler.models.MovieModel;
 import com.zhenl.violet.base.RecyclerAdapter;
 import com.zhenl.violet.core.Dispatcher;
@@ -129,8 +132,20 @@ public class HomeActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
         if (id == Menu.FIRST) {
-            startActivity(new Intent(this, SearchActivity.class));
+            showSearchEngines();
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void showSearchEngines() {
+        final String items[] = {"Search Engine 1", "Search Engine 2"};
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setItems(items, (DialogInterface dialog, int which) -> {
+            dialog.dismiss();
+            SearchEngineFactory.type = which + 1;
+            startActivity(new Intent(HomeActivity.this, SearchActivity.class));
+        });
+        builder.create().show();
     }
 }
