@@ -11,7 +11,16 @@
         <com.zhenl.violet.widget.SwipeRecyclerView
             android:id="@+id/recyclerView"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"/>
+            android:layout_height="match_parent" />
     </android.support.v4.widget.SwipeRefreshLayout>
+
+    <android.support.design.widget.FloatingActionButton
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="right|bottom"
+        android:layout_marginBottom="30dp"
+        android:layout_marginRight="30dp"
+        android:onClick="onClick"
+        android:src="@drawable/ic_send_black_24dp" />
 
 </FrameLayout>

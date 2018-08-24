@@ -16,7 +16,7 @@ if (window.vid && (vid.indexOf('.mp4') > 0 || vid.indexOf('.m3u8') > 0)) {
                 var data = JSON.parse(this.responseText);
                 if (data.ext && (data.ext == 'xml' || data.ext == 'xml_client')) {
                     console.log("type=5")
-                    window.bridge.intercept();
+                    intercept();
                 } else if (data.ext && data.ext == 'link') {
                     console.log("type=6;" + data.url);
                     window.bridge.loadUrl(data.url);
@@ -53,4 +53,55 @@ XMLHttpRequest.prototype.open = function() {
         arguments[1] = arguments[1] + prefix + "package=com.zhenl.crawler";
     }
     return _open.apply(this, arguments);
+}
+function intercept() {
+    function scanPage()
+    {
+    	var allUrlsList = [];
+
+        var a = document.getElementsByTagName('video');
+        for (var i = 0; i < a.length; i++)
+        {
+            var link = a[i];
+            var u = false;
+    	    if (link.src)
+    	        u = link.src;
+    	    if (!u && link.hasAttribute('data-thumb'))
+    	    {
+    		    u = myTrim(link.getAttribute('data-thumb'));
+    		    if (u.indexOf("http") == -1)
+    		        u = "http:" + u;
+    	    }
+    	    if ( u)
+    	    {
+    		    var title = '';
+    		    if (link.hasAttribute('alt'))
+    			    title = myTrim(link.getAttribute('alt'));
+    		    else if (link.hasAttribute('title'))
+    			    title = myTrim(link.getAttribute('title'));
+    			if (!title)
+    	            title=document.title;
+    		    var cl = "";
+    		    if (link.hasAttribute('class'))
+    			    cl = myTrim(link.getAttribute('class'));
+
+    		    allUrlsList.push({'url': u,'title': title});
+    	    }
+    	}
+
+    	console.log(JSON.stringify(allUrlsList));
+    	if (allUrlsList.length > 0)
+    	    window.bridge.loadVideo(allUrlsList[0].url);
+    }
+
+    var observer = new window.MutationObserver(function (mutations) {
+        scanPage();
+    });
+
+    observer.observe(document, {
+        childList: true, // listen to changes to node children
+        subtree: true // listen to changes to descendants as well
+    });
+
+    scanPage();
 }

@@ -20,8 +20,11 @@ import android.widget.TextView;
 import com.bumptech.glide.Glide;
 import com.zhenl.crawler.engines.SearchEngineFactory;
 import com.zhenl.crawler.models.DramasModel;
+import com.zhenl.crawler.models.MovieModel;
 import com.zhenl.violet.base.RecyclerAdapter;
 import com.zhenl.violet.core.Dispatcher;
+
+import org.jsoup.UncheckedIOException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -76,6 +79,8 @@ public class MovieDetailActivity extends AppCompatActivity {
                         loadData();
                     } catch (Exception e) {
                         e.printStackTrace();
+                    } catch (UncheckedIOException e) {
+                        e.printStackTrace();
                     } finally {
                         handler.sendEmptyMessage(0);
                     }
@@ -85,7 +90,7 @@ public class MovieDetailActivity extends AppCompatActivity {
 
     private void loadData() throws Exception {
         SearchEngineFactory.create().detail(url, (String img, String summary, List<DramasModel> list) -> {
-            this.img = img;
+            this.img = MovieModel.handleImg(img);
             this.summary = summary;
             if (list != null)
                 dsList.addAll(list);

@@ -1,6 +1,5 @@
 package com.zhenl.crawler;
 
-import android.annotation.SuppressLint;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -19,13 +18,9 @@ import com.zhenl.crawler.engines.SearchEngineFactory;
 import com.zhenl.crawler.models.MovieModel;
 import com.zhenl.violet.core.Dispatcher;
 
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
+import org.jsoup.UncheckedIOException;
 
 import java.lang.ref.WeakReference;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -77,12 +72,14 @@ public class SearchActivity extends AppCompatActivity {
                 loadData(seqNum);
             } catch (Exception e) {
                 e.printStackTrace();
+            } catch (UncheckedIOException e) {
+                e.printStackTrace();
             }
         });
     }
 
     private void loadData(int seqNum) throws Exception {
-        engine.search(et.getText().toString(), handler);
+        engine.search(seqNum, et.getText().toString(), handler);
     }
 
     SearchHandler handler = new SearchHandler(this);

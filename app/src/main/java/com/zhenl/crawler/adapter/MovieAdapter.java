@@ -45,7 +45,7 @@ public class MovieAdapter extends RecyclerAdapter {
     public void onBindViewHolder(RecyclerView.ViewHolder viewHolder, int position) {
         Holder holder = (Holder) viewHolder;
         MovieModel model = list.get(position);
-        Glide.with(holder.iv.getContext()).load(model.img).centerCrop().into(holder.iv);
+        Glide.with(holder.iv.getContext()).load(model.getImg()).centerCrop().into(holder.iv);
         holder.tvTitle.setText(model.title);
         holder.tvDate.setText(model.date);
     }

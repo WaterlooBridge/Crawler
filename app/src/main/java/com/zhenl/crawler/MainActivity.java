@@ -68,7 +68,7 @@ public class MainActivity extends AppCompatActivity implements IMediaPlayer.OnIn
         url = SearchEngineFactory.getHost() + getIntent().getSerializableExtra("url");
         Log.e(TAG, "[INFO:CONSOLE]" + url);
         engine = SearchEngineFactory.create();
-        engine.load(this, url, new SearchEngine.Callback() {
+        engine.load(url, new SearchEngine.Callback() {
             @Override
             public void play(String path) {
                 MainActivity.this.play(path);

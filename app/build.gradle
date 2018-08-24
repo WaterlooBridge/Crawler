@@ -35,6 +35,7 @@ android {
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation "com.android.support:appcompat-v7:${libs.supportVersion}"
+    implementation "com.android.support:design:${libs.supportVersion}"
     implementation 'com.android.support.constraint:constraint-layout:1.0.2'
     implementation 'org.jsoup:jsoup:1.11.2'
     implementation project(':Violet')

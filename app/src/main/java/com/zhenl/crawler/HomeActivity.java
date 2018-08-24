@@ -35,12 +35,15 @@ public class HomeActivity extends AppCompatActivity {
 
     private final String TAG = getClass().getSimpleName();
 
+    private int types[] = {7, 1, 2, 4, 6, 9};
+
     private SwipeRefreshLayout refreshLayout;
     private SwipeRecyclerView recyclerView;
 
     private List<MovieModel> list = new ArrayList<>();
     private int page = 1;
     private MovieAdapter adapter;
+    private int pos;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -92,7 +95,7 @@ public class HomeActivity extends AppCompatActivity {
     }
 
     private void loadData() throws Exception {
-        Document document = Jsoup.connect(Constants.API_HOST + "/type/7/" + page + ".html").get();
+        Document document = Jsoup.connect(Constants.API_HOST + "/type/" + types[pos] + "/" + page + ".html").get();
         if (document.location().startsWith(Constants.API_HOST)) {
             Elements elements = document.select(".movie-item");
             if (page++ == 1)
@@ -100,7 +103,7 @@ public class HomeActivity extends AppCompatActivity {
             for (Element element : elements) {
                 MovieModel model = new MovieModel();
                 model.url = element.select("a").attr("href");
-                model.img = element.select("img").attr("src");
+                model.setImg(element.select("img").attr("src"));
                 model.title = element.select(".movie-name").text();
                 model.date = element.select(".hdtag").text();
                 list.add(model);
@@ -147,5 +150,14 @@ public class HomeActivity extends AppCompatActivity {
             startActivity(new Intent(HomeActivity.this, SearchActivity.class));
         });
         builder.create().show();
+    }
+
+    public void onClick(View view) {
+        list.clear();
+        recyclerView.loadMoreComplete();
+        pos = ++pos % types.length;
+        refreshLayout.setRefreshing(true);
+        page = 1;
+        load();
     }
 }
