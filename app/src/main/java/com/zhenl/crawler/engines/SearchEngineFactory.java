@@ -15,6 +15,9 @@ public class SearchEngineFactory {
             case 2:
                 engine = new SearchEngineImpl2();
                 break;
+            case 3:
+                engine = new SearchEngineImpl3();
+                break;
             default:
                 engine = new SearchEngineImpl1();
                 break;
@@ -27,6 +30,9 @@ public class SearchEngineFactory {
         switch (type) {
             case 2:
                 host = Constants.API_HOST2;
+                break;
+            case 3:
+                host = Constants.API_HOST3;
                 break;
             default:
                 host = Constants.API_HOST;

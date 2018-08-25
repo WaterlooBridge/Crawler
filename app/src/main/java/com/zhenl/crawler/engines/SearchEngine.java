@@ -70,6 +70,7 @@ public abstract class SearchEngine extends WebViewClient {
         Map<String, String> map = new HashMap<>();
         map.put("referer", referer);
         wv.loadUrl(url, map);
+        referer = url;
     }
 
     public void destroy() {
@@ -139,7 +140,11 @@ public abstract class SearchEngine extends WebViewClient {
                     callback.finish();
                     break;
                 case 3:
-                    wv.loadUrl((String) msg.obj);
+                    String url = (String) msg.obj;
+                    Map<String, String> map = new HashMap<>();
+                    map.put("referer", referer);
+                    wv.loadUrl(url, map);
+                    referer = url;
                     break;
                 case 4:
                     url = (String) msg.obj;

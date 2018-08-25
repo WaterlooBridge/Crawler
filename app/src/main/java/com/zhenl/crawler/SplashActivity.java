@@ -52,6 +52,8 @@ public class SplashActivity extends AppCompatActivity {
                         String result = streamToString(is);
                         JSONObject json = new JSONObject(result);
                         Constants.API_HOST = json.optString("crawler_host");
+                        Constants.API_HOST2 = json.optString("crawler_host2");
+                        Constants.API_HOST3 = json.optString("crawler_host3");
                     }
 
                 } catch (Exception e) {

@@ -141,7 +141,7 @@ public class HomeActivity extends AppCompatActivity {
     }
 
     private void showSearchEngines() {
-        final String items[] = {"Search Engine 1", "Search Engine 2"};
+        final String items[] = {"Search Engine 1", "Search Engine 2", "Search Engine 3"};
 
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setItems(items, (DialogInterface dialog, int which) -> {
