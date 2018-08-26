@@ -1,6 +1,7 @@
 package com.zhenl.crawler.engines;
 
 import android.annotation.SuppressLint;
+import android.graphics.Bitmap;
 import android.net.http.SslError;
 import android.os.Build;
 import android.os.Handler;
@@ -9,7 +10,6 @@ import android.os.Message;
 import android.util.Log;
 import android.webkit.JavascriptInterface;
 import android.webkit.SslErrorHandler;
-import android.webkit.WebResourceResponse;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -18,7 +18,6 @@ import com.zhenl.crawler.MyApplication;
 import com.zhenl.crawler.SearchActivity;
 import com.zhenl.crawler.models.DramasModel;
 
-import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.List;
@@ -88,19 +87,18 @@ public abstract class SearchEngine extends WebViewClient {
     }
 
     @Override
-    public void onPageFinished(WebView view, String url) {
-        Log.e(TAG, "[INFO:CONSOLE]" + url);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            view.evaluateJavascript("javascript:" + loadJs(), null);
-        }
+    public void onPageStarted(WebView view, String url, Bitmap favicon) {
+        handler.removeMessages(5);
+        handler.sendEmptyMessageDelayed(5, 5000);
     }
 
     @Override
-    public WebResourceResponse shouldInterceptRequest(WebView view, String url) {
-        if (url.contains(".jpg") || url.contains(".png") || url.contains(".gif"))
-            return new WebResourceResponse("text/html", "utf-8", new ByteArrayInputStream("".getBytes()));
-        else
-            return super.shouldInterceptRequest(view, url);
+    public void onPageFinished(WebView view, String url) {
+        Log.e(TAG, "[INFO:CONSOLE]" + url);
+        handler.removeMessages(5);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            view.evaluateJavascript("javascript:" + loadJs(), null);
+        }
     }
 
     @Override
@@ -149,6 +147,10 @@ public abstract class SearchEngine extends WebViewClient {
                 case 4:
                     url = (String) msg.obj;
                     load(url, callback);
+                    break;
+                case 5:
+                    if (wv != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT)
+                        wv.evaluateJavascript("javascript:" + loadJs(), null);
                     break;
             }
         }

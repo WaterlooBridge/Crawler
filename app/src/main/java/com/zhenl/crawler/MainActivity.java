@@ -52,6 +52,7 @@ public class MainActivity extends AppCompatActivity implements IMediaPlayer.OnIn
         setContentView(R.layout.activity_main);
         getSupportActionBar().setBackgroundDrawable(new ColorDrawable(0x40000000));
         mVideoView = (VideoView) findViewById(R.id.buffer);
+        mVideoView.setUserAgent(Constants.USER_AGENT);
         controller = new AndroidMediaController(this, false);
         controller.setSupportActionBar(getSupportActionBar());
         controller.setOnFullscreenClickListener((View v) -> {

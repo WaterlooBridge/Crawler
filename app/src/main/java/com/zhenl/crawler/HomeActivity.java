@@ -87,7 +87,6 @@ public class HomeActivity extends AppCompatActivity {
                     loadData();
                 } catch (Exception e) {
                     e.printStackTrace();
-                } finally {
                     handler.sendEmptyMessage(0);
                 }
             }
@@ -95,11 +94,11 @@ public class HomeActivity extends AppCompatActivity {
     }
 
     private void loadData() throws Exception {
-        Document document = Jsoup.connect(Constants.API_HOST + "/type/" + types[pos] + "/" + page + ".html").get();
+        int type = types[pos];
+        Document document = Jsoup.connect(Constants.API_HOST + "/type/" + type + "/" + page + ".html").get();
         if (document.location().startsWith(Constants.API_HOST)) {
             Elements elements = document.select(".movie-item");
-            if (page++ == 1)
-                list.clear();
+            List<MovieModel> list = new ArrayList<>();
             for (Element element : elements) {
                 MovieModel model = new MovieModel();
                 model.url = element.select("a").attr("href");
@@ -108,10 +107,15 @@ public class HomeActivity extends AppCompatActivity {
                 model.date = element.select(".hdtag").text();
                 list.add(model);
             }
+            Message msg = Message.obtain();
+            msg.what = type;
+            msg.obj = list;
+            handler.sendMessage(msg);
         } else {
             Uri uri = Uri.parse(document.location());
             Constants.API_HOST = uri.getScheme() + "://" + uri.getHost();
-            loadData();
+            if (type == types[pos])
+                loadData();
         }
     }
 
@@ -119,8 +123,18 @@ public class HomeActivity extends AppCompatActivity {
     Handler handler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
-            recyclerView.loadMoreComplete();
-            refreshLayout.setRefreshing(false);
+            int type = msg.what;
+            if (type == 0) {
+                recyclerView.loadMoreComplete();
+                refreshLayout.setRefreshing(false);
+            } else if (type == types[pos]) {
+                List<MovieModel> models = (List<MovieModel>) msg.obj;
+                if (page++ == 1)
+                    list.clear();
+                list.addAll(models);
+                recyclerView.loadMoreComplete();
+                refreshLayout.setRefreshing(false);
+            }
         }
     };
 
