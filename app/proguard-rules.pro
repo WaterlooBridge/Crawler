@@ -23,6 +23,8 @@
 -keepattributes *Annotation*
 -keepattributes *JavascriptInterface*
 
--keepclassmembers class com.zhenl.crawler.MainActivity$JSBridge {
-  public *;
+-keep class tv.danmaku.ijk.media.player.** {*;}
+
+-keepclassmembers class ** {
+    @android.webkit.JavascriptInterface <methods>;
 }

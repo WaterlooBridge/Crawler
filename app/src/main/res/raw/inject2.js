@@ -50,3 +50,7 @@ if (window.Player && window.Player.Url)
     window.bridge.loadUrl(Player.Url);
 else
     scanPage();
+
+setTimeout(function(){
+    window.bridge.destroy();
+}, 5000);

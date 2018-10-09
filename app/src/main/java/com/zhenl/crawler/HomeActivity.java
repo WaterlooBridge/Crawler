@@ -59,6 +59,7 @@ public class HomeActivity extends AppCompatActivity {
             @Override
             public void onItemClick(Object object, View view, int position) {
                 MovieModel model = (MovieModel) object;
+                SearchEngineFactory.type = 1;
                 MovieDetailActivity.start(view.getContext(), model.title, model.url);
             }
         });

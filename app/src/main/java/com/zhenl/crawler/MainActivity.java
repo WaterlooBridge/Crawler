@@ -1,5 +1,6 @@
 package com.zhenl.crawler;
 
+import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
@@ -10,12 +11,14 @@ import android.os.Build;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.OrientationEventListener;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.ProgressBar;
+import android.widget.Switch;
 
 import com.zhenl.crawler.core.RecordAgent;
 import com.zhenl.crawler.engines.SearchEngine;
@@ -37,11 +40,18 @@ public class MainActivity extends AppCompatActivity implements IMediaPlayer.OnIn
 
     private final String TAG = getClass().getSimpleName();
 
+    private final int MENU_LOCK = 2;
+    private final int MENU_MORE = 3;
+
     private String url;
     private VideoView mVideoView;
     private AndroidMediaController controller;
     private ProgressBar pb;
+    private MenuItem lockMenu;
     private SearchEngine engine;
+    private boolean mStopped;
+    private boolean isLock;
+    private boolean bgEnable;
 
     @Override
     public void onCreate(Bundle icicle) {
@@ -53,7 +63,13 @@ public class MainActivity extends AppCompatActivity implements IMediaPlayer.OnIn
         getSupportActionBar().setBackgroundDrawable(new ColorDrawable(0x40000000));
         mVideoView = (VideoView) findViewById(R.id.buffer);
         mVideoView.setUserAgent(Constants.USER_AGENT);
+        mVideoView.setOnErrorListener((mp, what, extra) -> {
+            isLock = false;
+            record((int) mp.getDuration(), (int) mp.getCurrentPosition());
+            return false;
+        });
         controller = new AndroidMediaController(this, false);
+        controller.setInstantSeeking(false);
         controller.setSupportActionBar(getSupportActionBar());
         controller.setOnFullscreenClickListener((View v) -> {
             if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
@@ -92,13 +108,8 @@ public class MainActivity extends AppCompatActivity implements IMediaPlayer.OnIn
         mVideoView.setMediaController(controller);
         mVideoView.requestFocus();
         mVideoView.setOnInfoListener(this);
-        mVideoView.setOnPreparedListener(new IMediaPlayer.OnPreparedListener() {
-            @Override
-            public void onPrepared(IMediaPlayer mp) {
-                mp.start();
-                pb.setVisibility(View.GONE);
-            }
-        });
+        mVideoView.setOnPreparedListener(mp ->
+                pb.setVisibility(View.GONE));
 
         int pos = RecordAgent.getInstance().getRecord(url);
         if (pos > 0)
@@ -115,7 +126,8 @@ public class MainActivity extends AppCompatActivity implements IMediaPlayer.OnIn
                 }
                 break;
             case IMediaPlayer.MEDIA_INFO_BUFFERING_END:
-                mVideoView.start();
+                if (!mStopped || bgEnable)
+                    mVideoView.start();
                 pb.setVisibility(View.GONE);
                 break;
         }
@@ -135,6 +147,12 @@ public class MainActivity extends AppCompatActivity implements IMediaPlayer.OnIn
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuItem moreItem = menu.add(Menu.NONE, Menu.FIRST, Menu.FIRST, "PIP");
         moreItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
+        lockMenu = menu.add(Menu.NONE, MENU_LOCK, MENU_LOCK, null);
+        lockMenu.setIcon(R.drawable.ic_lock_24dp);
+        lockMenu.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
+        MenuItem moreMenu = menu.add(Menu.NONE, MENU_MORE, MENU_MORE, null);
+        moreMenu.setIcon(R.drawable.ic_more_vert_24dp);
+        moreMenu.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -144,6 +162,14 @@ public class MainActivity extends AppCompatActivity implements IMediaPlayer.OnIn
         if (id == Menu.FIRST) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
                 enterPictureInPictureMode();
+        } else if (id == MENU_LOCK) {
+            isLock = !isLock;
+            lockMenu.setIcon(isLock ? R.drawable.ic_lock_open_24dp : R.drawable.ic_lock_24dp);
+            controller.setLock(isLock);
+            controller.hide();
+        } else if (id == MENU_MORE) {
+            if (!isLock)
+                showSettingDialog();
         }
         return super.onOptionsItemSelected(item);
     }
@@ -151,10 +177,11 @@ public class MainActivity extends AppCompatActivity implements IMediaPlayer.OnIn
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
-        controller.onConfigurationChanged(newConfig);
         if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            controller.onFullscreenChanged(true);
             mOrientationListener.enable();
         } else {
+            controller.onFullscreenChanged(false);
             mOrientationListener.disable();
         }
     }
@@ -162,12 +189,22 @@ public class MainActivity extends AppCompatActivity implements IMediaPlayer.OnIn
     @Override
     public void finish() {
         engine.destroy();
-        int pos = mVideoView.getCurrentPosition();
-        if (mVideoView.getDuration() - pos < 5000)
-            pos = 0;
-        RecordAgent.getInstance().record(url, pos);
+        record(mVideoView.getDuration(), mVideoView.getCurrentPosition());
         mVideoView.release(true);
         super.finish();
+    }
+
+    public void record(int duration, int curPos) {
+        if (duration - curPos < 5000)
+            curPos = 0;
+        if (duration > 0)
+            RecordAgent.getInstance().record(url, curPos);
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        mStopped = false;
     }
 
     @Override
@@ -186,7 +223,9 @@ public class MainActivity extends AppCompatActivity implements IMediaPlayer.OnIn
 
     @Override
     protected void onStop() {
-        mVideoView.pause();
+        mStopped = true;
+        if (!bgEnable)
+            mVideoView.pause();
         super.onStop();
     }
 
@@ -208,4 +247,26 @@ public class MainActivity extends AppCompatActivity implements IMediaPlayer.OnIn
         }
     }
 
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if (isLock)
+            return true;
+        return super.onKeyDown(keyCode, event);
+    }
+
+    private Dialog settingDialog;
+
+    public void showSettingDialog() {
+        if (settingDialog == null)
+            initSettingDialog();
+        settingDialog.show();
+    }
+
+    public void initSettingDialog() {
+        settingDialog = new Dialog(this, R.style.TransparentDialog);
+        settingDialog.setContentView(R.layout.dialog_video_play_setting);
+        Switch switch_play_background = settingDialog.findViewById(R.id.switch_play_background);
+        switch_play_background.setOnCheckedChangeListener((buttonView, isChecked) ->
+                bgEnable = isChecked);
+    }
 }
