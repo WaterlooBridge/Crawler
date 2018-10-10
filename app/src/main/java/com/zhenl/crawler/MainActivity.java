@@ -10,6 +10,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
@@ -23,6 +24,8 @@ import android.widget.Switch;
 import com.zhenl.crawler.core.RecordAgent;
 import com.zhenl.crawler.engines.SearchEngine;
 import com.zhenl.crawler.engines.SearchEngineFactory;
+
+import java.net.URLEncoder;
 
 import tv.danmaku.ijk.media.player.IMediaPlayer;
 import tv.danmaku.ijk.media.widget.AndroidMediaController;
@@ -52,6 +55,7 @@ public class MainActivity extends AppCompatActivity implements IMediaPlayer.OnIn
     private boolean mStopped;
     private boolean isLock;
     private boolean bgEnable;
+    private String videoPath;
 
     @Override
     public void onCreate(Bundle icicle) {
@@ -103,13 +107,19 @@ public class MainActivity extends AppCompatActivity implements IMediaPlayer.OnIn
      * path.
      */
     private void play(String path) {
+        videoPath = path;
         Uri uri = Uri.parse(path);
         mVideoView.setVideoURI(uri);
         mVideoView.setMediaController(controller);
         mVideoView.requestFocus();
         mVideoView.setOnInfoListener(this);
-        mVideoView.setOnPreparedListener(mp ->
-                pb.setVisibility(View.GONE));
+        mVideoView.setOnPreparedListener(mp -> {
+            if (!mStopped || bgEnable)
+                mp.start();
+            else
+                mp.pause();
+            pb.setVisibility(View.GONE);
+        });
 
         int pos = RecordAgent.getInstance().getRecord(url);
         if (pos > 0)
@@ -268,5 +278,18 @@ public class MainActivity extends AppCompatActivity implements IMediaPlayer.OnIn
         Switch switch_play_background = settingDialog.findViewById(R.id.switch_play_background);
         switch_play_background.setOnCheckedChangeListener((buttonView, isChecked) ->
                 bgEnable = isChecked);
+        settingDialog.findViewById(R.id.view_open_browser).setOnClickListener(v -> {
+            settingDialog.dismiss();
+            if (TextUtils.isEmpty(videoPath))
+                return;
+            try {
+                Uri uri = Uri.parse("https://waterloobridge.github.io/smile/video.html?path=" + URLEncoder.encode(videoPath));
+                Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+                startActivity(intent);
+                finish();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
     }
 }

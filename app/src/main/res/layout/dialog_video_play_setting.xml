@@ -27,4 +27,12 @@
 
     </FrameLayout>
 
+    <TextView
+        android:id="@+id/view_open_browser"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:gravity="center_vertical"
+        android:text="使用浏览器播放"
+        android:textColor="@color/white" />
+
 </LinearLayout>
