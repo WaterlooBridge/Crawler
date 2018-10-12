@@ -9,15 +9,18 @@ import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.util.Log;
-import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.OrientationEventListener;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.ImageButton;
 import android.widget.ProgressBar;
 import android.widget.Switch;
 
@@ -25,6 +28,7 @@ import com.zhenl.crawler.core.RecordAgent;
 import com.zhenl.crawler.engines.SearchEngine;
 import com.zhenl.crawler.engines.SearchEngineFactory;
 
+import java.lang.ref.WeakReference;
 import java.net.URLEncoder;
 
 import tv.danmaku.ijk.media.player.IMediaPlayer;
@@ -43,25 +47,27 @@ public class MainActivity extends AppCompatActivity implements IMediaPlayer.OnIn
 
     private final String TAG = getClass().getSimpleName();
 
-    private final int MENU_LOCK = 2;
-    private final int MENU_MORE = 3;
+    private static final int MENU_MORE = 2;
 
     private String url;
     private VideoView mVideoView;
     private AndroidMediaController controller;
     private ProgressBar pb;
-    private MenuItem lockMenu;
+    private ImageButton btn_lock;
     private SearchEngine engine;
     private boolean mStopped;
+    private boolean isPlaying;
     private boolean isLock;
     private boolean bgEnable;
     private String videoPath;
+    private MainHandler handler;
 
     @Override
     public void onCreate(Bundle icicle) {
         super.onCreate(icicle);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
         mOrientationListener = new OrientationListener(this);
+        handler = new MainHandler(this);
 
         setContentView(R.layout.activity_main);
         getSupportActionBar().setBackgroundDrawable(new ColorDrawable(0x40000000));
@@ -84,6 +90,16 @@ public class MainActivity extends AppCompatActivity implements IMediaPlayer.OnIn
             }
         });
         pb = (ProgressBar) findViewById(R.id.probar);
+        btn_lock = findViewById(R.id.btn_lock);
+        btn_lock.setOnClickListener(v -> {
+            isLock = !isLock;
+            btn_lock.setImageResource(isLock ? R.drawable.ic_lock_open_24dp : R.drawable.ic_lock_24dp);
+            controller.setLock(isLock);
+            if (isLock)
+                controller.hide();
+            else
+                controller.show();
+        });
 
         setTitle(getIntent().getStringExtra("title"));
         url = SearchEngineFactory.getHost() + getIntent().getSerializableExtra("url");
@@ -146,6 +162,8 @@ public class MainActivity extends AppCompatActivity implements IMediaPlayer.OnIn
 
     @Override
     public void onBackPressed() {
+        if (isLock)
+            return;
         if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
             mOrientationListener.disable();
             setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
@@ -157,9 +175,6 @@ public class MainActivity extends AppCompatActivity implements IMediaPlayer.OnIn
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuItem moreItem = menu.add(Menu.NONE, Menu.FIRST, Menu.FIRST, "PIP");
         moreItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
-        lockMenu = menu.add(Menu.NONE, MENU_LOCK, MENU_LOCK, null);
-        lockMenu.setIcon(R.drawable.ic_lock_24dp);
-        lockMenu.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
         MenuItem moreMenu = menu.add(Menu.NONE, MENU_MORE, MENU_MORE, null);
         moreMenu.setIcon(R.drawable.ic_more_vert_24dp);
         moreMenu.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS);
@@ -172,14 +187,8 @@ public class MainActivity extends AppCompatActivity implements IMediaPlayer.OnIn
         if (id == Menu.FIRST) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
                 enterPictureInPictureMode();
-        } else if (id == MENU_LOCK) {
-            isLock = !isLock;
-            lockMenu.setIcon(isLock ? R.drawable.ic_lock_open_24dp : R.drawable.ic_lock_24dp);
-            controller.setLock(isLock);
-            controller.hide();
         } else if (id == MENU_MORE) {
-            if (!isLock)
-                showSettingDialog();
+            showSettingDialog();
         }
         return super.onOptionsItemSelected(item);
     }
@@ -215,6 +224,8 @@ public class MainActivity extends AppCompatActivity implements IMediaPlayer.OnIn
     protected void onStart() {
         super.onStart();
         mStopped = false;
+        if (!bgEnable && isPlaying)
+            mVideoView.start();
     }
 
     @Override
@@ -234,9 +245,23 @@ public class MainActivity extends AppCompatActivity implements IMediaPlayer.OnIn
     @Override
     protected void onStop() {
         mStopped = true;
+        isPlaying = mVideoView.isPlaying();
         if (!bgEnable)
             mVideoView.pause();
         super.onStop();
+    }
+
+    @Override
+    public boolean dispatchTouchEvent(MotionEvent ev) {
+        if (ev.getAction() == MotionEvent.ACTION_UP) {
+            if (isLock && btn_lock.getVisibility() == View.GONE || controller.isShowing()) {
+                btn_lock.setVisibility(View.VISIBLE);
+                handler.removeMessages(MainHandler.MSG_FADE_OUT);
+                handler.sendEmptyMessageDelayed(MainHandler.MSG_FADE_OUT, 3000);
+            } else
+                btn_lock.setVisibility(View.GONE);
+        }
+        return super.dispatchTouchEvent(ev);
     }
 
     OrientationEventListener mOrientationListener;
@@ -255,13 +280,6 @@ public class MainActivity extends AppCompatActivity implements IMediaPlayer.OnIn
                 setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
             }
         }
-    }
-
-    @Override
-    public boolean onKeyDown(int keyCode, KeyEvent event) {
-        if (isLock)
-            return true;
-        return super.onKeyDown(keyCode, event);
     }
 
     private Dialog settingDialog;
@@ -291,5 +309,28 @@ public class MainActivity extends AppCompatActivity implements IMediaPlayer.OnIn
                 e.printStackTrace();
             }
         });
+    }
+
+    private static class MainHandler extends Handler {
+
+        static final int MSG_FADE_OUT = 0;
+
+        WeakReference<MainActivity> wr;
+
+        public MainHandler(MainActivity activity) {
+            wr = new WeakReference<>(activity);
+        }
+
+        @Override
+        public void handleMessage(Message msg) {
+            MainActivity activity = wr.get();
+            if (activity == null)
+                return;
+            switch (msg.what) {
+                case MSG_FADE_OUT:
+                    activity.btn_lock.setVisibility(View.GONE);
+                    break;
+            }
+        }
     }
 }

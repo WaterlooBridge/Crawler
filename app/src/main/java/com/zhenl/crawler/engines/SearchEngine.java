@@ -106,7 +106,7 @@ public abstract class SearchEngine extends WebViewClient {
     @Override
     public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
         super.onReceivedError(view, request, error);
-        if (callback != null)
+        if (callback != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && request.isForMainFrame())
             callback.finish();
     }
 
