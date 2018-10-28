@@ -24,8 +24,6 @@ import com.zhenl.crawler.models.MovieModel;
 import com.zhenl.violet.base.RecyclerAdapter;
 import com.zhenl.violet.core.Dispatcher;
 
-import org.jsoup.UncheckedIOException;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -78,8 +76,6 @@ public class MovieDetailActivity extends AppCompatActivity {
                     try {
                         loadData();
                     } catch (Exception e) {
-                        e.printStackTrace();
-                    } catch (UncheckedIOException e) {
                         e.printStackTrace();
                     } finally {
                         handler.sendEmptyMessage(0);

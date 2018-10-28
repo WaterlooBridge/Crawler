@@ -14,7 +14,6 @@ import com.zhenl.crawler.models.MovieModel;
 import com.zhenl.violet.core.Dispatcher;
 
 import org.jsoup.Jsoup;
-import org.jsoup.UncheckedIOException;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
@@ -80,8 +79,6 @@ public class SearchEngineImpl1 extends SearchEngine {
             try {
                 loadData();
             } catch (Exception e) {
-                e.printStackTrace();
-            } catch (UncheckedIOException e) {
                 e.printStackTrace();
             } finally {
                 handler.sendEmptyMessage(0);

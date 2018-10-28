@@ -18,8 +18,6 @@ import com.zhenl.crawler.engines.SearchEngineFactory;
 import com.zhenl.crawler.models.MovieModel;
 import com.zhenl.violet.core.Dispatcher;
 
-import org.jsoup.UncheckedIOException;
-
 import java.lang.ref.WeakReference;
 import java.util.List;
 
@@ -71,8 +69,6 @@ public class SearchActivity extends AppCompatActivity {
             try {
                 loadData(seqNum);
             } catch (Exception e) {
-                e.printStackTrace();
-            } catch (UncheckedIOException e) {
                 e.printStackTrace();
             }
         });
