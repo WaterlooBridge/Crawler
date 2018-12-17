@@ -35,18 +35,18 @@ public class SearchEngineImpl1 extends SearchEngine {
 
     @Override
     public void search(int seqNum, String keyword, SearchActivity.SearchHandler handler) throws Exception {
-        Document document = Jsoup.connect(Constants.API_HOST + "/search?wd=" + keyword).get();
+        Document document = Jsoup.connect(Constants.API_HOST + "/search?wd=" + keyword).userAgent(Constants.USER_AGENT).get();
         if (handler.recSeqNum > seqNum)
             return;
         handler.recSeqNum = seqNum;
-        Elements elements = document.select(".movie-item");
+        Elements elements = document.select(".p1");
         List<MovieModel> list = new ArrayList<>();
         for (Element element : elements) {
             MovieModel model = new MovieModel();
             model.url = element.select("a").attr("href");
             model.setImg(element.select("img").attr("src"));
-            model.title = element.select(".movie-name").text();
-            model.date = element.select(".hdtag").text();
+            model.title = element.select(".name").text();
+            model.date = element.select(".other i").text();
             list.add(model);
         }
         Message msg = handler.obtainMessage(0);
@@ -56,10 +56,10 @@ public class SearchEngineImpl1 extends SearchEngine {
 
     @Override
     public void detail(String url, DetailCallback callback) throws Exception {
-        Document document = Jsoup.connect(Constants.API_HOST + url).get();
-        String img = document.select(".img-thumbnail").attr("src");
-        String summary = document.select(".summary").text();
-        Elements elements = document.select(".dslist-group a");
+        Document document = Jsoup.connect(Constants.API_HOST + url).userAgent(Constants.USER_AGENT).get();
+        String img = document.select(".lazy").attr("src");
+        String summary = document.select(".tab-jq").text();
+        Elements elements = document.select(".show_player_gogo a");
         List<DramasModel> list = new ArrayList<>();
         for (Element element : elements) {
             DramasModel model = new DramasModel();

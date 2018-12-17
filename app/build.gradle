@@ -12,6 +12,9 @@ android {
         targetSdkVersion cfg.targetSdk
         versionCode cfg.version_code
         versionName cfg.version_name
+        ndk {
+            abiFilters 'armeabi-v7a'
+        }
     }
     buildTypes {
         release {

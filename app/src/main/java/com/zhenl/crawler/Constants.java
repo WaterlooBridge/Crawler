@@ -6,7 +6,7 @@ package com.zhenl.crawler;
 
 public class Constants {
 
-    public static String API_HOST = "http://www.juduoba.com";
+    public static String API_HOST = "http://www.15yc.com";
     public static String API_HOST2 = "http://kanbo8.com";
     public static String API_HOST3 = "http://www.kanjuba.tv";
 

@@ -5,7 +5,7 @@
     android:layout_height="match_parent"
     android:background="#000">
 
-    <tv.danmaku.ijk.media.widget.VideoView
+    <tv.danmaku.ijk.media.widget.VideoControlView
         android:id="@+id/buffer"
         android:layout_width="match_parent"
         android:layout_height="match_parent"

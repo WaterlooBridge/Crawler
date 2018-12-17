@@ -96,16 +96,17 @@ public class HomeActivity extends AppCompatActivity {
 
     private void loadData() throws Exception {
         int type = types[pos];
-        Document document = Jsoup.connect(Constants.API_HOST + "/type/" + type + "/" + page + ".html").get();
+        Document document = Jsoup.connect(Constants.API_HOST + "/type/" + type + "/" + page + ".html")
+                .userAgent(Constants.USER_AGENT).get();
         if (document.location().startsWith(Constants.API_HOST)) {
-            Elements elements = document.select(".movie-item");
+            Elements elements = document.select(".p1");
             List<MovieModel> list = new ArrayList<>();
             for (Element element : elements) {
                 MovieModel model = new MovieModel();
                 model.url = element.select("a").attr("href");
                 model.setImg(element.select("img").attr("src"));
-                model.title = element.select(".movie-name").text();
-                model.date = element.select(".hdtag").text();
+                model.title = element.select(".name").text();
+                model.date = element.select(".other i").text();
                 list.add(model);
             }
             Message msg = Message.obtain();

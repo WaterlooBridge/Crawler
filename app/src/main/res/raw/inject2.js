@@ -48,6 +48,8 @@ observer.observe(document, {
 
 if (window.Player && window.Player.Url)
     window.bridge.loadUrl(Player.Url);
+else if (window.main)
+    window.bridge.loadVideo(window.location.protocol + "//" + window.location.host + main);
 else
     scanPage();
 

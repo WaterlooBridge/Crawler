@@ -4,10 +4,10 @@ buildscript {
     
     repositories {
         google()
-        jcenter()
+        maven{url 'http://maven.aliyun.com/nexus/content/groups/public/'}
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.0.1'
+        classpath 'com.android.tools.build:gradle:3.2.1'
         
 
         // NOTE: Do not place your application dependencies here; they belong
@@ -18,7 +18,7 @@ buildscript {
 allprojects {
     repositories {
         google()
-        jcenter()
+        maven{url 'http://maven.aliyun.com/nexus/content/groups/public/'}
     }
 }
 
@@ -29,7 +29,7 @@ task clean(type: Delete) {
 ext {
     configuration = [
             package          : "com.zhenl.crawler",
-            buildToolsVersion: "27.0.1",
+            buildToolsVersion: "28.0.3",
             compileVersion   : 26,
             minSdk           : 15,
             targetSdk        : 26,
