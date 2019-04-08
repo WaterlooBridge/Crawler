@@ -11,6 +11,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.util.Log;
@@ -76,6 +77,12 @@ public class MainActivity extends AppCompatActivity implements IMediaPlayer.OnIn
         mVideoView.setOnErrorListener((mp, what, extra) -> {
             isLock = false;
             record((int) mp.getDuration(), (int) mp.getCurrentPosition());
+            if (what == -10000) {
+                new AlertDialog.Builder(this).setMessage("播放异常，是否尝试浏览器播放")
+                        .setNegativeButton("否", (dialog, which) -> finish())
+                        .setPositiveButton("是", (dialog, which) -> jumpBrowser()).create().show();
+                return true;
+            }
             return false;
         });
         controller = new AndroidMediaController(this, false);
@@ -298,17 +305,21 @@ public class MainActivity extends AppCompatActivity implements IMediaPlayer.OnIn
                 bgEnable = isChecked);
         settingDialog.findViewById(R.id.view_open_browser).setOnClickListener(v -> {
             settingDialog.dismiss();
-            if (TextUtils.isEmpty(videoPath))
-                return;
-            try {
-                Uri uri = Uri.parse("https://waterloobridge.github.io/smile/video.html?path=" + URLEncoder.encode(videoPath));
-                Intent intent = new Intent(Intent.ACTION_VIEW, uri);
-                startActivity(intent);
-                finish();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            jumpBrowser();
         });
+    }
+
+    private void jumpBrowser() {
+        if (TextUtils.isEmpty(videoPath))
+            return;
+        try {
+            Uri uri = Uri.parse("https://waterloobridge.github.io/smile/video.html?path=" + URLEncoder.encode(videoPath));
+            Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+            startActivity(intent);
+            finish();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private static class MainHandler extends Handler {

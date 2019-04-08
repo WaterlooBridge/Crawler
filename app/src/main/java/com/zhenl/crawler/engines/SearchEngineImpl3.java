@@ -8,13 +8,16 @@ import com.zhenl.crawler.SearchActivity;
 import com.zhenl.crawler.models.DramasModel;
 import com.zhenl.crawler.models.MovieModel;
 
+import org.jsoup.Connection;
 import org.jsoup.Jsoup;
+import org.jsoup.helper.StringUtil;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by lin on 2018/8/25.
@@ -22,7 +25,20 @@ import java.util.List;
 public class SearchEngineImpl3 extends SearchEngine {
     @Override
     public void search(int seqNum, String keyword, SearchActivity.SearchHandler handler) throws Exception {
-        Document document = Jsoup.connect(Constants.API_HOST3 + "/search.php").data("searchword", keyword).post();
+        String url = Constants.API_HOST3 + "/search.php";
+        Connection.Response res = Jsoup.connect(url).method(Connection.Method.POST).data("searchword", keyword)
+                .followRedirects(false).execute();
+        while (res.hasHeader("Location")) {
+            String location = res.header("Location");
+            if (location != null && location.startsWith("http:/") && location.charAt(6) != '/')
+                location = location.substring(6);
+            String redir = StringUtil.resolve(url, location);
+            Connection connection = Jsoup.connect(redir).method(Connection.Method.POST).data("searchword", keyword);
+            for (Map.Entry<String, String> cookie : res.cookies().entrySet())
+                connection.cookie(cookie.getKey(), cookie.getValue());
+            res = connection.followRedirects(false).execute();
+        }
+        Document document = res.parse();
         if (handler.recSeqNum > seqNum)
             return;
         handler.recSeqNum = seqNum;
@@ -31,7 +47,7 @@ public class SearchEngineImpl3 extends SearchEngine {
         for (Element element : elements) {
             MovieModel model = new MovieModel();
             model.url = element.select("a").attr("href");
-            model.setImg(element.select("img").attr("src"));
+            model.setImg(element.select("img").attr("src").replace("\n", ""));
             model.title = element.select(".list-name").text();
             model.date = element.select(".duration").text();
             list.add(model);
@@ -44,7 +60,8 @@ public class SearchEngineImpl3 extends SearchEngine {
     @Override
     public void detail(String url, DetailCallback callback) throws Exception {
         Document document = Jsoup.connect(Constants.API_HOST3 + url).get();
-        String img = document.select(".detail-pic").select("img").attr("src");
+        String img = document.select(".detail-pic").select("img").attr("src")
+                .replace("\n", "");
         String summary = document.select(".info").text();
         Elements elements = document.select(".dslist-group a");
         List<DramasModel> list = new ArrayList<>();

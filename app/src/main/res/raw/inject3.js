@@ -1,7 +1,5 @@
 function scanPage()
 {
-    scanFrame(document);
-
     var allUrlsList = [];
 
     var a = document.getElementsByTagName('video');
@@ -39,16 +37,12 @@ function scanPage()
         window.bridge.loadVideo(allUrlsList[0].url);
 }
 
-var observer = new window.MutationObserver(function (mutations) {
+var scan = function() {
+    scanFrame(document);
     scanPage();
-});
+}
 
-observer.observe(document, {
-    childList: true, // listen to changes to node children
-    subtree: true // listen to changes to descendants as well
-});
-
-setTimeout(scanPage, 1000);
+setInterval(scan, 1000);
 
 function scanFrame(document) {
     var iframe = document.getElementsByTagName('iframe');
