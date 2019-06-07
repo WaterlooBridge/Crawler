@@ -35,4 +35,12 @@
         android:text="使用浏览器播放"
         android:textColor="@color/white" />
 
+    <TextView
+        android:id="@+id/view_copy_link"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:gravity="center_vertical"
+        android:text="复制播放链接"
+        android:textColor="@color/white" />
+
 </LinearLayout>

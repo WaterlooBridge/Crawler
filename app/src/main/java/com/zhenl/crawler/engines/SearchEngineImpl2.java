@@ -71,7 +71,7 @@ public class SearchEngineImpl2 extends SearchEngine {
     @Override
     public String loadJs() {
         if (js == null) {
-            js = loadJs(R.raw.inject2);
+            js = loadJs("inject2");
         }
         return js;
     }

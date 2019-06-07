@@ -84,6 +84,6 @@ public class SearchEngineImpl3 extends SearchEngine {
 
     @Override
     public String loadJs() {
-        return loadJs(R.raw.inject3);
+        return loadJs("inject3");
     }
 }

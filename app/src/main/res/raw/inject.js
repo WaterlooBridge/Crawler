@@ -13,7 +13,13 @@ if (window.vid && (vid.indexOf('.mp4') > 0 || vid.indexOf('.m3u8') > 0)) {
             var _onload = this.onload;
             this.onload = function() {
                 console.log(this.responseText);
-                var data = JSON.parse(this.responseText);
+                var data = {}
+                try {
+                    data = JSON.parse(this.responseText);
+                } catch(e) {
+                    eval(this.responseText);
+                    data = {"url":tvInfoJs.data.m3u};
+                }
                 if (data.ext && (data.ext == 'xml' || data.ext == 'xml_client')) {
                     console.log("type=5")
                     intercept();
@@ -29,12 +35,16 @@ if (window.vid && (vid.indexOf('.mp4') > 0 || vid.indexOf('.m3u8') > 0)) {
         }
         player();
     } else {
-        var a = document.getElementsByTagName('a');
-        if (a.length > 0) {
-            console.log("type=7;" + a[0].getAttribute('href'));
-            window.bridge.reload(a[0].getAttribute('href'));
-        } else
-            window.bridge.destroy();
+        if (window.xyplayer)
+            setInterval(scanFrame, 1000);
+        else {
+            var a = document.getElementsByTagName('a');
+            if (a.length > 0) {
+                console.log("type=7;" + a[0].getAttribute('href'));
+                window.bridge.reload(a[0].getAttribute('href'));
+            } else
+                window.bridge.destroy();
+        }
     }
 } else if (window.vid) {
     console.log('type=4;' + vid);
@@ -104,4 +114,15 @@ function intercept() {
     });
 
     scanPage();
+}
+
+function scanFrame() {
+    for (var i = 0; i < player.children.length; i++) {
+        if (player.children[i].nodeName == 'IFRAME') {
+            var url = player.children[i].src;
+            console.log('type=8;' + url);
+            window.bridge.loadUrl(url);
+            break;
+        }
+    }
 }

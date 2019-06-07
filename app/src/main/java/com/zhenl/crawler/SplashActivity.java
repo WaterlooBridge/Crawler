@@ -9,6 +9,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.Window;
 import android.view.WindowManager;
 
+import com.zhenl.crawler.services.DownloadService;
+import com.zhenl.crawler.services.DownloadServiceKt;
 import com.zhenl.violet.core.Dispatcher;
 
 import org.json.JSONObject;
@@ -72,6 +74,8 @@ public class SplashActivity extends AppCompatActivity {
         @Override
         public void handleMessage(Message msg) {
             startActivity(new Intent(SplashActivity.this, HomeActivity.class));
+            startService(new Intent(SplashActivity.this, DownloadService.class)
+                    .setAction(DownloadServiceKt.ACTION_FOO));
             finish();
         }
     };

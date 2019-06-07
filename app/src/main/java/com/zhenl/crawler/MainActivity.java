@@ -1,6 +1,8 @@
 package com.zhenl.crawler;
 
 import android.app.Dialog;
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
@@ -24,6 +26,7 @@ import android.view.WindowManager;
 import android.widget.ImageButton;
 import android.widget.ProgressBar;
 import android.widget.Switch;
+import android.widget.Toast;
 
 import com.zhenl.crawler.core.RecordAgent;
 import com.zhenl.crawler.engines.SearchEngine;
@@ -307,19 +310,31 @@ public class MainActivity extends AppCompatActivity implements IMediaPlayer.OnIn
             settingDialog.dismiss();
             jumpBrowser();
         });
+        settingDialog.findViewById(R.id.view_copy_link).setOnClickListener(v -> {
+            settingDialog.dismiss();
+            ClipboardManager manager = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+            if (manager == null)
+                return;
+            manager.setPrimaryClip(ClipData.newPlainText("link", generateUrl()));
+            Toast.makeText(getApplicationContext(), "Link Copied", Toast.LENGTH_SHORT).show();
+        });
     }
 
     private void jumpBrowser() {
         if (TextUtils.isEmpty(videoPath))
             return;
         try {
-            Uri uri = Uri.parse("https://waterloobridge.github.io/smile/video.html?path=" + URLEncoder.encode(videoPath));
+            Uri uri = Uri.parse(generateUrl());
             Intent intent = new Intent(Intent.ACTION_VIEW, uri);
             startActivity(intent);
             finish();
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private String generateUrl() {
+        return "https://waterloobridge.github.io/smile/video.html?path=" + URLEncoder.encode(videoPath);
     }
 
     private static class MainHandler extends Handler {

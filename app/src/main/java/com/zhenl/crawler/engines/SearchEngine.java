@@ -1,12 +1,14 @@
 package com.zhenl.crawler.engines;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.net.http.SslError;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
+import android.text.TextUtils;
 import android.util.Log;
 import android.webkit.JavascriptInterface;
 import android.webkit.SslErrorHandler;
@@ -115,8 +117,13 @@ public abstract class SearchEngine extends WebViewClient {
         handler.proceed();
     }
 
-    protected String loadJs(int resId) {
-        String js = null;
+    protected String loadJs(String name) {
+        String js = MyApplication.getInstance().getSharedPreferences("search_engine", Context.MODE_PRIVATE)
+                .getString(name, null);
+        if (!TextUtils.isEmpty(js))
+            return js;
+        int resId = MyApplication.getInstance().getResources().getIdentifier(name, "raw",
+                MyApplication.getInstance().getPackageName());
         try {
             InputStream inputStream = MyApplication.getInstance().getResources().openRawResource(resId);
             byte[] bytes = new byte[inputStream.available()];
