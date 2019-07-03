@@ -13,9 +13,11 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.os.RemoteException;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
+import android.util.Base64;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -35,11 +37,15 @@ import com.zhenl.crawler.engines.SearchEngineFactory;
 import java.lang.ref.WeakReference;
 import java.net.URLEncoder;
 
+import tv.danmaku.ijk.media.player.AVOptions;
+import tv.danmaku.ijk.media.player.IIjkMediaPlayer;
 import tv.danmaku.ijk.media.player.IMediaPlayer;
+import tv.danmaku.ijk.media.player.IjkMediaPlayer;
 import tv.danmaku.ijk.media.widget.AndroidMediaController;
-import tv.danmaku.ijk.media.widget.VideoView;
+import tv.danmaku.ijk.media.widget.IPCVideoView;
+import tv.danmaku.ijk.media.widget.VideoControlHelper;
 
-public class MainActivity extends AppCompatActivity implements IMediaPlayer.OnInfoListener {
+public class MainActivity extends AppCompatActivity implements IPCVideoView.OnInfoListener {
 
     public static void start(Context context, String title, String url) {
         Intent intent = new Intent(context, MainActivity.class);
@@ -54,8 +60,9 @@ public class MainActivity extends AppCompatActivity implements IMediaPlayer.OnIn
     private static final int MENU_MORE = 2;
 
     private String url;
-    private VideoView mVideoView;
+    private IPCVideoView mVideoView;
     private AndroidMediaController controller;
+    private VideoControlHelper controlHelper;
     private ProgressBar pb;
     private ImageButton btn_lock;
     private SearchEngine engine;
@@ -75,11 +82,17 @@ public class MainActivity extends AppCompatActivity implements IMediaPlayer.OnIn
 
         setContentView(R.layout.activity_main);
         getSupportActionBar().setBackgroundDrawable(new ColorDrawable(0x40000000));
-        mVideoView = (VideoView) findViewById(R.id.buffer);
-        mVideoView.setUserAgent(Constants.USER_AGENT);
+        mVideoView = findViewById(R.id.buffer);
+        AVOptions options = new AVOptions();
+        options.setOption(IjkMediaPlayer.OPT_CATEGORY_FORMAT, "user_agent", Constants.USER_AGENT);
+        mVideoView.setOptions(options);
         mVideoView.setOnErrorListener((mp, what, extra) -> {
             isLock = false;
-            record((int) mp.getDuration(), (int) mp.getCurrentPosition());
+            try {
+                record((int) mp.getDuration(), (int) mp.getCurrentPosition());
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            }
             if (what == -10000) {
                 new AlertDialog.Builder(this).setMessage("播放异常，是否尝试浏览器播放")
                         .setNegativeButton("否", (dialog, which) -> finish())
@@ -99,7 +112,11 @@ public class MainActivity extends AppCompatActivity implements IMediaPlayer.OnIn
                 setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
             }
         });
-        pb = (ProgressBar) findViewById(R.id.probar);
+        controlHelper = new VideoControlHelper(mVideoView);
+        controlHelper.setMediaController(controller);
+
+        pb = findViewById(R.id.probar);
+        mVideoView.setBufferingIndicator(pb);
         btn_lock = findViewById(R.id.btn_lock);
         btn_lock.setOnClickListener(v -> {
             isLock = !isLock;
@@ -135,16 +152,21 @@ public class MainActivity extends AppCompatActivity implements IMediaPlayer.OnIn
     private void play(String path) {
         videoPath = path;
         Uri uri = Uri.parse(path);
+        mVideoView.setCacheEnable(true);
         mVideoView.setVideoURI(uri);
         mVideoView.setMediaController(controller);
+        mVideoView.setControlHelper(controlHelper);
         mVideoView.requestFocus();
         mVideoView.setOnInfoListener(this);
         mVideoView.setOnPreparedListener(mp -> {
-            if (!mStopped || bgEnable)
-                mp.start();
-            else
-                mp.pause();
-            pb.setVisibility(View.GONE);
+            try {
+                if (!mStopped || bgEnable)
+                    mp.start();
+                else
+                    mp.pause();
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            }
         });
 
         int pos = RecordAgent.getInstance().getRecord(url);
@@ -153,18 +175,16 @@ public class MainActivity extends AppCompatActivity implements IMediaPlayer.OnIn
     }
 
     @Override
-    public boolean onInfo(IMediaPlayer mp, int what, int extra) {
+    public boolean onInfo(IIjkMediaPlayer mp, int what, int extra) {
         switch (what) {
             case IMediaPlayer.MEDIA_INFO_BUFFERING_START:
                 if (mVideoView.isPlaying()) {
                     mVideoView.pause();
-                    pb.setVisibility(View.VISIBLE);
                 }
                 break;
             case IMediaPlayer.MEDIA_INFO_BUFFERING_END:
                 if (!mStopped || bgEnable)
                     mVideoView.start();
-                pb.setVisibility(View.GONE);
                 break;
         }
         return true;
