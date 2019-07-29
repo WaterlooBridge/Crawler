@@ -27,6 +27,8 @@ if (window.vid && (vid.indexOf('.mp4') > 0 || vid.indexOf('.m3u8') > 0)) {
                     console.log("type=6;" + data.url);
                     window.bridge.loadUrl(data.url);
                 } else if (data.url) {
+                    if (data.url.indexOf('//') == 0)
+                        data.url = window.location.protocol + data.url;
                     console.log('type=3;' + data.url);
                     window.bridge.loadVideo(data.url);
                 }

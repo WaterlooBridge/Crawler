@@ -2,18 +2,15 @@ apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
 
-def cfg = rootProject.ext.configuration
-def libs = rootProject.ext.libraries
-
 android {
-    compileSdkVersion cfg.compileVersion
-    buildToolsVersion cfg.buildToolsVersion
+    compileSdkVersion rootProject.compileSdkVersion
+    buildToolsVersion rootProject.buildToolsVersion
     defaultConfig {
-        applicationId cfg.package
-        minSdkVersion cfg.minSdk
-        targetSdkVersion cfg.targetSdk
-        versionCode cfg.version_code
-        versionName cfg.version_name
+        applicationId rootProject.packageName
+        minSdkVersion rootProject.minSdkVersion
+        targetSdkVersion rootProject.targetSdkVersion
+        versionCode rootProject.versionCode
+        versionName rootProject.versionName
         ndk {
             abiFilters 'armeabi-v7a', 'arm64-v8a'
         }
@@ -39,13 +36,13 @@ android {
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
-    implementation "com.android.support:appcompat-v7:${libs.supportVersion}"
-    implementation "com.android.support:design:${libs.supportVersion}"
-    implementation 'com.android.support.constraint:constraint-layout:1.0.2'
+    implementation "androidx.appcompat:appcompat:$rootProject.appcompatLibraryVersion"
+    implementation 'com.google.android.material:material:1.0.0'
+    implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
     implementation 'org.jsoup:jsoup:1.11.3'
     implementation project(':Violet')
     implementation project(':Player')
-    implementation "com.android.support:cardview-v7:${libs.supportVersion}"
+    implementation 'androidx.cardview:cardview:1.0.0'
 //    implementation 'net.sourceforge.htmlunit:htmlunit:2.29'
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     implementation 'com.squareup.okhttp3:okhttp:3.11.0'

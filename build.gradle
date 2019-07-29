@@ -31,19 +31,12 @@ task clean(type: Delete) {
 }
 
 ext {
-    configuration = [
-            package          : "com.zhenl.crawler",
-            buildToolsVersion: "28.0.3",
-            compileVersion   : 26,
-            minSdk           : 15,
-            targetSdk        : 26,
-            version_code     : 1,
-            version_name     : "1.0.0",
-            baidu_api_key    : "nwrwRPDxIVZUMqco7p7r8YgdHqw8Lmvu",
-            rong_app_key     : "p5tvi9dsphv14",
-    ]
-
-    libraries = [
-            supportVersion    : "26.0.1"
-    ]
+    packageName = 'com.zhenl.crawler'
+    versionCode = 1
+    versionName = '1.0.0'
+    compileSdkVersion = 28
+    buildToolsVersion = '28.0.3'
+    minSdkVersion = 19
+    targetSdkVersion = 28
+    appcompatLibraryVersion = '1.0.2'
 }
