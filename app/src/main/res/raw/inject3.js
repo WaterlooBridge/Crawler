@@ -35,7 +35,24 @@ function scanPage()
     console.log(JSON.stringify(allUrlsList));
     if (allUrlsList.length > 0)
         window.bridge.loadVideo(allUrlsList[0].url);
+
+    var dp = document.getElementById('dpplayer');
+    if (dp) {
+        var path = urlParam('url');
+        if (path) {
+            console.log(path);
+            window.bridge.loadVideo(path);
+        }
+    }
 }
+
+function urlParam(name) {
+  var results = new RegExp('[\\?&]' + name + '=([^&#]*)').exec(window.location.href);
+  if(!results || results.length <= 1) {
+    return "";
+  }
+  return results[1] || 0;
+};
 
 var scan = function() {
     scanFrame(document);

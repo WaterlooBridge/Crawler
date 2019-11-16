@@ -32,7 +32,7 @@ public class SearchEngineFactory {
                 host = Constants.API_HOST2;
                 break;
             case 3:
-                host = Constants.API_HOST3;
+                host = SearchEngineImpl3.baseUrl;
                 break;
             default:
                 host = Constants.API_HOST;

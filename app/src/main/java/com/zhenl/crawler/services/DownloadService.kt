@@ -27,7 +27,7 @@ class DownloadService : IntentService("DownloadService") {
     override fun onHandleIntent(intent: Intent?) {
         when (intent?.action) {
             ACTION_FOO -> {
-                val param1 = intent.getStringExtra(EXTRA_PARAM1)
+                val param1 = intent.getIntExtra(EXTRA_PARAM1, 0)
                 val param2 = intent.getStringExtra(EXTRA_PARAM2)
                 handleActionFoo(param1, param2)
             }
@@ -43,25 +43,20 @@ class DownloadService : IntentService("DownloadService") {
      * Handle action Foo in the provided background thread with the provided
      * parameters.
      */
-    private fun handleActionFoo(param1: String?, param2: String?) {
+    private fun handleActionFoo(originVersionCode: Int, param2: String?) {
         val baseUrl = "https://raw.githubusercontent.com/WaterlooBridge/Crawler/master/"
-        val response = HttpUtil.getSync(baseUrl + "config.json")
-        response?.let {
-            val json = JSONObject(it)
-            val sp = MyApplication.application.getSharedPreferences("search_engine", Context.MODE_PRIVATE)
-            val versionCode = sp.getInt("versionCode", 0)
-            val originVersionCode = json.optInt("versionCode", versionCode)
-            if (originVersionCode > versionCode) {
-                val inject = HttpUtil.getSync(baseUrl + "app/src/main/res/raw/inject.js")
-                val inject2 = HttpUtil.getSync(baseUrl + "app/src/main/res/raw/inject2.js")
-                val inject3 = HttpUtil.getSync(baseUrl + "app/src/main/res/raw/inject3.js")
-                if (inject != null && inject2 != null && inject3 != null)
-                    sp.edit().putInt("versionCode", originVersionCode)
-                            .putString("inject", inject)
-                            .putString("inject2", inject2)
-                            .putString("inject3", inject3)
-                            .apply()
-            }
+        val sp = MyApplication.application.getSharedPreferences("search_engine", Context.MODE_PRIVATE)
+        val versionCode = sp.getInt("versionCode", 0)
+        if (originVersionCode > versionCode) {
+            val inject = HttpUtil.getSync(baseUrl + "app/src/main/res/raw/inject.js")
+            val inject2 = HttpUtil.getSync(baseUrl + "app/src/main/res/raw/inject2.js")
+            val inject3 = HttpUtil.getSync(baseUrl + "app/src/main/res/raw/inject3.js")
+            if (inject != null && inject2 != null && inject3 != null)
+                sp.edit().putInt("versionCode", originVersionCode)
+                        .putString("inject", inject)
+                        .putString("inject2", inject2)
+                        .putString("inject3", inject3)
+                        .apply()
         }
     }
 

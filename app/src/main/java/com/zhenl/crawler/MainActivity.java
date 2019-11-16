@@ -1,11 +1,13 @@
 package com.zhenl.crawler;
 
+import android.Manifest;
 import android.app.Dialog;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
+import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
@@ -14,8 +16,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.os.RemoteException;
-import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.Menu;
@@ -29,9 +29,16 @@ import android.widget.ProgressBar;
 import android.widget.Switch;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+
 import com.zhenl.crawler.core.RecordAgent;
 import com.zhenl.crawler.engines.SearchEngine;
 import com.zhenl.crawler.engines.SearchEngineFactory;
+import com.zhenl.crawler.utils.FileUtil;
 
 import java.lang.ref.WeakReference;
 import java.net.URLEncoder;
@@ -57,6 +64,7 @@ public class MainActivity extends AppCompatActivity implements IPCVideoView.OnIn
     private final String TAG = getClass().getSimpleName();
 
     private static final int MENU_MORE = 2;
+    private static final int REQUEST_CODE_FILE = 101;
 
     private String url;
     private IPCVideoView mVideoView;
@@ -127,6 +135,12 @@ public class MainActivity extends AppCompatActivity implements IPCVideoView.OnIn
                 controller.show();
         });
 
+        Uri data = getIntent().getData();
+        if (data != null) {
+            handleVideoFileIntent(data);
+            return;
+        }
+
         setTitle(getIntent().getStringExtra("title"));
         url = SearchEngineFactory.getHost() + getIntent().getSerializableExtra("url");
         Log.e(TAG, "[INFO:CONSOLE]" + url);
@@ -134,6 +148,7 @@ public class MainActivity extends AppCompatActivity implements IPCVideoView.OnIn
         engine.load(url, new SearchEngine.Callback() {
             @Override
             public void play(String path) {
+                mVideoView.setCacheEnable(!path.contains(".m3u8"));
                 MainActivity.this.play(path);
             }
 
@@ -144,6 +159,25 @@ public class MainActivity extends AppCompatActivity implements IPCVideoView.OnIn
         });
     }
 
+    private void handleVideoFileIntent(Uri uri) {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE,
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE}, REQUEST_CODE_FILE);
+            return;
+        }
+        Log.e(TAG, uri.toString());
+        String url = FileUtil.getFilePathFromContentUri(uri, getContentResolver());
+        if (TextUtils.isEmpty(url)) {
+            finish();
+            return;
+        }
+        Log.e(TAG, url);
+        AVOptions options = new AVOptions();
+        options.setOption(IjkMediaPlayer.OPT_CATEGORY_FORMAT, "allowed_extensions", "ALL");
+        mVideoView.setOptions(options);
+        play(url);
+    }
+
     /**
      * TODO: Set the path variable to a streaming video URL or a local media file
      * path.
@@ -151,7 +185,6 @@ public class MainActivity extends AppCompatActivity implements IPCVideoView.OnIn
     private void play(String path) {
         videoPath = path;
         Uri uri = Uri.parse(path);
-        mVideoView.setCacheEnable(true);
         mVideoView.setVideoURI(uri);
         mVideoView.setMediaController(controller);
         mVideoView.setControlHelper(controlHelper);
@@ -236,10 +269,17 @@ public class MainActivity extends AppCompatActivity implements IPCVideoView.OnIn
 
     @Override
     public void finish() {
-        engine.destroy();
+        if (engine != null)
+            engine.destroy();
         record(mVideoView.getDuration(), mVideoView.getCurrentPosition());
         mVideoView.release(true);
         super.finish();
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        handleVideoFileIntent(getIntent().getData());
     }
 
     public void record(int duration, int curPos) {

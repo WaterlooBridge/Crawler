@@ -1,12 +1,17 @@
 package com.zhenl.crawler.engines;
 
 import android.os.Message;
+import android.text.TextUtils;
+import android.util.Log;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
 
 import com.zhenl.crawler.Constants;
-import com.zhenl.crawler.R;
+import com.zhenl.crawler.MyApplication;
 import com.zhenl.crawler.SearchActivity;
 import com.zhenl.crawler.models.DramasModel;
 import com.zhenl.crawler.models.MovieModel;
+import com.zhenl.violet.core.Dispatcher;
 
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
@@ -23,17 +28,64 @@ import java.util.Map;
  * Created by lin on 2018/8/25.
  */
 public class SearchEngineImpl3 extends SearchEngine {
+
+    private static final String TAG = "SearchEngineImpl3";
+
+    private static boolean isPinging;
+    public static String baseUrl;
+
+    private static void ping(String html) {
+        String decodeHtml = html.replace("\\u003C", "<");
+        Log.e("SearchEngineImpl3", decodeHtml);
+        Dispatcher.getInstance().enqueue(() -> {
+            Elements elements = Jsoup.parse(decodeHtml).select("a");
+            for (Element e : elements) {
+                String url = e.attr("href").replace("\\\"", "");
+                try {
+                    Connection.Response res = Jsoup.connect(url).timeout(5000).execute();
+                    if (res.statusCode() == 200) {
+                        baseUrl = url;
+                        break;
+                    }
+                } catch (Throwable t) {
+                    Log.e(TAG, "", t);
+                }
+            }
+            isPinging = false;
+        });
+    }
+
+    public SearchEngineImpl3() {
+        if (isPinging || !TextUtils.isEmpty(baseUrl))
+            return;
+        isPinging = true;
+        WebView wv = new WebView(MyApplication.getInstance());
+        wv.getSettings().setJavaScriptEnabled(true);
+        wv.setWebViewClient(new WebViewClient() {
+            @Override
+            public void onPageFinished(WebView view, String url) {
+                super.onPageFinished(view, url);
+                wv.evaluateJavascript("document.getElementsByClassName('link')[0].innerHTML", value -> ping(value));
+            }
+        });
+        wv.loadUrl(Constants.API_HOST3);
+    }
+
     @Override
     public void search(int seqNum, String keyword, SearchActivity.SearchHandler handler) throws Exception {
-        String url = Constants.API_HOST3 + "/search.php";
-        Connection.Response res = Jsoup.connect(url).method(Connection.Method.POST).data("searchword", keyword)
+        if (baseUrl == null)
+            return;
+        String url = baseUrl + "/search";
+        Connection.Response res = Jsoup.connect(url).method(Connection.Method.POST).data("wd", keyword)
+                .userAgent(Constants.USER_AGENT)
                 .followRedirects(false).execute();
         while (res.hasHeader("Location")) {
             String location = res.header("Location");
             if (location != null && location.startsWith("http:/") && location.charAt(6) != '/')
                 location = location.substring(6);
             String redir = StringUtil.resolve(url, location);
-            Connection connection = Jsoup.connect(redir).method(Connection.Method.POST).data("searchword", keyword);
+            Connection connection = Jsoup.connect(redir).method(Connection.Method.POST).data("wd", keyword)
+                    .userAgent(Constants.USER_AGENT);
             for (Map.Entry<String, String> cookie : res.cookies().entrySet())
                 connection.cookie(cookie.getKey(), cookie.getValue());
             res = connection.followRedirects(false).execute();
@@ -42,15 +94,16 @@ public class SearchEngineImpl3 extends SearchEngine {
         if (handler.recSeqNum > seqNum)
             return;
         handler.recSeqNum = seqNum;
-        Elements elements = document.select(".listfl");
+        Elements elements = document.select(".p1.m1");
         List<MovieModel> list = new ArrayList<>();
         for (Element element : elements) {
             MovieModel model = new MovieModel();
             model.url = element.select("a").attr("href");
             model.setImg(element.select("img").attr("src").replace("\n", ""));
-            model.title = element.select(".list-name").text();
-            model.date = element.select(".duration").text();
-            list.add(model);
+            model.title = element.select(".name").text();
+            model.date = element.select(".actor").first().text();
+            if (!"VIP".equals(model.date))
+                list.add(model);
         }
         Message msg = handler.obtainMessage(0);
         msg.obj = list;
@@ -59,11 +112,11 @@ public class SearchEngineImpl3 extends SearchEngine {
 
     @Override
     public void detail(String url, DetailCallback callback) throws Exception {
-        Document document = Jsoup.connect(Constants.API_HOST3 + url).get();
-        String img = document.select(".detail-pic").select("img").attr("src")
+        Document document = Jsoup.connect(baseUrl + url).userAgent(Constants.USER_AGENT).get();
+        String img = document.select(".ct-l").select("img").attr("src")
                 .replace("\n", "");
-        String summary = document.select(".info").text();
-        Elements elements = document.select(".dslist-group a");
+        String summary = document.select(".tab-jq.ctc").text();
+        Elements elements = document.select(".show_player_gogo a");
         List<DramasModel> list = new ArrayList<>();
         for (Element element : elements) {
             DramasModel model = new DramasModel();
