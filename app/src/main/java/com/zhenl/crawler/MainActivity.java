@@ -148,7 +148,8 @@ public class MainActivity extends AppCompatActivity implements IPCVideoView.OnIn
         engine.load(url, new SearchEngine.Callback() {
             @Override
             public void play(String path) {
-                mVideoView.setCacheEnable(!path.contains(".m3u8"));
+                mVideoView.setCacheEnable(true);
+                mVideoView.setProxyCacheMode(path.contains(".m3u8"));
                 MainActivity.this.play(path);
             }
 
@@ -166,7 +167,7 @@ public class MainActivity extends AppCompatActivity implements IPCVideoView.OnIn
             return;
         }
         Log.e(TAG, uri.toString());
-        String url = FileUtil.getFilePathFromContentUri(uri, getContentResolver());
+        url = FileUtil.getFilePathFromContentUri(uri, getContentResolver());
         if (TextUtils.isEmpty(url)) {
             finish();
             return;
@@ -273,6 +274,7 @@ public class MainActivity extends AppCompatActivity implements IPCVideoView.OnIn
             engine.destroy();
         record(mVideoView.getDuration(), mVideoView.getCurrentPosition());
         mVideoView.release(true);
+        controller.release();
         super.finish();
     }
 

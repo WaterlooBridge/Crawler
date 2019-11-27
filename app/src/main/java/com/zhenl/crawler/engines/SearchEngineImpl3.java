@@ -31,8 +31,8 @@ public class SearchEngineImpl3 extends SearchEngine {
 
     private static final String TAG = "SearchEngineImpl3";
 
-    private static boolean isPinging;
-    public static String baseUrl;
+    private static volatile boolean isPinging;
+    static volatile String baseUrl;
 
     private static void ping(String html) {
         String decodeHtml = html.replace("\\u003C", "<");
@@ -65,7 +65,7 @@ public class SearchEngineImpl3 extends SearchEngine {
             @Override
             public void onPageFinished(WebView view, String url) {
                 super.onPageFinished(view, url);
-                wv.evaluateJavascript("document.getElementsByClassName('link')[0].innerHTML", value -> ping(value));
+                wv.evaluateJavascript("document.getElementsByClassName('link')[0].innerHTML", SearchEngineImpl3::ping);
             }
         });
         wv.loadUrl(Constants.API_HOST3);
