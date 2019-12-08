@@ -38,7 +38,6 @@ import androidx.core.content.ContextCompat;
 import com.zhenl.crawler.core.RecordAgent;
 import com.zhenl.crawler.engines.SearchEngine;
 import com.zhenl.crawler.engines.SearchEngineFactory;
-import com.zhenl.crawler.utils.FileUtil;
 
 import java.lang.ref.WeakReference;
 import java.net.URLEncoder;
@@ -166,26 +165,18 @@ public class MainActivity extends AppCompatActivity implements IPCVideoView.OnIn
                     Manifest.permission.WRITE_EXTERNAL_STORAGE}, REQUEST_CODE_FILE);
             return;
         }
-        Log.e(TAG, uri.toString());
-        url = FileUtil.getFilePathFromContentUri(uri, getContentResolver());
-        if (TextUtils.isEmpty(url)) {
-            finish();
-            return;
-        }
+        url = uri.toString();
         Log.e(TAG, url);
-        AVOptions options = new AVOptions();
-        options.setOption(IjkMediaPlayer.OPT_CATEGORY_FORMAT, "allowed_extensions", "ALL");
-        mVideoView.setOptions(options);
-        play(url);
+        play(uri);
     }
 
-    /**
-     * TODO: Set the path variable to a streaming video URL or a local media file
-     * path.
-     */
     private void play(String path) {
         videoPath = path;
         Uri uri = Uri.parse(path);
+        play(uri);
+    }
+
+    private void play(Uri uri) {
         mVideoView.setVideoURI(uri);
         mVideoView.setMediaController(controller);
         mVideoView.setControlHelper(controlHelper);
@@ -281,7 +272,8 @@ public class MainActivity extends AppCompatActivity implements IPCVideoView.OnIn
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        handleVideoFileIntent(getIntent().getData());
+        if (requestCode == REQUEST_CODE_FILE)
+            play(getIntent().getData());
     }
 
     public void record(int duration, int curPos) {

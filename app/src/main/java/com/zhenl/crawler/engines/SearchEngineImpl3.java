@@ -1,5 +1,7 @@
 package com.zhenl.crawler.engines;
 
+import android.os.Handler;
+import android.os.Looper;
 import android.os.Message;
 import android.text.TextUtils;
 import android.util.Log;
@@ -31,8 +33,27 @@ public class SearchEngineImpl3 extends SearchEngine {
 
     private static final String TAG = "SearchEngineImpl3";
 
+    private static final int MAX_REQUEST_TIME = 3;
+
     private static volatile boolean isPinging;
+    private static volatile int requestTime;
     static volatile String baseUrl;
+
+    private static void loadLink() {
+        if (isPinging || !TextUtils.isEmpty(baseUrl))
+            return;
+        isPinging = true;
+        WebView wv = new WebView(MyApplication.getInstance());
+        wv.getSettings().setJavaScriptEnabled(true);
+        wv.setWebViewClient(new WebViewClient() {
+            @Override
+            public void onPageFinished(WebView view, String url) {
+                super.onPageFinished(view, url);
+                wv.evaluateJavascript("document.getElementsByClassName('link')[0].innerHTML", SearchEngineImpl3::ping);
+            }
+        });
+        wv.loadUrl(Constants.API_HOST3);
+    }
 
     private static void ping(String html) {
         String decodeHtml = html.replace("\\u003C", "<");
@@ -52,23 +73,14 @@ public class SearchEngineImpl3 extends SearchEngine {
                 }
             }
             isPinging = false;
+            if (TextUtils.isEmpty(baseUrl) && ++requestTime < MAX_REQUEST_TIME)
+                new Handler(Looper.getMainLooper()).post(() -> loadLink());
         });
     }
 
-    public SearchEngineImpl3() {
-        if (isPinging || !TextUtils.isEmpty(baseUrl))
-            return;
-        isPinging = true;
-        WebView wv = new WebView(MyApplication.getInstance());
-        wv.getSettings().setJavaScriptEnabled(true);
-        wv.setWebViewClient(new WebViewClient() {
-            @Override
-            public void onPageFinished(WebView view, String url) {
-                super.onPageFinished(view, url);
-                wv.evaluateJavascript("document.getElementsByClassName('link')[0].innerHTML", SearchEngineImpl3::ping);
-            }
-        });
-        wv.loadUrl(Constants.API_HOST3);
+    SearchEngineImpl3() {
+        requestTime = 0;
+        loadLink();
     }
 
     @Override
