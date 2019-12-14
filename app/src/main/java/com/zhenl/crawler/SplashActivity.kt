@@ -20,10 +20,21 @@ class SplashActivity : AppCompatActivity() {
     @SuppressLint("HandlerLeak")
     internal var handler: Handler = object : Handler() {
         override fun handleMessage(msg: Message) {
-            startActivity(Intent(this@SplashActivity, HomeActivity::class.java))
-            startService(Intent(this@SplashActivity, DownloadService::class.java)
+            startHome.run()
+            startService(Intent(MyApplication.getInstance(), DownloadService::class.java)
                     .setAction(ACTION_FOO)
                     .putExtra(EXTRA_PARAM1, msg.what))
+        }
+    }
+
+    internal var startHome = object : Runnable {
+        var hasStart = false
+
+        override fun run() {
+            if (hasStart)
+                return
+            hasStart = true
+            startActivity(Intent(this@SplashActivity, HomeActivity::class.java))
             finish()
         }
     }
@@ -40,6 +51,8 @@ class SplashActivity : AppCompatActivity() {
         setContentView(R.layout.activity_splash)
 
         load()
+
+        handler.postDelayed(startHome, 5000)
     }
 
     private fun load() {

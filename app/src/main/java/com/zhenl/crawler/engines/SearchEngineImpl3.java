@@ -1,5 +1,6 @@
 package com.zhenl.crawler.engines;
 
+import android.graphics.Bitmap;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
@@ -39,13 +40,28 @@ public class SearchEngineImpl3 extends SearchEngine {
     private static volatile int requestTime;
     static volatile String baseUrl;
 
+    private static Handler handler = new Handler(Looper.getMainLooper()) {
+        @Override
+        public void handleMessage(Message msg) {
+            isPinging = false;
+            loadLink();
+        }
+    };
+
     private static void loadLink() {
         if (isPinging || !TextUtils.isEmpty(baseUrl))
             return;
-        isPinging = true;
         WebView wv = new WebView(MyApplication.getInstance());
         wv.getSettings().setJavaScriptEnabled(true);
         wv.setWebViewClient(new WebViewClient() {
+            @Override
+            public void onPageStarted(WebView view, String url, Bitmap favicon) {
+                super.onPageStarted(view, url, favicon);
+                isPinging = true;
+                handler.removeMessages(0);
+                handler.sendEmptyMessageDelayed(0, 30000);
+            }
+
             @Override
             public void onPageFinished(WebView view, String url) {
                 super.onPageFinished(view, url);
@@ -73,8 +89,9 @@ public class SearchEngineImpl3 extends SearchEngine {
                 }
             }
             isPinging = false;
+            handler.removeMessages(0);
             if (TextUtils.isEmpty(baseUrl) && ++requestTime < MAX_REQUEST_TIME)
-                new Handler(Looper.getMainLooper()).post(() -> loadLink());
+                handler.post(SearchEngineImpl3::loadLink);
         });
     }
 

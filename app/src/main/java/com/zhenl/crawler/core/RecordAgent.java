@@ -22,8 +22,11 @@ public class RecordAgent {
 
     }
 
-    public void record(String url, int position) {
-        records.put(url, position - 5000);
+    public void record(String url, int duration, int position) {
+        if (duration - position < 5000)
+            position = 0;
+        if (duration > 0)
+            records.put(url, position - 5000);
     }
 
     public int getRecord(String url) {

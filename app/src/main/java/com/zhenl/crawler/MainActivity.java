@@ -23,6 +23,7 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.OrientationEventListener;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.ImageButton;
 import android.widget.ProgressBar;
@@ -38,6 +39,7 @@ import androidx.core.content.ContextCompat;
 import com.zhenl.crawler.core.RecordAgent;
 import com.zhenl.crawler.engines.SearchEngine;
 import com.zhenl.crawler.engines.SearchEngineFactory;
+import com.zhenl.crawler.views.FloatVideoView;
 
 import java.lang.ref.WeakReference;
 import java.net.URLEncoder;
@@ -50,7 +52,7 @@ import tv.danmaku.ijk.media.widget.AndroidMediaController;
 import tv.danmaku.ijk.media.widget.IPCVideoView;
 import tv.danmaku.ijk.media.widget.VideoControlHelper;
 
-public class MainActivity extends AppCompatActivity implements IPCVideoView.OnInfoListener {
+public class MainActivity extends AppCompatActivity implements IPCVideoView.OnInfoListener, IPCVideoView.OnPreparedListener {
 
     public static void start(Context context, String title, String url) {
         Intent intent = new Intent(context, MainActivity.class);
@@ -66,6 +68,7 @@ public class MainActivity extends AppCompatActivity implements IPCVideoView.OnIn
     private static final int REQUEST_CODE_FILE = 101;
 
     private String url;
+    private ViewGroup videoParent;
     private IPCVideoView mVideoView;
     private AndroidMediaController controller;
     private VideoControlHelper controlHelper;
@@ -88,7 +91,23 @@ public class MainActivity extends AppCompatActivity implements IPCVideoView.OnIn
 
         setContentView(R.layout.activity_main);
         getSupportActionBar().setBackgroundDrawable(new ColorDrawable(0x40000000));
-        mVideoView = findViewById(R.id.buffer);
+        videoParent = findViewById(R.id.buffer);
+
+        boolean isFromFloatWindow = getIntent().getBooleanExtra("isFromFloatWindow", false);
+        if (isFromFloatWindow) {
+            mVideoView = FloatVideoView.Companion.getVideoView(getIntent().getStringExtra("viewId"));
+            if (mVideoView == null) {
+                super.finish();
+                return;
+            }
+            ViewGroup parent = (ViewGroup) mVideoView.getParent();
+            parent.removeView(mVideoView);
+            WindowManager wm = (WindowManager) getSystemService(Context.WINDOW_SERVICE);
+            wm.removeViewImmediate(parent);
+        } else
+            mVideoView = new IPCVideoView(MyApplication.getInstance());
+
+        videoParent.addView(mVideoView, -1, -1);
         AVOptions options = new AVOptions();
         options.setOption(IjkMediaPlayer.OPT_CATEGORY_FORMAT, "user_agent", Constants.USER_AGENT);
         mVideoView.setOptions(options);
@@ -118,7 +137,7 @@ public class MainActivity extends AppCompatActivity implements IPCVideoView.OnIn
                 setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
             }
         });
-        controlHelper = new VideoControlHelper(mVideoView);
+        controlHelper = new VideoControlHelper(mVideoView, getWindow());
         controlHelper.setMediaController(controller);
 
         pb = findViewById(R.id.probar);
@@ -134,6 +153,16 @@ public class MainActivity extends AppCompatActivity implements IPCVideoView.OnIn
                 controller.show();
         });
 
+        if (isFromFloatWindow) {
+            url = getIntent().getStringExtra("url");
+            mVideoView.setMediaController(controller);
+            mVideoView.setControlHelper(controlHelper);
+            mVideoView.setOnInfoListener(this);
+            mVideoView.setOnPreparedListener(this);
+            pb.setVisibility(View.GONE);
+            return;
+        }
+
         Uri data = getIntent().getData();
         if (data != null) {
             handleVideoFileIntent(data);
@@ -141,7 +170,7 @@ public class MainActivity extends AppCompatActivity implements IPCVideoView.OnIn
         }
 
         setTitle(getIntent().getStringExtra("title"));
-        url = SearchEngineFactory.getHost() + getIntent().getSerializableExtra("url");
+        url = SearchEngineFactory.getHost() + getIntent().getStringExtra("url");
         Log.e(TAG, "[INFO:CONSOLE]" + url);
         engine = SearchEngineFactory.create();
         engine.load(url, new SearchEngine.Callback() {
@@ -182,16 +211,7 @@ public class MainActivity extends AppCompatActivity implements IPCVideoView.OnIn
         mVideoView.setControlHelper(controlHelper);
         mVideoView.requestFocus();
         mVideoView.setOnInfoListener(this);
-        mVideoView.setOnPreparedListener(mp -> {
-            try {
-                if (!mStopped || bgEnable)
-                    mp.start();
-                else
-                    mp.pause();
-            } catch (RemoteException e) {
-                e.printStackTrace();
-            }
-        });
+        mVideoView.setOnPreparedListener(this);
 
         int pos = RecordAgent.getInstance().getRecord(url);
         if (pos > 0)
@@ -212,6 +232,18 @@ public class MainActivity extends AppCompatActivity implements IPCVideoView.OnIn
                 break;
         }
         return true;
+    }
+
+    @Override
+    public void onPrepared(IIjkMediaPlayer mp) {
+        try {
+            if (!mStopped || bgEnable)
+                mp.start();
+            else
+                mp.pause();
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -239,12 +271,28 @@ public class MainActivity extends AppCompatActivity implements IPCVideoView.OnIn
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
         if (id == Menu.FIRST) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
-                enterPictureInPictureMode();
+            openFloat();
         } else if (id == MENU_MORE) {
             showSettingDialog();
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void openFloat() {
+        if (!FloatVideoView.Companion.isFloatWindowOpAllowed())
+            return;
+        bgEnable = true;
+        mVideoView.setBufferingIndicator(null);
+        mVideoView.setMediaController(null);
+        mVideoView.setControlHelper(null);
+        mVideoView.setOnInfoListener(null);
+        mVideoView.setOnPreparedListener(null);
+        videoParent.removeView(mVideoView);
+        FloatVideoView.Companion.showFloatWindow(mVideoView, url);
+        if (engine != null)
+            engine.destroy();
+        controller.release();
+        super.finish();
     }
 
     @Override
@@ -277,10 +325,7 @@ public class MainActivity extends AppCompatActivity implements IPCVideoView.OnIn
     }
 
     public void record(int duration, int curPos) {
-        if (duration - curPos < 5000)
-            curPos = 0;
-        if (duration > 0)
-            RecordAgent.getInstance().record(url, curPos);
+        RecordAgent.getInstance().record(url, duration, curPos);
     }
 
     @Override
