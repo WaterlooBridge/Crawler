@@ -71,8 +71,11 @@ function scanFrame(document) {
                 window.bridge.loadUrl(src);
             else
                 scanFrame(iframe[i].contentWindow.document);
-        } else {
+        } else if (iframe[i].id == 'player_swf') {
             window.bridge.loadUrl(src);
+            break;
+        } else if (i == iframe.length - 1) {
+            window.bridge.loadUrl(iframe[0].getAttribute("src"));
         }
     }
 }

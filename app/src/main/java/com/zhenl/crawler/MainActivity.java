@@ -411,7 +411,7 @@ public class MainActivity extends AppCompatActivity implements IPCVideoView.OnIn
         settingDialog.findViewById(R.id.view_copy_link).setOnClickListener(v -> {
             settingDialog.dismiss();
             ClipboardManager manager = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
-            if (manager == null)
+            if (manager == null || TextUtils.isEmpty(videoPath))
                 return;
             manager.setPrimaryClip(ClipData.newPlainText("link", generateUrl()));
             Toast.makeText(getApplicationContext(), "Link Copied", Toast.LENGTH_SHORT).show();
