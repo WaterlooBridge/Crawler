@@ -11,13 +11,15 @@ import android.util.AttributeSet
 import android.util.DisplayMetrics
 import android.view.*
 import android.widget.FrameLayout
+import android.widget.OverScroller
+import androidx.core.view.ViewCompat
 import com.zhenl.crawler.MainActivity
 import com.zhenl.crawler.MyApplication
 import com.zhenl.crawler.R
 import com.zhenl.crawler.core.RecordAgent
 import kotlinx.android.synthetic.main.layout_float_video.view.*
 import tv.danmaku.ijk.media.widget.IPCVideoView
-import kotlin.math.abs
+
 
 /**
  * Created by lin on 19-12-9.
@@ -69,18 +71,13 @@ class FloatVideoView : FrameLayout, View.OnClickListener {
     private lateinit var wmParams: WindowManager.LayoutParams
     private val controller: View
     private var url: String? = null
-    private var mTouchSlop = 3
-    private var downX = 0f
-    private var downY = 0f
-    private var lastX = 0f
-    private var lastY = 0f
+    private var initialWidth = -2
 
     constructor(context: Context) : super(context)
     constructor(context: Context, attrs: AttributeSet?) : super(context, attrs)
     constructor(context: Context, attrs: AttributeSet?, defStyleAttr: Int) : super(context, attrs, defStyleAttr)
 
     init {
-        mTouchSlop = ViewConfiguration.get(context).scaledTouchSlop
         controller = LayoutInflater.from(context).inflate(R.layout.layout_float_video, this, false)
         addView(controller)
         setOnClickListener(this)
@@ -136,8 +133,8 @@ class FloatVideoView : FrameLayout, View.OnClickListener {
         wmParams.gravity = Gravity.CENTER
         val dm = DisplayMetrics()
         wm.defaultDisplay.getMetrics(dm)
-        val width = (if (dm.heightPixels < dm.widthPixels) dm.heightPixels else dm.widthPixels) / 5 * 4
-        wmParams.width = width
+        initialWidth = (if (dm.heightPixels < dm.widthPixels) dm.heightPixels else dm.widthPixels) / 5 * 4
+        wmParams.width = initialWidth
         wmParams.height = WindowManager.LayoutParams.WRAP_CONTENT
         wm.addView(this, wmParams)
     }
@@ -146,27 +143,74 @@ class FloatVideoView : FrameLayout, View.OnClickListener {
         if (event == null)
             return false
 
-        when (event.action) {
-            MotionEvent.ACTION_DOWN -> {
-                downX = event.rawX
-                lastX = downX
-                downY = event.rawY
-                lastY = downY
-            }
-            MotionEvent.ACTION_MOVE -> {
-                val deltaX = (event.rawX - lastX).toInt()
-                val deltaY = (event.rawY - lastY).toInt()
-                wmParams.x += deltaX
-                wmParams.y += deltaY
-                wm.updateViewLayout(this, wmParams)
-                lastX = event.rawX
-                lastY = event.rawY
-            }
-            MotionEvent.ACTION_UP -> if (isClickable && abs(event.rawX - downX) < mTouchSlop
-                    && abs(event.rawY - downY) < mTouchSlop)
-                performClick()
-        }
+        event.offsetLocation(event.rawX - event.x, event.rawY - event.y)
+        mScaleGestureDetector.onTouchEvent(event)
+        mGestureDetector.onTouchEvent(event)
         return true
+    }
+
+    private val mGestureDetector = GestureDetector(context, object : GestureDetector.SimpleOnGestureListener() {
+        override fun onSingleTapUp(e: MotionEvent?): Boolean {
+            if (isClickable)
+                return performClick()
+            return super.onSingleTapUp(e)
+        }
+
+        override fun onScroll(e1: MotionEvent?, e2: MotionEvent?, distanceX: Float, distanceY: Float): Boolean {
+            wmParams.x -= distanceX.toInt()
+            wmParams.y -= distanceY.toInt()
+            wm.updateViewLayout(this@FloatVideoView, wmParams)
+            return true
+        }
+
+        override fun onFling(e1: MotionEvent?, e2: MotionEvent?, velocityX: Float, velocityY: Float): Boolean {
+            fling(velocityX.toInt(), velocityY.toInt())
+            return true
+        }
+    })
+
+    private val mScaleGestureDetector = ScaleGestureDetector(context, object : ScaleGestureDetector.SimpleOnScaleGestureListener() {
+
+        private var mScaleFactor = 1f
+
+        override fun onScale(detector: ScaleGestureDetector?): Boolean {
+            mScaleFactor *= detector?.scaleFactor ?: 1f
+            wmParams.width = (initialWidth * mScaleFactor).toInt()
+            wm.updateViewLayout(this@FloatVideoView, wmParams)
+            return true
+        }
+    })
+
+    private fun fling(velocityX: Int, velocityY: Int) {
+        if (mFlingRunnable != null) {
+            removeCallbacks(mFlingRunnable)
+            mFlingRunnable = null
+        }
+        val startX = wmParams.x
+        val startY = wmParams.y
+        val dm = DisplayMetrics()
+        wm.defaultDisplay.getRealMetrics(dm)
+        mScroller.fling(startX, startY, velocityX, velocityY,
+                (width - dm.widthPixels) / 2, (dm.widthPixels - width) / 2,
+                (height - dm.heightPixels) / 2, (dm.heightPixels - height) / 2)
+        if (mScroller.computeScrollOffset()) {
+            mFlingRunnable = FlingRunnable()
+            ViewCompat.postOnAnimation(this, mFlingRunnable)
+        }
+    }
+
+    private val mScroller = OverScroller(context)
+    private var mFlingRunnable: FlingRunnable? = null
+
+    inner class FlingRunnable : Runnable {
+        override fun run() {
+            if (mScroller.computeScrollOffset()) {
+                wmParams.x = mScroller.currX
+                wmParams.y = mScroller.currY
+                wm.updateViewLayout(this@FloatVideoView, wmParams)
+                ViewCompat.postOnAnimation(this@FloatVideoView, this)
+            }
+        }
     }
 
     private fun release() {

@@ -1,6 +1,12 @@
+import com.android.build.OutputFile
+
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
+
+static def releaseAppName() {
+    return "Crawler"
+}
 
 android {
     compileSdkVersion rootProject.compileSdkVersion
@@ -21,6 +27,23 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+    splits {
+        abi {
+            enable true
+            reset()
+            include 'armeabi-v7a', 'arm64-v8a'
+            universalApk true
+        }
+    }
+
+    android.applicationVariants.all {
+        variant ->
+            variant.outputs.each { output ->
+                def abi = output.getFilter(OutputFile.ABI) ?: "universal"
+                output.outputFileName = "${releaseAppName()}_${abi}.apk"
+            }
+    }
+
     packagingOptions {
         exclude 'META-INF/DEPENDENCIES'
         exclude 'META-INF/NOTICE'
@@ -45,5 +68,5 @@ dependencies {
     implementation 'androidx.cardview:cardview:1.0.0'
 //    implementation 'net.sourceforge.htmlunit:htmlunit:2.29'
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
-    implementation 'com.squareup.okhttp3:okhttp:3.11.0'
+    implementation 'com.squareup.okhttp3:okhttp:3.12.8'
 }

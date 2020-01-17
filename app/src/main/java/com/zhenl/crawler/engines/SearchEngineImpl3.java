@@ -128,7 +128,7 @@ public class SearchEngineImpl3 extends SearchEngine {
         for (Element element : elements) {
             MovieModel model = new MovieModel();
             model.url = element.select("a").attr("href");
-            model.setImg(element.select("img").attr("src").replace("\n", ""));
+            model.setImg(element.select("img").attr("data-original").replace("\n", ""));
             model.title = element.select(".name").text();
             model.date = element.select(".actor").first().text();
             if (!"VIP".equals(model.date))
@@ -142,7 +142,7 @@ public class SearchEngineImpl3 extends SearchEngine {
     @Override
     public void detail(String url, DetailCallback callback) throws Exception {
         Document document = Jsoup.connect(baseUrl + url).userAgent(Constants.USER_AGENT).get();
-        String img = document.select(".ct-l").select("img").attr("src")
+        String img = document.select(".ct-l").select("img").attr("data-original")
                 .replace("\n", "");
         String summary = document.select(".tab-jq.ctc").text();
         Elements elements = document.select(".show_player_gogo a");

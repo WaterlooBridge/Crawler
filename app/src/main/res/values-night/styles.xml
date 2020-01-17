@@ -1,0 +1,12 @@
+<resources>
+
+    <style name="AppTheme" parent="Theme.AppCompat.DayNight.DarkActionBar">
+        <item name="colorPrimary">@color/colorPrimary_dark</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark_dark</item>
+        <item name="colorAccent">@color/colorAccent_dark</item>
+
+        <item name="dramas_bg_color">@color/dramas_bg_color_dark</item>
+        <item name="splash_background">@mipmap/violet</item>
+    </style>
+
+</resources>
