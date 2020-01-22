@@ -43,4 +43,12 @@
         android:text="复制播放链接"
         android:textColor="@color/white" />
 
+    <TextView
+        android:id="@+id/view_download"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:gravity="center_vertical"
+        android:text="下载视频"
+        android:textColor="@color/white" />
+
 </LinearLayout>

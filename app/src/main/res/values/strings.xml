@@ -1,3 +1,11 @@
 <resources>
     <string name="app_name">Crawler</string>
+
+    <string name="downloads">Downloads</string>
+    <string name="wait_download">wait download</string>
+    <string name="downloading">downloading</string>
+    <string name="already_paused">paused</string>
+    <string name="preparing">preparing</string>
+    <string name="download_error">error</string>
+    <string name="unknown_movie">unknown movie</string>
 </resources>

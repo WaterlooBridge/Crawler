@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="downloads">下载</string>
+    <string name="wait_download">等待下载</string>
+    <string name="downloading">下载中</string>
+    <string name="already_paused">已暂停</string>
+    <string name="preparing">准备中</string>
+    <string name="download_error">下载异常</string>
+    <string name="unknown_movie">未知影片</string>
+</resources>

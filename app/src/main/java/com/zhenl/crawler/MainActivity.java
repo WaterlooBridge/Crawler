@@ -11,7 +11,6 @@ import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -39,6 +38,7 @@ import androidx.core.content.ContextCompat;
 import com.zhenl.crawler.core.RecordAgent;
 import com.zhenl.crawler.engines.SearchEngine;
 import com.zhenl.crawler.engines.SearchEngineFactory;
+import com.zhenl.crawler.download.VideoDownloadService;
 import com.zhenl.crawler.views.FloatVideoView;
 
 import java.lang.ref.WeakReference;
@@ -415,6 +415,17 @@ public class MainActivity extends AppCompatActivity implements IPCVideoView.OnIn
                 return;
             manager.setPrimaryClip(ClipData.newPlainText("link", generateUrl()));
             Toast.makeText(getApplicationContext(), "Link Copied", Toast.LENGTH_SHORT).show();
+        });
+        View view_download = settingDialog.findViewById(R.id.view_download);
+        if (TextUtils.isEmpty(videoPath) || !videoPath.startsWith("http")) {
+            view_download.setVisibility(View.GONE);
+            return;
+        }
+        view_download.setOnClickListener(v -> {
+            settingDialog.dismiss();
+            if (TextUtils.isEmpty(videoPath))
+                return;
+            VideoDownloadService.Companion.downloadVideo(videoPath);
         });
     }
 

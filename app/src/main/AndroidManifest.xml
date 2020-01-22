@@ -6,6 +6,7 @@
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 
     <application
         android:name=".MyApplication"
@@ -17,7 +18,10 @@
         android:theme="@style/AppTheme">
         <service
             android:name=".services.DownloadService"
-            android:exported="false"></service>
+            android:exported="false" />
+        <service
+            android:name=".download.VideoDownloadService"
+            android:exported="false" />
 
         <activity android:name=".HomeActivity" />
         <activity
@@ -76,6 +80,7 @@
         </activity>
         <activity android:name=".MovieDetailActivity" />
         <activity android:name=".SearchActivity" />
+        <activity android:name=".DownloadActivity" />
     </application>
 
 </manifest>

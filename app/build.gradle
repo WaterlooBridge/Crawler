@@ -69,4 +69,7 @@ dependencies {
 //    implementation 'net.sourceforge.htmlunit:htmlunit:2.29'
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     implementation 'com.squareup.okhttp3:okhttp:3.12.8'
+    implementation 'com.liulishuo.okdownload:okdownload:1.0.7'
+    implementation 'com.liulishuo.okdownload:okhttp:1.0.7'
+    implementation 'com.google.code.gson:gson:2.8.5'
 }

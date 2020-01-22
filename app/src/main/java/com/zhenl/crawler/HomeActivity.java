@@ -7,19 +7,21 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.StaggeredGridLayoutManager;
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
-
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.recyclerview.widget.StaggeredGridLayoutManager;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
+
+import com.google.android.material.navigation.NavigationView;
 import com.zhenl.crawler.adapter.MovieAdapter;
 import com.zhenl.crawler.engines.SearchEngineFactory;
 import com.zhenl.crawler.models.MovieModel;
-import com.zhenl.violet.base.RecyclerAdapter;
 import com.zhenl.violet.core.Dispatcher;
 import com.zhenl.violet.widget.SwipeFooterFactory;
 import com.zhenl.violet.widget.SwipeRecyclerView;
@@ -36,8 +38,10 @@ public class HomeActivity extends AppCompatActivity {
 
     private final String TAG = getClass().getSimpleName();
 
-    private int types[] = {7, 1, 2, 4, 6, 9};
+    private int[] types = {7, 1, 2, 4, 6, 9};
 
+    private DrawerLayout drawerLayout;
+    private NavigationView nav_view;
     private SwipeRefreshLayout refreshLayout;
     private SwipeRecyclerView recyclerView;
 
@@ -50,47 +54,45 @@ public class HomeActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
+
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setHomeAsUpIndicator(R.drawable.ic_menu);
+
+        drawerLayout = findViewById(R.id.drawer_layout);
+        nav_view = findViewById(R.id.nav_view);
         refreshLayout = findViewById(R.id.refresh_layout);
         recyclerView = findViewById(R.id.recyclerView);
         recyclerView.setLayoutManager(new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL));
         recyclerView.addFootView(SwipeFooterFactory.createSwipeFooter(this, recyclerView));
         adapter = new MovieAdapter(list);
         recyclerView.setAdapter(adapter);
-        adapter.setOnItemClickListener(new RecyclerAdapter.OnItemClickListener() {
-            @Override
-            public void onItemClick(Object object, View view, int position) {
-                MovieModel model = (MovieModel) object;
-                SearchEngineFactory.type = 1;
-                MovieDetailActivity.start(view.getContext(), model.title, model.url);
-            }
+        adapter.setOnItemClickListener((object, view, position) -> {
+            MovieModel model = (MovieModel) object;
+            SearchEngineFactory.type = 1;
+            MovieDetailActivity.start(view.getContext(), model.title, model.url);
         });
-        refreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
-            @Override
-            public void onRefresh() {
-                page = 1;
-                load();
-            }
+        nav_view.setNavigationItemSelectedListener(menuItem -> {
+            drawerLayout.closeDrawer(GravityCompat.START);
+            Intent intent = new Intent(getApplication(), DownloadActivity.class);
+            startActivity(intent);
+            return false;
         });
-        recyclerView.setOnLoadMoreListener(new SwipeRecyclerView.OnLoadMoreListener() {
-            @Override
-            public void onLoadMore() {
-                load();
-            }
+        refreshLayout.setOnRefreshListener(() -> {
+            page = 1;
+            load();
         });
+        recyclerView.setOnLoadMoreListener(this::load);
         refreshLayout.setRefreshing(true);
         load();
     }
 
     private void load() {
-        Dispatcher.getInstance().enqueue(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    loadData();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    handler.sendEmptyMessage(0);
-                }
+        Dispatcher.getInstance().enqueue(() -> {
+            try {
+                loadData();
+            } catch (Exception e) {
+                e.printStackTrace();
+                handler.sendEmptyMessage(0);
             }
         });
     }
@@ -153,12 +155,14 @@ public class HomeActivity extends AppCompatActivity {
         int id = item.getItemId();
         if (id == Menu.FIRST) {
             showSearchEngines();
+        } else if (id == android.R.id.home) {
+            drawerLayout.openDrawer(GravityCompat.START);
         }
         return super.onOptionsItemSelected(item);
     }
 
     private void showSearchEngines() {
-        final String items[] = {"Search Engine 1", "Search Engine 2", "Search Engine 3"};
+        final String[] items = {"Search Engine 1", "Search Engine 2", "Search Engine 3"};
 
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setItems(items, (DialogInterface dialog, int which) -> {

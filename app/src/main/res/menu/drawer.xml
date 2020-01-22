@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <group
+        android:checkableBehavior="single"
+        android:id="@+id/main_group">
+
+        <item
+            android:id="@+id/reposFragment"
+            android:icon="@drawable/ic_cloud_download"
+            android:title="下载"/>
+
+    </group>
+
+</menu>
