@@ -46,14 +46,8 @@ observer.observe(document, {
     subtree: true // listen to changes to descendants as well
 });
 
-if (window.Player && window.Player.Url) {
-    console.log(JSON.stringify(Player));
-    if (Player.PlayerName && Player.PlayerName == 'm3u8')
-        window.bridge.loadVideo(Player.Url);
-    else
-        window.bridge.loadUrl(Player.Url);
-} else if (window.main)
-    window.bridge.loadVideo(window.location.protocol + "//" + window.location.host + main);
+if (window.now)
+    window.bridge.loadVideo(now);
 else
     scanPage();
 

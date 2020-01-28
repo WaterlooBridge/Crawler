@@ -18,6 +18,7 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
+import com.zhenl.crawler.Constants;
 import com.zhenl.crawler.MyApplication;
 import com.zhenl.crawler.SearchActivity;
 import com.zhenl.crawler.models.DramasModel;
@@ -120,7 +121,7 @@ public abstract class SearchEngine extends WebViewClient {
     protected String loadJs(String name) {
         String js = MyApplication.getInstance().getSharedPreferences("search_engine", Context.MODE_PRIVATE)
                 .getString(name, null);
-        if (!TextUtils.isEmpty(js))
+        if (!Constants.DEBUG && !TextUtils.isEmpty(js))
             return js;
         int resId = MyApplication.getInstance().getResources().getIdentifier(name, "raw",
                 MyApplication.getInstance().getPackageName());

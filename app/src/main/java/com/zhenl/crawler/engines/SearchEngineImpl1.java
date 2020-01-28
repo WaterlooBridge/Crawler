@@ -35,7 +35,13 @@ public class SearchEngineImpl1 extends SearchEngine {
 
     @Override
     public void search(int seqNum, String keyword, SearchActivity.SearchHandler handler) throws Exception {
-        Document document = Jsoup.connect(Constants.API_HOST + "/search?wd=" + keyword).userAgent(Constants.USER_AGENT).get();
+        int page = handler.pageNum;
+        String url;
+        if (page > 1)
+            url = Constants.API_HOST + "/s/" + keyword + "/" + page + ".html";
+        else
+            url = Constants.API_HOST + "/search?wd=" + keyword;
+        Document document = Jsoup.connect(url).userAgent(Constants.USER_AGENT).get();
         if (handler.recSeqNum > seqNum)
             return;
         handler.recSeqNum = seqNum;
@@ -49,7 +55,7 @@ public class SearchEngineImpl1 extends SearchEngine {
             model.date = element.select(".other i").text();
             list.add(model);
         }
-        Message msg = handler.obtainMessage(0);
+        Message msg = handler.obtainMessage(page);
         msg.obj = list;
         msg.sendToTarget();
     }

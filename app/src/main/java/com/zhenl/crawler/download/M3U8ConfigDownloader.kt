@@ -4,11 +4,9 @@ import android.net.Uri
 import android.util.Log
 import com.liulishuo.okdownload.DownloadTask
 import com.liulishuo.okdownload.core.cause.EndCause
-import com.liulishuo.okdownload.core.cause.ResumeFailedCause
-import com.liulishuo.okdownload.core.listener.DownloadListener1
 import com.liulishuo.okdownload.core.listener.DownloadListener2
-import com.liulishuo.okdownload.core.listener.assist.Listener1Assist
 import java.io.File
+import java.util.regex.Pattern
 
 /**
  * Created by lin on 20-1-19.
@@ -122,7 +120,9 @@ internal object M3U8ConfigDownloader {
             file = File(path, "original.m3u8")
         }
         Log.d(TAG, "getFileContent---${file.name}")
-        val list = file.readLines().filter { !it.startsWith("#") }//读取m3u8文件
+        val prefix = "#EXT-X-KEY:"
+        val p = Pattern.compile("(?<=URI=\").*?(?=\")")
+        val list = file.readLines().filter { !it.startsWith("#") || it.startsWith(prefix) }//读取m3u8文件
         if (list.size > 1) {//直接的m3u8的ts链接
             entity.tsSize = list.size
             entity.toFile()
@@ -131,25 +131,42 @@ internal object M3U8ConfigDownloader {
             }
             val m3u8ListFile = File(path, "m3u8.list")
             list.forEach {
-                val ts = if (it.startsWith("http")) {
-                    it
-                } else if (!it.startsWith("/")) {
-                    url.substring(0, url.lastIndexOf("/") + 1) + it
+                var hls = it
+                if (it.startsWith(prefix)) {
+                    val m = p.matcher(it)
+                    if (m.find())
+                        hls = m.group()
+                    else
+                        return@forEach
+                }
+                val ts = if (hls.startsWith("http")) {
+                    hls
+                } else if (!hls.startsWith("/")) {
+                    url.substring(0, url.lastIndexOf("/") + 1) + hls
                 } else {
-                    "${uri.scheme}://${uri.host}$it"
+                    "${uri.scheme}://${uri.host}$hls"
                 }
                 m3u8ListFile.appendText("$ts\n")
             }
             val localPlaylist = File(path, "localPlaylist.m3u8")
             val localDir = path.absolutePath
             file.readLines().forEach {
-                var str = it
+                var key: String? = null
+                if (it.startsWith(prefix)) {
+                    val m = p.matcher(it)
+                    if (m.find())
+                        key = m.group()
+                }
+                var str = key ?: it
                 if (!str.startsWith("#")) {
                     str = if (str.contains("/")) {
-                        "$localDir/.ts${it.substring(it.lastIndexOf("/"))}"
+                        "$localDir/.ts${str.substring(str.lastIndexOf("/"))}"
                     } else {
-                        "$localDir/.ts/$it"
+                        "$localDir/.ts/$str"
                     }
+                }
+                key?.apply {
+                    str = it.replace(this, str)
                 }
                 localPlaylist.appendText("$str\n")
             }

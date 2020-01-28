@@ -82,7 +82,7 @@ class DownloadActivity : BaseActivity() {
     private fun onProgress(entity: VideoDownloadEntity) {
         for ((index, item) in videoList.withIndex()) {
             if (item.originalUrl == entity.originalUrl) {
-                if (videoList[index] != entity)
+                if (item != entity)
                     videoList[index] = entity
                 adapter.notifyItemChanged(index, 0)
                 break

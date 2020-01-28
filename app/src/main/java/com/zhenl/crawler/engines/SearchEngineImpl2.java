@@ -25,21 +25,23 @@ public class SearchEngineImpl2 extends SearchEngine {
 
     @Override
     public void search(int seqNum, String keyword, SearchActivity.SearchHandler handler) throws Exception {
-        Document document = Jsoup.connect(Constants.API_HOST2 + "/index.php?s=vod-search").data("wd", keyword).post();
+        int page = handler.pageNum;
+        Document document = Jsoup.connect(Constants.API_HOST2 + "/search.php").data("searchword", keyword)
+                .data("page", String.valueOf(page)).get();
         if (handler.recSeqNum > seqNum)
             return;
         handler.recSeqNum = seqNum;
-        Elements elements = document.select(".mui-table-view-cell");
+        Elements elements = document.select(".v-thumb.stui-vodlist__thumb");
         List<MovieModel> list = new ArrayList<>();
         for (Element element : elements) {
             MovieModel model = new MovieModel();
-            model.url = element.select("a").attr("href");
-            model.setImg(Constants.API_HOST2 + element.select("img").attr("data-original"));
-            model.title = element.select(".type-title").text();
-            model.date = element.select("span").text();
+            model.url = element.attr("href");
+            model.setImg(element.attr("data-original"));
+            model.title = element.attr("title");
+            model.date = element.select(".pic-text").text();
             list.add(model);
         }
-        Message msg = handler.obtainMessage(0);
+        Message msg = handler.obtainMessage(page);
         msg.obj = list;
         msg.sendToTarget();
     }
@@ -47,9 +49,9 @@ public class SearchEngineImpl2 extends SearchEngine {
     @Override
     public void detail(String url, DetailCallback callback) throws Exception {
         Document document = Jsoup.connect(Constants.API_HOST2 + url).get();
-        String img = null;
-        String summary = document.select(".tab-jq").text();
-        Elements elements = document.select(".ptab a");
+        String img = document.select(".stui-vodlist__thumb img").attr("data-original");
+        String summary = document.select("meta[name=description]").attr("content");
+        Elements elements = document.select(".stui-content__playlist a");
         List<DramasModel> list = new ArrayList<>();
         for (Element element : elements) {
             DramasModel model = new DramasModel();

@@ -104,8 +104,10 @@ public class SearchEngineImpl3 extends SearchEngine {
     public void search(int seqNum, String keyword, SearchActivity.SearchHandler handler) throws Exception {
         if (baseUrl == null)
             return;
+        int page = handler.pageNum;
         String url = baseUrl + "/search";
-        Connection.Response res = Jsoup.connect(url).method(Connection.Method.POST).data("wd", keyword)
+        Connection.Response res = Jsoup.connect(url).method(Connection.Method.GET).data("wd", keyword)
+                .data("page", String.valueOf(page))
                 .userAgent(Constants.USER_AGENT)
                 .followRedirects(false).execute();
         while (res.hasHeader("Location")) {
@@ -113,7 +115,8 @@ public class SearchEngineImpl3 extends SearchEngine {
             if (location != null && location.startsWith("http:/") && location.charAt(6) != '/')
                 location = location.substring(6);
             String redir = StringUtil.resolve(url, location);
-            Connection connection = Jsoup.connect(redir).method(Connection.Method.POST).data("wd", keyword)
+            Connection connection = Jsoup.connect(redir).method(Connection.Method.GET).data("wd", keyword)
+                    .data("page", String.valueOf(page))
                     .userAgent(Constants.USER_AGENT);
             for (Map.Entry<String, String> cookie : res.cookies().entrySet())
                 connection.cookie(cookie.getKey(), cookie.getValue());
@@ -134,7 +137,7 @@ public class SearchEngineImpl3 extends SearchEngine {
             if (!"VIP".equals(model.date))
                 list.add(model);
         }
-        Message msg = handler.obtainMessage(0);
+        Message msg = handler.obtainMessage(page);
         msg.obj = list;
         msg.sendToTarget();
     }
