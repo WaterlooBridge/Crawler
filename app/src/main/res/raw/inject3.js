@@ -36,13 +36,16 @@ function scanPage()
     if (allUrlsList.length > 0)
         window.bridge.loadVideo(allUrlsList[0].url);
 
-    var dp = document.getElementById('dpplayer');
-    if (dp) {
-        var path = urlParam('url');
-        if (path) {
-            console.log(path);
-            window.bridge.loadVideo(path);
-        }
+    var dp = document.getElementById('dplayer');
+    if (dp && window.onload) {
+        window.onload();
+    }
+}
+
+function DPlayer(data) {
+    console.log(JSON.stringify(data));
+    if (data.video && data.video.url) {
+        window.bridge.loadVideo(data.video.url);
     }
 }
 
