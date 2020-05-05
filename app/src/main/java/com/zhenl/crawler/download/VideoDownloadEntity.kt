@@ -112,7 +112,7 @@ class VideoDownloadEntity(
     }
 
     override fun compareTo(other: VideoDownloadEntity) =
-            (other.createTime - this.createTime).toInt()
+            other.createTime.compareTo(this.createTime)
 }
 
 fun parseJsonToVideoDownloadEntity(jsonString: String): VideoDownloadEntity? {

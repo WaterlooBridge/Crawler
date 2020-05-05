@@ -2,6 +2,7 @@ package com.zhenl.crawler;
 
 import org.junit.Test;
 
+import java.net.URI;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -21,5 +22,16 @@ public class UnitTest {
             str = str.replace(key, "/sdcard/" + key);
         }
         System.out.println(str);
+    }
+
+    @Test
+    public void testUri() {
+        String newUrl = "/20200312/AxEgOHZ6/1200kb/hls/index.m3u8";
+        URI uri = URI.create("https://www.nmgxwhz.com:65/20200312/AxEgOHZ6/index.m3u8");
+        String redirectUrl = uri.getScheme() + "://" + uri.getHost() + (uri.getPort() != -1 ? ":" + uri.getPort() : "") + newUrl;
+        System.out.println(redirectUrl);
+        uri = URI.create("http://g.co/androidstudio/not-mocked");
+        redirectUrl = uri.getScheme() + "://" + uri.getHost() + (uri.getPort() != -1 ? ":" + uri.getPort() : "") + newUrl;
+        System.out.println(redirectUrl);
     }
 }

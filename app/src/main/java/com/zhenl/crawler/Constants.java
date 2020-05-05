@@ -9,7 +9,7 @@ public class Constants {
     public static final boolean DEBUG = false;
 
     public static String API_HOST = "http://www.15yc.com";
-    public static String API_HOST2 = "http://yyy4480.net";
+    public static String API_HOST2 = "http://yyy4480.tv";
     public static String API_HOST3 = "http://q1268.com";
 
     public static String USER_AGENT = "Mozilla/5.0 (Linux; U; Android 8.0.0; zh-CN; ONEPLUS A3010 Build/OPR1.170623.032)" +

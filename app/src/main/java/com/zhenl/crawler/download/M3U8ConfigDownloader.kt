@@ -144,7 +144,7 @@ internal object M3U8ConfigDownloader {
                 } else if (!hls.startsWith("/")) {
                     url.substring(0, url.lastIndexOf("/") + 1) + hls
                 } else {
-                    "${uri.scheme}://${uri.host}$hls"
+                    "${uri.scheme}://${uri.host}${if (uri.port != -1) ":${uri.port}" else ""}$hls"
                 }
                 m3u8ListFile.appendText("$ts\n")
             }
@@ -171,13 +171,16 @@ internal object M3U8ConfigDownloader {
                 localPlaylist.appendText("$str\n")
             }
             Log.d(TAG, "start--->$entity")
-        } else {//重定向
-            val newUrl = list[0]
-            entity.redirectUrl = if (newUrl.startsWith("/")) {
-                "${uri.scheme}://${uri.host}$newUrl"
+        } else if (list.size == 1) {//重定向
+            var newUrl = list[0]
+            newUrl = if (newUrl.startsWith("/")) {
+                "${uri.scheme}://${uri.host}${if (uri.port != -1) ":${uri.port}" else ""}$newUrl"
             } else {
                 url.substring(0, url.lastIndexOf("/") + 1) + newUrl
             }
+            if (newUrl == entity.redirectUrl)
+                return
+            entity.redirectUrl = newUrl
             entity.toFile()
             downloadM3U8File(path, entity)
         }
