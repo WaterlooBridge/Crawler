@@ -17,6 +17,7 @@ import com.zhenl.crawler.MainActivity
 import com.zhenl.crawler.MyApplication
 import com.zhenl.crawler.R
 import com.zhenl.crawler.core.RecordAgent
+import com.zhenl.crawler.models.VideoModel
 import kotlinx.android.synthetic.main.layout_float_video.view.*
 import tv.danmaku.ijk.media.widget.IPCVideoView
 
@@ -45,10 +46,10 @@ class FloatVideoView : FrameLayout, View.OnClickListener {
             return true
         }
 
-        fun showFloatWindow(videoView: IPCVideoView, url: String) {
+        fun showFloatWindow(videoView: IPCVideoView, model: VideoModel) {
             val context = MyApplication.getInstance()
             val floatView = FloatVideoView(context)
-            floatView.showFloatWindow(videoView, url)
+            floatView.showFloatWindow(videoView, model)
         }
 
         private fun windowType(): Int {
@@ -69,8 +70,8 @@ class FloatVideoView : FrameLayout, View.OnClickListener {
     private lateinit var videoView: IPCVideoView
     private lateinit var wm: WindowManager
     private lateinit var wmParams: WindowManager.LayoutParams
-    private val controller: View
-    private var url: String? = null
+    private val controller: View = LayoutInflater.from(context).inflate(R.layout.layout_float_video, this, false)
+    private var videoModel: VideoModel? = null
     private var initialWidth = -2
 
     constructor(context: Context) : super(context)
@@ -78,7 +79,6 @@ class FloatVideoView : FrameLayout, View.OnClickListener {
     constructor(context: Context, attrs: AttributeSet?, defStyleAttr: Int) : super(context, attrs, defStyleAttr)
 
     init {
-        controller = LayoutInflater.from(context).inflate(R.layout.layout_float_video, this, false)
         addView(controller)
         setOnClickListener(this)
         iv_close.setOnClickListener(this)
@@ -98,7 +98,7 @@ class FloatVideoView : FrameLayout, View.OnClickListener {
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 intent.putExtra("isFromFloatWindow", true)
                 intent.putExtra("viewId", videoView.toString())
-                intent.putExtra("url", url)
+                intent.putExtra("video", videoModel)
                 context.startActivity(intent)
             }
             R.id.btn_play -> {
@@ -121,8 +121,8 @@ class FloatVideoView : FrameLayout, View.OnClickListener {
         }
     }
 
-    fun showFloatWindow(videoView: IPCVideoView, url: String?) {
-        this.url = url
+    fun showFloatWindow(videoView: IPCVideoView, model: VideoModel?) {
+        this.videoModel = model
         this.videoView = videoView
         addView(videoView, 0)
         wm = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
@@ -215,7 +215,7 @@ class FloatVideoView : FrameLayout, View.OnClickListener {
 
     private fun release() {
         handler.removeCallbacks(fadeOut)
-        RecordAgent.getInstance().record(url, videoView.duration, videoView.currentPosition)
+        RecordAgent.getInstance().record(videoModel?.url, videoView.duration, videoView.currentPosition)
         videoMap.remove(videoView.toString())
         videoView.release(true)
         wm.removeViewImmediate(this)

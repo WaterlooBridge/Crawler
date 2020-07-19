@@ -72,9 +72,15 @@ public class HomeActivity extends AppCompatActivity {
             MovieDetailActivity.start(view.getContext(), model.title, model.url);
         });
         nav_view.setNavigationItemSelectedListener(menuItem -> {
+            int id = menuItem.getItemId();
+            if (id == R.id.downloads) {
+                Intent intent = new Intent(getApplication(), DownloadActivity.class);
+                startActivity(intent);
+            } else if (id == R.id.settings) {
+                Intent intent = new Intent(getApplication(), SettingsActivity.class);
+                startActivity(intent);
+            }
             drawerLayout.closeDrawer(GravityCompat.START);
-            Intent intent = new Intent(getApplication(), DownloadActivity.class);
-            startActivity(intent);
             return false;
         });
         refreshLayout.setOnRefreshListener(() -> {

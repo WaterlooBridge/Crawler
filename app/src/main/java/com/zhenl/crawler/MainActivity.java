@@ -34,11 +34,13 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.preference.PreferenceManager;
 
 import com.zhenl.crawler.core.RecordAgent;
+import com.zhenl.crawler.download.VideoDownloadService;
 import com.zhenl.crawler.engines.SearchEngine;
 import com.zhenl.crawler.engines.SearchEngineFactory;
-import com.zhenl.crawler.download.VideoDownloadService;
+import com.zhenl.crawler.models.VideoModel;
 import com.zhenl.crawler.views.FloatVideoView;
 
 import java.lang.ref.WeakReference;
@@ -54,10 +56,9 @@ import tv.danmaku.ijk.media.widget.VideoControlHelper;
 
 public class MainActivity extends AppCompatActivity implements IPCVideoView.OnInfoListener, IPCVideoView.OnPreparedListener {
 
-    public static void start(Context context, String title, String url) {
+    public static void start(Context context, VideoModel model) {
         Intent intent = new Intent(context, MainActivity.class);
-        intent.putExtra("title", title);
-        intent.putExtra("url", url);
+        intent.putExtra("video", model);
         intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         context.startActivity(intent);
     }
@@ -66,6 +67,8 @@ public class MainActivity extends AppCompatActivity implements IPCVideoView.OnIn
 
     private static final int MENU_MORE = 2;
     private static final int REQUEST_CODE_FILE = 101;
+
+    private VideoModel videoModel;
 
     private String url;
     private ViewGroup videoParent;
@@ -79,7 +82,6 @@ public class MainActivity extends AppCompatActivity implements IPCVideoView.OnIn
     private boolean isPlaying;
     private boolean isLock;
     private boolean bgEnable;
-    private String videoPath;
     private MainHandler handler;
 
     @Override
@@ -104,8 +106,11 @@ public class MainActivity extends AppCompatActivity implements IPCVideoView.OnIn
             parent.removeView(mVideoView);
             WindowManager wm = (WindowManager) getSystemService(Context.WINDOW_SERVICE);
             wm.removeViewImmediate(parent);
-        } else
+        } else {
             mVideoView = new IPCVideoView(MyApplication.getInstance());
+            if ("1".equals(PreferenceManager.getDefaultSharedPreferences(MyApplication.getInstance()).getString("decoding_settings", null)))
+                mVideoView.setMediaCodecEnable(true);
+        }
 
         videoParent.addView(mVideoView, -1, -1);
         AVOptions options = new AVOptions();
@@ -153,8 +158,14 @@ public class MainActivity extends AppCompatActivity implements IPCVideoView.OnIn
                 controller.show();
         });
 
+        videoModel = getIntent().getParcelableExtra("video");
+        if (videoModel != null) {
+            setTitle(videoModel.getTitle());
+            getSupportActionBar().setSubtitle(videoModel.getSubtitle());
+            url = videoModel.getUrl();
+        }
+
         if (isFromFloatWindow) {
-            url = getIntent().getStringExtra("url");
             mVideoView.setMediaController(controller);
             mVideoView.setControlHelper(controlHelper);
             mVideoView.setOnInfoListener(this);
@@ -169,8 +180,6 @@ public class MainActivity extends AppCompatActivity implements IPCVideoView.OnIn
             return;
         }
 
-        setTitle(getIntent().getStringExtra("title"));
-        url = SearchEngineFactory.getHost() + getIntent().getStringExtra("url");
         Log.e(TAG, "[INFO:CONSOLE]" + url);
         engine = SearchEngineFactory.create();
         engine.load(url, new SearchEngine.Callback() {
@@ -200,7 +209,7 @@ public class MainActivity extends AppCompatActivity implements IPCVideoView.OnIn
     }
 
     private void play(String path) {
-        videoPath = path;
+        videoModel.setVideoPath(path);
         Uri uri = Uri.parse(path);
         play(uri);
     }
@@ -288,7 +297,9 @@ public class MainActivity extends AppCompatActivity implements IPCVideoView.OnIn
         mVideoView.setOnInfoListener(null);
         mVideoView.setOnPreparedListener(null);
         videoParent.removeView(mVideoView);
-        FloatVideoView.Companion.showFloatWindow(mVideoView, url);
+        if (videoModel == null)
+            videoModel = new VideoModel(null, null, url);
+        FloatVideoView.Companion.showFloatWindow(mVideoView, videoModel);
         if (engine != null)
             engine.destroy();
         controller.release();
@@ -411,26 +422,24 @@ public class MainActivity extends AppCompatActivity implements IPCVideoView.OnIn
         settingDialog.findViewById(R.id.view_copy_link).setOnClickListener(v -> {
             settingDialog.dismiss();
             ClipboardManager manager = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
-            if (manager == null || TextUtils.isEmpty(videoPath))
+            if (manager == null || videoModel == null || TextUtils.isEmpty(videoModel.getVideoPath()))
                 return;
             manager.setPrimaryClip(ClipData.newPlainText("link", generateUrl()));
             Toast.makeText(getApplicationContext(), "Link Copied", Toast.LENGTH_SHORT).show();
         });
         View view_download = settingDialog.findViewById(R.id.view_download);
-        if (TextUtils.isEmpty(videoPath) || !videoPath.startsWith("http")) {
+        if (videoModel == null || TextUtils.isEmpty(videoModel.getVideoPath()) || !videoModel.getVideoPath().startsWith("http")) {
             view_download.setVisibility(View.GONE);
             return;
         }
         view_download.setOnClickListener(v -> {
             settingDialog.dismiss();
-            if (TextUtils.isEmpty(videoPath))
-                return;
-            VideoDownloadService.Companion.downloadVideo(videoPath);
+            VideoDownloadService.Companion.downloadVideo(videoModel);
         });
     }
 
     private void jumpBrowser() {
-        if (TextUtils.isEmpty(videoPath))
+        if (videoModel == null || TextUtils.isEmpty(videoModel.getVideoPath()))
             return;
         try {
             Uri uri = Uri.parse(generateUrl());
@@ -443,7 +452,7 @@ public class MainActivity extends AppCompatActivity implements IPCVideoView.OnIn
     }
 
     private String generateUrl() {
-        return "https://waterloobridge.github.io/smile/video.html?path=" + URLEncoder.encode(videoPath);
+        return "https://waterloobridge.github.io/smile/video.html?path=" + URLEncoder.encode(videoModel.getVideoPath());
     }
 
     private static class MainHandler extends Handler {

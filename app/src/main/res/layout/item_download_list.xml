@@ -44,13 +44,25 @@
             tools:text="@string/app_name" />
 
         <TextView
+            android:id="@+id/subtitle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textSize="14sp"
+            app:layout_constraintEnd_toStartOf="@id/download"
+            app:layout_constraintStart_toStartOf="@id/title"
+            app:layout_constraintTop_toBottomOf="@id/title"
+            tools:text="@string/app_name" />
+
+        <TextView
             android:id="@+id/current_size"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="5dp"
             android:textSize="12sp"
             app:layout_constraintStart_toStartOf="@id/title"
-            app:layout_constraintTop_toBottomOf="@id/title"
+            app:layout_constraintTop_toBottomOf="@id/subtitle"
             tools:text="201.37MB" />
 
         <TextView

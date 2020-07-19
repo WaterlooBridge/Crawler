@@ -8,4 +8,9 @@
     <string name="preparing">准备中</string>
     <string name="download_error">下载异常</string>
     <string name="unknown_movie">未知影片</string>
+
+    <string name="player_header">播放设置</string>
+    <string name="decoding_title">解码设置</string>
+    <string name="option_software_decoding">软件解码</string>
+    <string name="option_hardware_decoding">系统硬解</string>
 </resources>

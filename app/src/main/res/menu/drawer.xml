@@ -2,13 +2,18 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
     <group
-        android:checkableBehavior="single"
-        android:id="@+id/main_group">
+        android:id="@+id/main_group"
+        android:checkableBehavior="single">
 
         <item
-            android:id="@+id/reposFragment"
+            android:id="@+id/downloads"
             android:icon="@drawable/ic_cloud_download"
-            android:title="下载"/>
+            android:title="@string/downloads" />
+
+        <item
+            android:id="@+id/settings"
+            android:icon="@drawable/ic_settings"
+            android:title="@string/settings" />
 
     </group>
 

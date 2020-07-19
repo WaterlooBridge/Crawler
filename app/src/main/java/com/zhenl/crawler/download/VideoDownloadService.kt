@@ -15,6 +15,7 @@ import androidx.core.app.NotificationCompat
 import com.zhenl.crawler.BuildConfig
 import com.zhenl.crawler.IVideoDownloader
 import com.zhenl.crawler.MyApplication
+import com.zhenl.crawler.models.VideoModel
 import com.zhenl.crawler.utils.FileUtil
 import java.lang.ref.WeakReference
 
@@ -28,7 +29,7 @@ class VideoDownloadService : Service() {
 
         private val map = HashMap<String, VideoDownloadEntity>()
 
-        fun downloadVideo(url: String) {
+        private fun downloadVideo(url: String) {
             val context = MyApplication.getInstance()
             val intent = Intent(context, VideoDownloadService::class.java)
             context.bindService(intent, object : ServiceConnection {
@@ -45,6 +46,13 @@ class VideoDownloadService : Service() {
             val url = entity.originalUrl
             map[url] = entity
             downloadVideo(url)
+        }
+
+        fun downloadVideo(model: VideoModel) {
+            val url = model.videoPath ?: return
+            downloadVideo(VideoDownloadEntity(url, model.title
+                    ?: FileUtil.getFileNameFromUrl(url), model.subtitle
+                    ?: "").apply { toFile() })
         }
     }
 
@@ -64,8 +72,7 @@ class VideoDownloadService : Service() {
 
         override fun downloadVideo(url: String?) {
             url?.let {
-                val entity = map.remove(it)
-                        ?: VideoDownloadEntity(it, FileUtil.getFileNameFromUrl(it)).apply { toFile() }
+                val entity = map.remove(it) ?: return
                 FileDownloader.downloadVideo(entity)
             }
         }

@@ -5,6 +5,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
+import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AlertDialog
@@ -15,6 +16,7 @@ import com.google.gson.Gson
 import com.zhenl.crawler.base.BaseActivity
 import com.zhenl.crawler.download.*
 import com.zhenl.crawler.download.VideoDownloadEntity
+import com.zhenl.crawler.models.VideoModel
 import com.zhenl.crawler.utils.FileUtil
 import com.zhenl.violet.core.Dispatcher
 import kotlinx.android.synthetic.main.activity_download.*
@@ -36,6 +38,7 @@ class DownloadActivity : BaseActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         supportActionBar?.setTitle(R.string.downloads)
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
         adapter = VideoDownloadAdapter(videoList)
         rv_downloads.adapter = adapter
@@ -47,6 +50,12 @@ class DownloadActivity : BaseActivity() {
         })
 
         load()
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        if (item.itemId == android.R.id.home)
+            finish()
+        return super.onOptionsItemSelected(item)
     }
 
     private fun load() {
@@ -154,6 +163,7 @@ class DownloadActivity : BaseActivity() {
 
         inner class ViewHolder(private val view: View) : RecyclerView.ViewHolder(view) {
             private val title = view.title
+            private val subtitle = view.subtitle
             private val currentSize = view.current_size
             private val speed = view.speed
             private val date = view.date
@@ -180,7 +190,7 @@ class DownloadActivity : BaseActivity() {
                             if (it.status == DOWNLOADING) {
                                 it.downloadContext?.stop()
                             } else if (it.status == COMPLETE) {
-                                play(it.originalUrl)
+                                play(it)
                             } else {
                                 VideoDownloadService.downloadVideo(it)
                             }
@@ -194,18 +204,19 @@ class DownloadActivity : BaseActivity() {
                                     }.setNegativeButton("取消", null)
                                     .show()
                         } else {
-                            play(it.originalUrl)
+                            play(it)
                         }
                     }
                     builder.create().show()
                 }
             }
 
-            private fun play(url: String) {
+            private fun play(entity: VideoDownloadEntity) {
                 val context = MyApplication.getInstance()
                 val intent = Intent(context, MainActivity::class.java)
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                intent.data = Uri.fromFile(FileDownloader.getLocalPlayFile(url))
+                intent.data = Uri.fromFile(FileDownloader.getLocalPlayFile(entity.originalUrl))
+                intent.putExtra("video", VideoModel(entity.name, entity.subName, intent.data.toString()))
                 context.startActivity(intent)
             }
 
@@ -215,20 +226,8 @@ class DownloadActivity : BaseActivity() {
                 }
                 this.data = data
                 val context = view.context
-                val name = if (data.name.isNotEmpty()) {
-                    if (data.subName.isNotEmpty()) {
-                        "${data.name}(${data.subName})"
-                    } else {
-                        data.name
-                    }
-                } else {
-                    if (data.subName.isNotEmpty()) {
-                        "${context.getString(R.string.unknown_movie)}(${data.subName})"
-                    } else {
-                        context.getString(R.string.unknown_movie)
-                    }
-                }
-                title.text = name
+                title.text = if (data.name.isNotEmpty()) data.name else context.getString(R.string.unknown_movie)
+                subtitle.text = data.subName
                 date.text = df.format(Date(data.createTime))
                 updateProgress(data)
             }

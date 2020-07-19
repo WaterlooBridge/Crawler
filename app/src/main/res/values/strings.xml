@@ -8,4 +8,11 @@
     <string name="preparing">preparing</string>
     <string name="download_error">error</string>
     <string name="unknown_movie">unknown movie</string>
+
+    <!-- Preference Titles -->
+    <string name="player_header">Player settings</string>
+    <string name="decoding_title">Decoding settings</string>
+    <string name="option_software_decoding">Software decoding</string>
+    <string name="option_hardware_decoding">Hardware decoding</string>
+
 </resources>

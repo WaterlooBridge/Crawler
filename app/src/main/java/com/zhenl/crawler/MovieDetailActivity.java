@@ -7,10 +7,12 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,6 +23,7 @@ import com.bumptech.glide.Glide;
 import com.zhenl.crawler.engines.SearchEngineFactory;
 import com.zhenl.crawler.models.DramasModel;
 import com.zhenl.crawler.models.MovieModel;
+import com.zhenl.crawler.models.VideoModel;
 import com.zhenl.violet.base.RecyclerAdapter;
 import com.zhenl.violet.core.Dispatcher;
 
@@ -56,7 +59,8 @@ public class MovieDetailActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         url = getIntent().getStringExtra("url");
         setContentView(R.layout.activity_movie_detail);
-        setTitle(getIntent().getStringExtra("title"));
+        String title = getIntent().getStringExtra("title");
+        setTitle(title);
         iv = findViewById(R.id.iv);
         tvSummary = findViewById(R.id.tv_summary);
         gv = findViewById(R.id.gv);
@@ -66,7 +70,7 @@ public class MovieDetailActivity extends AppCompatActivity {
         gv.setAdapter(adapter);
         adapter.setOnItemClickListener((Object object, View view, int position) -> {
             DramasModel model = dsList.get(position);
-            MainActivity.start(view.getContext(), model.text, model.url);
+            MainActivity.start(view.getContext(), new VideoModel(title, model.text, SearchEngineFactory.getHost() + model.url));
         });
         load();
     }
