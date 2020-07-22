@@ -1,54 +1,60 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="180dp"
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#40ffffff"
-    android:orientation="vertical"
-    android:paddingLeft="15dp"
-    android:paddingRight="15dp">
+    app:cardBackgroundColor="#40ffffff">
 
-    <FrameLayout
-        android:id="@+id/fl_play_background"
-        android:layout_width="match_parent"
-        android:layout_height="40dp">
+    <LinearLayout
+        android:layout_width="180dp"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:paddingLeft="15dp"
+        android:paddingRight="15dp">
+
+        <FrameLayout
+            android:id="@+id/fl_play_background"
+            android:layout_width="match_parent"
+            android:layout_height="40dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:text="后台播放"
+                android:textColor="@color/white" />
+
+            <Switch
+                android:id="@+id/switch_play_background"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical|right" />
+
+        </FrameLayout>
 
         <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
-            android:text="后台播放"
+            android:id="@+id/view_open_browser"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:gravity="center_vertical"
+            android:text="使用浏览器播放"
             android:textColor="@color/white" />
 
-        <Switch
-            android:id="@+id/switch_play_background"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical|right" />
+        <TextView
+            android:id="@+id/view_copy_link"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:gravity="center_vertical"
+            android:text="复制播放链接"
+            android:textColor="@color/white" />
 
-    </FrameLayout>
+        <TextView
+            android:id="@+id/view_download"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:gravity="center_vertical"
+            android:text="下载视频"
+            android:textColor="@color/white" />
 
-    <TextView
-        android:id="@+id/view_open_browser"
-        android:layout_width="match_parent"
-        android:layout_height="40dp"
-        android:gravity="center_vertical"
-        android:text="使用浏览器播放"
-        android:textColor="@color/white" />
-
-    <TextView
-        android:id="@+id/view_copy_link"
-        android:layout_width="match_parent"
-        android:layout_height="40dp"
-        android:gravity="center_vertical"
-        android:text="复制播放链接"
-        android:textColor="@color/white" />
-
-    <TextView
-        android:id="@+id/view_download"
-        android:layout_width="match_parent"
-        android:layout_height="40dp"
-        android:gravity="center_vertical"
-        android:text="下载视频"
-        android:textColor="@color/white" />
-
-</LinearLayout>
+    </LinearLayout>
+</com.google.android.material.card.MaterialCardView>
