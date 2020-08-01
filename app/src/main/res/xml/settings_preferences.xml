@@ -12,4 +12,12 @@
 
     </PreferenceCategory>
 
+    <PreferenceCategory app:title="@string/clear_cache_header">
+
+        <Preference
+            app:key="clear_video_cache"
+            app:title="@string/clear_video_cache" />
+
+    </PreferenceCategory>
+
 </PreferenceScreen>

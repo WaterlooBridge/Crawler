@@ -13,4 +13,6 @@
     <string name="decoding_title">解码设置</string>
     <string name="option_software_decoding">软件解码</string>
     <string name="option_hardware_decoding">系统硬解</string>
+    <string name="clear_cache_header">清理存储空间</string>
+    <string name="clear_video_cache">清除视频缓存</string>
 </resources>

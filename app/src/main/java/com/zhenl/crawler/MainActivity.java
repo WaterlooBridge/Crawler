@@ -186,7 +186,7 @@ public class MainActivity extends AppCompatActivity implements IPCVideoView.OnIn
             @Override
             public void play(String path) {
                 mVideoView.setCacheEnable(true);
-                mVideoView.setProxyCacheMode(path.contains(".m3u8"));
+//                mVideoView.setProxyCacheMode(path.contains(".m3u8"));
                 MainActivity.this.play(path);
             }
 

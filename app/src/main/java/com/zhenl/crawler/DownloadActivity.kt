@@ -124,19 +124,7 @@ class DownloadActivity : BaseActivity() {
             RecyclerView.Adapter<VideoDownloadAdapter.ViewHolder>() {
 
         companion object {
-
-            private val units = arrayOf("B", "KB", "MB", "GB", "TB")
             private val df = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US)
-
-            fun getSizeUnit(size: Double): String {
-                var sizeUnit = size
-                var index = 0
-                while (sizeUnit > 1024 && index < 4) {
-                    sizeUnit /= 1024.0
-                    index++
-                }
-                return String.format(Locale.getDefault(), "%.2f %s", sizeUnit, units[index])
-            }
         }
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -234,7 +222,7 @@ class DownloadActivity : BaseActivity() {
 
             fun updateProgress(data: VideoDownloadEntity) {
                 this.data = data
-                currentSize.text = getSizeUnit(data.currentSize.toDouble())
+                currentSize.text = FileUtil.getFormatSize(data.currentSize.toDouble())
                 speed.text = "${DecimalFormat("#.##%").format(data.currentProgress)}|${data.currentSpeed}"
 
                 when (data.status) {
