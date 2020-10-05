@@ -33,7 +33,7 @@
         android:layout_centerVertical="true"
         android:layout_margin="7dp"
         android:padding="15dp"
-        android:src="@drawable/ic_lock_24dp"
+        android:src="@drawable/ic_lock_open_24dp"
         android:visibility="gone"
         app:backgroundTint="#40000000" />
 

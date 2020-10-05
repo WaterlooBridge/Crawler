@@ -1,23 +1,26 @@
-package com.zhenl.crawler
+package com.zhenl.crawler.ui
 
 import android.os.Bundle
 import android.view.MenuItem
 import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
+import com.zhenl.crawler.MyApplication
+import com.zhenl.crawler.R
+import com.zhenl.crawler.base.BaseActivity
+import com.zhenl.crawler.databinding.SettingsActivityBinding
 import com.zhenl.crawler.utils.FileUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import tv.danmaku.ijk.media.services.IPCPlayerControl
 
-class SettingsActivity : AppCompatActivity() {
+class SettingsActivity : BaseActivity<SettingsActivityBinding>() {
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.settings_activity)
+    override val layoutRes: Int = R.layout.settings_activity
+
+    override fun initView() {
         supportFragmentManager
                 .beginTransaction()
                 .replace(R.id.settings, SettingsFragment())
@@ -37,20 +40,30 @@ class SettingsActivity : AppCompatActivity() {
             setPreferencesFromResource(R.xml.settings_preferences, rootKey)
 
             findPreference<Preference>("clear_video_cache")?.let {
-                lifecycleScope.launch {
-                    it.summary = withContext(Dispatchers.IO) { FileUtil.getFormatSize(IPCPlayerControl.getCacheSize(context).toDouble()) }
-                }
+                lifecycleScope.launch { it.summary = calcSummary() }
                 it.setOnPreferenceClickListener {
                     AlertDialog.Builder(requireContext())
                             .setTitle("确认清除？")
                             .setPositiveButton("确定") { _, _ ->
-                                IPCPlayerControl.clearCache(context)
-                                it.summary = FileUtil.getFormatSize(IPCPlayerControl.getCacheSize(context).toDouble())
+                                clearCache(it)
                             }.setNegativeButton("取消", null)
                             .show()
                     true
                 }
             }
+        }
+
+        private fun clearCache(preference: Preference) {
+            lifecycleScope.launch {
+                MyApplication.globalLoading.value = true
+                withContext(Dispatchers.IO) { IPCPlayerControl.clearCache(context) }
+                MyApplication.globalLoading.value = false
+                preference.summary = calcSummary()
+            }
+        }
+
+        private suspend fun calcSummary(): String = withContext(Dispatchers.IO) {
+            FileUtil.getFormatSize(IPCPlayerControl.getCacheSize(context).toDouble())
         }
     }
 }

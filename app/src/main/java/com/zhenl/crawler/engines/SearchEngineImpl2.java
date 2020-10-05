@@ -1,10 +1,6 @@
 package com.zhenl.crawler.engines;
 
-import android.os.Message;
-
 import com.zhenl.crawler.Constants;
-import com.zhenl.crawler.R;
-import com.zhenl.crawler.SearchActivity;
 import com.zhenl.crawler.models.DramasModel;
 import com.zhenl.crawler.models.MovieModel;
 
@@ -24,13 +20,9 @@ public class SearchEngineImpl2 extends SearchEngine {
     private static String js;
 
     @Override
-    public void search(int seqNum, String keyword, SearchActivity.SearchHandler handler) throws Exception {
-        int page = handler.pageNum;
+    public List<MovieModel> search(int page, String keyword) throws Exception {
         Document document = Jsoup.connect(Constants.API_HOST2 + "/search.php").data("searchword", keyword)
                 .data("page", String.valueOf(page)).get();
-        if (handler.recSeqNum > seqNum)
-            return;
-        handler.recSeqNum = seqNum;
         Elements elements = document.select(".v-thumb.stui-vodlist__thumb");
         List<MovieModel> list = new ArrayList<>();
         for (Element element : elements) {
@@ -41,9 +33,7 @@ public class SearchEngineImpl2 extends SearchEngine {
             model.date = element.select(".pic-text").text();
             list.add(model);
         }
-        Message msg = handler.obtainMessage(page);
-        msg.obj = list;
-        msg.sendToTarget();
+        return list;
     }
 
     @Override

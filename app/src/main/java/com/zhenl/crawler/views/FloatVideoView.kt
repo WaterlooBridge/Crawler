@@ -13,7 +13,7 @@ import android.view.*
 import android.widget.FrameLayout
 import android.widget.OverScroller
 import androidx.core.view.ViewCompat
-import com.zhenl.crawler.MainActivity
+import com.zhenl.crawler.ui.MainActivity
 import com.zhenl.crawler.MyApplication
 import com.zhenl.crawler.R
 import com.zhenl.crawler.core.RecordAgent
@@ -32,7 +32,7 @@ class FloatVideoView : FrameLayout, View.OnClickListener {
         private val IC_MEDIA_PLAY_ID = Resources.getSystem().getIdentifier("ic_media_play", "drawable", "android")
 
         fun isFloatWindowOpAllowed(): Boolean {
-            val context = MyApplication.getInstance()
+            val context = MyApplication.instance
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(context)) {
                 try {
                     val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:" + context.packageName))
@@ -47,7 +47,7 @@ class FloatVideoView : FrameLayout, View.OnClickListener {
         }
 
         fun showFloatWindow(videoView: IPCVideoView, model: VideoModel) {
-            val context = MyApplication.getInstance()
+            val context = MyApplication.instance
             val floatView = FloatVideoView(context)
             floatView.showFloatWindow(videoView, model)
         }
@@ -93,7 +93,7 @@ class FloatVideoView : FrameLayout, View.OnClickListener {
             }
             R.id.iv_fullscreen -> {
                 videoMap[videoView.toString()] = videoView
-                val context = MyApplication.getInstance()
+                val context = MyApplication.instance
                 val intent = Intent(context, MainActivity::class.java)
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 intent.putExtra("isFromFloatWindow", true)

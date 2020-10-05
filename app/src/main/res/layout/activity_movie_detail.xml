@@ -1,42 +1,57 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent">
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <LinearLayout
+    <data>
+
+        <variable
+            name="vm"
+            type="com.zhenl.crawler.vm.MovieViewModel" />
+    </data>
+
+    <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:focusableInTouchMode="true"
-        android:orientation="vertical">
+        android:layout_height="match_parent">
 
-        <com.zhenl.crawler.views.RatioImageView
-            android:id="@+id/iv"
-            android:layout_width="120dp"
-            android:layout_height="wrap_content"
-            android:layout_margin="10dp" />
-
-        <TextView
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_margin="10dp"
-            android:text="剧情介绍："
-            android:textColor="#777"
-            android:textStyle="bold" />
+            android:layout_height="match_parent"
+            android:focusableInTouchMode="true"
+            android:orientation="vertical">
 
-        <TextView
-            android:id="@+id/tv_summary"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_margin="10dp" />
+            <com.zhenl.crawler.views.RatioImageView
+                android:id="@+id/iv"
+                imgRes="@{vm.img}"
+                android:layout_width="120dp"
+                android:layout_height="wrap_content"
+                android:layout_margin="10dp" />
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/gv"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_margin="10dp"
-            android:cacheColorHint="#0000"
-            android:listSelector="#0000"
-            android:numColumns="4" />
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="10dp"
+                android:text="剧情介绍："
+                android:textColor="#777"
+                android:textStyle="bold" />
 
-    </LinearLayout>
-</androidx.core.widget.NestedScrollView>
+            <TextView
+                android:id="@+id/tv_summary"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="10dp"
+                android:text="@{vm.summary}" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/gv"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="10dp"
+                android:cacheColorHint="#0000"
+                android:listSelector="#0000"
+                android:numColumns="4"
+                app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
+                app:spanCount="4" />
+
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+</layout>

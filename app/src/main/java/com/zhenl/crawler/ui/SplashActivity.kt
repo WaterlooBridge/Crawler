@@ -1,4 +1,4 @@
-package com.zhenl.crawler
+package com.zhenl.crawler.ui
 
 import android.annotation.SuppressLint
 import android.content.Intent
@@ -9,6 +9,9 @@ import android.os.Message
 import android.view.Window
 import android.view.WindowManager
 import androidx.appcompat.app.AppCompatActivity
+import com.zhenl.crawler.Constants
+import com.zhenl.crawler.MyApplication
+import com.zhenl.crawler.R
 import com.zhenl.crawler.services.ACTION_FOO
 import com.zhenl.crawler.services.DownloadService
 import com.zhenl.crawler.services.EXTRA_PARAM1
@@ -22,7 +25,7 @@ class SplashActivity : AppCompatActivity() {
     internal var handler: Handler = object : Handler() {
         override fun handleMessage(msg: Message) {
             startHome.run()
-            startService(Intent(MyApplication.getInstance(), DownloadService::class.java)
+            startService(Intent(MyApplication.instance, DownloadService::class.java)
                     .setAction(ACTION_FOO)
                     .putExtra(EXTRA_PARAM1, msg.what))
         }

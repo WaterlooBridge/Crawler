@@ -22,8 +22,8 @@ object FileDownloader {
      */
     @JvmStatic
     fun getBaseDownloadPath(): File {
-        val file = MyApplication.getInstance().getExternalFilesDir("m3u8Downloader")
-                ?: File(MyApplication.getInstance().filesDir, "m3u8Downloader")
+        val file = MyApplication.instance.getExternalFilesDir("m3u8Downloader")
+                ?: File(MyApplication.instance.filesDir, "m3u8Downloader")
         if (!file.exists()) {
             file.mkdirs()
         }
@@ -75,9 +75,9 @@ object FileDownloader {
         }
         if (entity.originalUrl.contains(".m3u8")) {
             downloadM3U8File(entity)
-            Toast.makeText(MyApplication.getInstance(), "已加入下载队列", Toast.LENGTH_SHORT).show()
+            Toast.makeText(MyApplication.instance, "已加入下载队列", Toast.LENGTH_SHORT).show()
         } else {
-            Toast.makeText(MyApplication.getInstance(), "当前仅支持m3u8下载", Toast.LENGTH_SHORT).show()
+            Toast.makeText(MyApplication.instance, "当前仅支持m3u8下载", Toast.LENGTH_SHORT).show()
         }
     }
 

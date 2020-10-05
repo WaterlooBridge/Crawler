@@ -23,9 +23,9 @@
             android:name=".download.VideoDownloadService"
             android:exported="false" />
 
-        <activity android:name=".HomeActivity" />
+        <activity android:name=".ui.HomeActivity" />
         <activity
-            android:name=".MainActivity"
+            android:name=".ui.MainActivity"
             android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation"
             android:supportsPictureInPicture="true">
             <intent-filter>
@@ -70,7 +70,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".SplashActivity"
+            android:name=".ui.SplashActivity"
             android:theme="@style/AppTheme.Splash">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -78,10 +78,10 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".MovieDetailActivity" />
-        <activity android:name=".SearchActivity" />
-        <activity android:name=".DownloadActivity" />
-        <activity android:name=".SettingsActivity" />
+        <activity android:name=".ui.MovieDetailActivity" />
+        <activity android:name=".ui.SearchActivity" />
+        <activity android:name=".ui.DownloadActivity" />
+        <activity android:name=".ui.SettingsActivity" />
     </application>
 
 </manifest>

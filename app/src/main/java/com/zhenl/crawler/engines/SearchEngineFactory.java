@@ -18,6 +18,9 @@ public class SearchEngineFactory {
             case 3:
                 engine = new SearchEngineImpl3();
                 break;
+            case 4:
+                engine = new SearchEngineImpl4();
+                break;
             default:
                 engine = new SearchEngineImpl1();
                 break;
@@ -33,6 +36,9 @@ public class SearchEngineFactory {
                 break;
             case 3:
                 host = SearchEngineImpl3.baseUrl;
+                break;
+            case 4:
+                host = Constants.API_HOST4;
                 break;
             default:
                 host = Constants.API_HOST;

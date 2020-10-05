@@ -1,4 +1,4 @@
-package com.zhenl.crawler;
+package com.zhenl.crawler.ui;
 
 import android.Manifest;
 import android.app.Dialog;
@@ -36,6 +36,9 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.preference.PreferenceManager;
 
+import com.zhenl.crawler.Constants;
+import com.zhenl.crawler.MyApplication;
+import com.zhenl.crawler.R;
 import com.zhenl.crawler.core.RecordAgent;
 import com.zhenl.crawler.download.VideoDownloadService;
 import com.zhenl.crawler.engines.SearchEngine;
@@ -107,8 +110,8 @@ public class MainActivity extends AppCompatActivity implements IPCVideoView.OnIn
             WindowManager wm = (WindowManager) getSystemService(Context.WINDOW_SERVICE);
             wm.removeViewImmediate(parent);
         } else {
-            mVideoView = new IPCVideoView(MyApplication.getInstance());
-            if ("1".equals(PreferenceManager.getDefaultSharedPreferences(MyApplication.getInstance()).getString("decoding_settings", null)))
+            mVideoView = new IPCVideoView(MyApplication.instance);
+            if ("1".equals(PreferenceManager.getDefaultSharedPreferences(MyApplication.instance).getString("decoding_settings", null)))
                 mVideoView.setMediaCodecEnable(true);
         }
 
@@ -150,7 +153,7 @@ public class MainActivity extends AppCompatActivity implements IPCVideoView.OnIn
         btn_lock = findViewById(R.id.btn_lock);
         btn_lock.setOnClickListener(v -> {
             isLock = !isLock;
-            btn_lock.setImageResource(isLock ? R.drawable.ic_lock_open_24dp : R.drawable.ic_lock_24dp);
+            btn_lock.setImageResource(isLock ? R.drawable.ic_lock_24dp : R.drawable.ic_lock_open_24dp);
             controller.setLock(isLock);
             if (isLock)
                 controller.hide();

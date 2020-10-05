@@ -11,7 +11,7 @@ import android.webkit.WebViewClient;
 
 import com.zhenl.crawler.Constants;
 import com.zhenl.crawler.MyApplication;
-import com.zhenl.crawler.SearchActivity;
+import com.zhenl.crawler.ui.SearchActivity;
 import com.zhenl.crawler.models.DramasModel;
 import com.zhenl.crawler.models.MovieModel;
 import com.zhenl.violet.core.Dispatcher;
@@ -51,7 +51,7 @@ public class SearchEngineImpl3 extends SearchEngine {
     private static void loadLink() {
         if (isPinging || !TextUtils.isEmpty(baseUrl))
             return;
-        WebView wv = new WebView(MyApplication.getInstance());
+        WebView wv = new WebView(MyApplication.instance);
         wv.getSettings().setJavaScriptEnabled(true);
         wv.setWebViewClient(new WebViewClient() {
             @Override
@@ -101,10 +101,9 @@ public class SearchEngineImpl3 extends SearchEngine {
     }
 
     @Override
-    public void search(int seqNum, String keyword, SearchActivity.SearchHandler handler) throws Exception {
+    public List<MovieModel> search(int page, String keyword) throws Exception {
         if (baseUrl == null)
-            return;
-        int page = handler.pageNum;
+            throw new RuntimeException();
         String url = baseUrl + "/search";
         Connection.Response res = Jsoup.connect(url).method(Connection.Method.GET).data("wd", keyword)
                 .data("page", String.valueOf(page))
@@ -123,9 +122,6 @@ public class SearchEngineImpl3 extends SearchEngine {
             res = connection.followRedirects(false).execute();
         }
         Document document = res.parse();
-        if (handler.recSeqNum > seqNum)
-            return;
-        handler.recSeqNum = seqNum;
         Elements elements = document.select(".p1.m1");
         List<MovieModel> list = new ArrayList<>();
         for (Element element : elements) {
@@ -137,9 +133,7 @@ public class SearchEngineImpl3 extends SearchEngine {
             if (!"VIP".equals(model.date))
                 list.add(model);
         }
-        Message msg = handler.obtainMessage(page);
-        msg.obj = list;
-        msg.sendToTarget();
+        return list;
     }
 
     @Override

@@ -45,7 +45,7 @@ class DownloadService : IntentService("DownloadService") {
      */
     private fun handleActionFoo(originVersionCode: Int, param2: String?) {
         val baseUrl = "https://raw.githubusercontent.com/WaterlooBridge/Crawler/master/"
-        val sp = MyApplication.application.getSharedPreferences("search_engine", Context.MODE_PRIVATE)
+        val sp = MyApplication.instance.getSharedPreferences("search_engine", Context.MODE_PRIVATE)
         val versionCode = sp.getInt("versionCode", 0)
         if (originVersionCode > versionCode) {
             val inject = HttpUtil.getSync(baseUrl + "app/src/main/res/raw/inject.js")

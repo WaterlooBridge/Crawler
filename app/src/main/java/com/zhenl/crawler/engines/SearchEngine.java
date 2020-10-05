@@ -20,8 +20,8 @@ import android.webkit.WebViewClient;
 
 import com.zhenl.crawler.Constants;
 import com.zhenl.crawler.MyApplication;
-import com.zhenl.crawler.SearchActivity;
 import com.zhenl.crawler.models.DramasModel;
+import com.zhenl.crawler.models.MovieModel;
 
 import java.io.InputStream;
 import java.util.HashMap;
@@ -42,7 +42,7 @@ public abstract class SearchEngine extends WebViewClient {
 
     private WebView wv;
 
-    public abstract void search(int seqNum, String keyword, SearchActivity.SearchHandler handler) throws Exception;
+    public abstract List<MovieModel> search(int page, String keyword) throws Exception;
 
     public abstract void detail(String url, DetailCallback callback) throws Exception;
 
@@ -64,7 +64,7 @@ public abstract class SearchEngine extends WebViewClient {
         if (isDestroy)
             return;
         if (wv == null) {
-            wv = new WebView(MyApplication.getInstance());
+            wv = new WebView(MyApplication.instance);
             wv.getSettings().setJavaScriptEnabled(true);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
                 wv.getSettings().setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
@@ -119,14 +119,14 @@ public abstract class SearchEngine extends WebViewClient {
     }
 
     protected String loadJs(String name) {
-        String js = MyApplication.getInstance().getSharedPreferences("search_engine", Context.MODE_PRIVATE)
+        Context context = MyApplication.instance;
+        String js = context.getSharedPreferences("search_engine", Context.MODE_PRIVATE)
                 .getString(name, null);
         if (!Constants.DEBUG && !TextUtils.isEmpty(js))
             return js;
-        int resId = MyApplication.getInstance().getResources().getIdentifier(name, "raw",
-                MyApplication.getInstance().getPackageName());
+        int resId = context.getResources().getIdentifier(name, "raw", context.getPackageName());
         try {
-            InputStream inputStream = MyApplication.getInstance().getResources().openRawResource(resId);
+            InputStream inputStream = context.getResources().openRawResource(resId);
             byte[] bytes = new byte[inputStream.available()];
             inputStream.read(bytes);
             js = new String(bytes);

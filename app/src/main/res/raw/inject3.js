@@ -39,6 +39,8 @@ function scanPage()
     var dp = document.getElementById('dplayer');
     if (dp && window.onload) {
         window.onload();
+    } else if (window.huiid) {
+        window.bridge.loadVideo(window.huiid);
     }
 }
 

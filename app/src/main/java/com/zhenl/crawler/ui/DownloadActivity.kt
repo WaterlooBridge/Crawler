@@ -1,4 +1,4 @@
-package com.zhenl.crawler
+package com.zhenl.crawler.ui
 
 import android.content.DialogInterface
 import android.content.Intent
@@ -13,7 +13,10 @@ import androidx.appcompat.widget.AppCompatEditText
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.RecyclerView
 import com.google.gson.Gson
+import com.zhenl.crawler.MyApplication
+import com.zhenl.crawler.R
 import com.zhenl.crawler.base.BaseActivity
+import com.zhenl.crawler.databinding.ActivityDownloadBinding
 import com.zhenl.crawler.download.*
 import com.zhenl.crawler.download.VideoDownloadEntity
 import com.zhenl.crawler.models.VideoModel
@@ -29,7 +32,7 @@ import java.util.*
 /**
  * Created by lin on 20-1-20.
  */
-class DownloadActivity : BaseActivity() {
+class DownloadActivity : BaseActivity<ActivityDownloadBinding>() {
     override val layoutRes: Int = R.layout.activity_download
 
     private lateinit var adapter: VideoDownloadAdapter
@@ -200,7 +203,7 @@ class DownloadActivity : BaseActivity() {
             }
 
             private fun play(entity: VideoDownloadEntity) {
-                val context = MyApplication.getInstance()
+                val context = MyApplication.instance
                 val intent = Intent(context, MainActivity::class.java)
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 intent.data = Uri.fromFile(FileDownloader.getLocalPlayFile(entity.originalUrl))

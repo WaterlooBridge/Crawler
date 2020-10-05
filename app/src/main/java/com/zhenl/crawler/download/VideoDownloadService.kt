@@ -30,7 +30,7 @@ class VideoDownloadService : Service() {
         private val map = HashMap<String, VideoDownloadEntity>()
 
         private fun downloadVideo(url: String) {
-            val context = MyApplication.getInstance()
+            val context = MyApplication.instance
             val intent = Intent(context, VideoDownloadService::class.java)
             context.bindService(intent, object : ServiceConnection {
                 override fun onServiceDisconnected(name: ComponentName?) {
@@ -89,7 +89,7 @@ class VideoDownloadService : Service() {
     private class ForegroundHandler(service: Service) : Handler() {
 
         private val wr = WeakReference(service)
-        private val builder = NotificationCompat.Builder(MyApplication.getInstance(), CHANNEL_ID)
+        private val builder = NotificationCompat.Builder(MyApplication.instance, CHANNEL_ID)
 
         private var foreground = false
 
