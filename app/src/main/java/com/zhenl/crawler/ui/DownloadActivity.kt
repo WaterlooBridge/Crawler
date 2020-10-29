@@ -3,14 +3,14 @@ package com.zhenl.crawler.ui
 import android.content.DialogInterface
 import android.content.Intent
 import android.net.Uri
-import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.AppCompatEditText
-import androidx.lifecycle.Observer
+import androidx.lifecycle.asFlow
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
 import com.google.gson.Gson
 import com.zhenl.crawler.MyApplication
@@ -21,9 +21,12 @@ import com.zhenl.crawler.download.*
 import com.zhenl.crawler.download.VideoDownloadEntity
 import com.zhenl.crawler.models.VideoModel
 import com.zhenl.crawler.utils.FileUtil
-import com.zhenl.violet.core.Dispatcher
 import kotlinx.android.synthetic.main.activity_download.*
 import kotlinx.android.synthetic.main.item_download_list.view.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 import java.text.DecimalFormat
 import java.text.SimpleDateFormat
@@ -38,8 +41,7 @@ class DownloadActivity : BaseActivity<ActivityDownloadBinding>() {
     private lateinit var adapter: VideoDownloadAdapter
     private val videoList = arrayListOf<VideoDownloadEntity>()
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
+    override fun initView() {
         supportActionBar?.setTitle(R.string.downloads)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
@@ -47,48 +49,39 @@ class DownloadActivity : BaseActivity<ActivityDownloadBinding>() {
         rv_downloads.adapter = adapter
 
         fab_btn.setOnClickListener { newDownload() }
+    }
 
-        FileDownloader.downloadCallback.observe(this, Observer {
-            onProgress(it)
-        })
-
-        load()
+    override fun initData() {
+        lifecycleScope.launch {
+            withContext(Dispatchers.IO) {
+                FileDownloader.getBaseDownloadPath().listFiles()?.forEach {
+                    val file = File(it, "video.config")
+                    if (!file.exists())
+                        return@forEach
+                    val text = file.readText()
+                    if (text.isEmpty())
+                        return@forEach
+                    val data = Gson().fromJson(text, VideoDownloadEntity::class.java)
+                            ?: return@forEach
+                    if (data.status == DELETE) {
+                        it.deleteRecursively()
+                    } else {
+                        if (data.status == DOWNLOADING && data.downloadContext == null)
+                            data.status = PAUSE
+                        videoList.add(data)
+                    }
+                }
+                videoList.sort()
+            }
+            adapter.notifyDataSetChanged()
+            FileDownloader.downloadCallback.asFlow().collect { onProgress(it) }
+        }
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         if (item.itemId == android.R.id.home)
             finish()
         return super.onOptionsItemSelected(item)
-    }
-
-    private fun load() {
-        Dispatcher.getInstance().enqueue {
-            FileDownloader.getBaseDownloadPath().listFiles().forEach {
-                val file = File(it, "video.config")
-                if (file.exists()) {
-                    val text = file.readText()
-                    if (text.isNotEmpty()) {
-                        val data = Gson().fromJson<VideoDownloadEntity>(
-                                text,
-                                VideoDownloadEntity::class.java
-                        )
-                        if (data != null) {
-                            if (data.status == DELETE) {
-                                it.deleteRecursively()
-                            } else {
-                                if (data.status == DOWNLOADING && data.downloadContext == null)
-                                    data.status = PAUSE
-                                videoList.add(data)
-                            }
-                        }
-                    }
-                }
-            }
-
-            videoList.sort()
-
-            runOnUiThread { adapter.notifyDataSetChanged() }
-        }
     }
 
     private fun onProgress(entity: VideoDownloadEntity) {
@@ -165,37 +158,36 @@ class DownloadActivity : BaseActivity<ActivityDownloadBinding>() {
             init {
                 view.setOnClickListener { view ->
                     val it = data!!
-                    val items = arrayListOf(
-                            if (it.status == DOWNLOADING) "暂停下载"
-                            else if (it.status == COMPLETE) "播放"
-                            else "开始下载", "删除")
-                            .apply {
-                                if (it.status != COMPLETE)
-                                    add("边下边播")
-                            }.toArray(arrayOf(""))
+                    val items = Array(if (it.status != COMPLETE) 3 else 2) { pos ->
+                        when (pos) {
+                            0 -> when (it.status) {
+                                DOWNLOADING -> "暂停下载"
+                                COMPLETE -> "播放"
+                                else -> "开始下载"
+                            }
+                            1 -> "删除"
+                            else -> "边下边播"
+                        }
+                    }
 
                     val builder = AlertDialog.Builder(view.context)
                     builder.setItems(items) { dialog: DialogInterface, which: Int ->
                         dialog.dismiss()
-                        if (which == 0) {
-                            if (it.status == DOWNLOADING) {
-                                it.downloadContext?.stop()
-                            } else if (it.status == COMPLETE) {
-                                play(it)
-                            } else {
-                                VideoDownloadService.downloadVideo(it)
+                        when (which) {
+                            0 -> when (it.status) {
+                                DOWNLOADING -> it.downloadContext?.stop()
+                                COMPLETE -> play(it)
+                                else -> VideoDownloadService.downloadVideo(it)
                             }
-                        } else if (which == 1) {
-                            AlertDialog.Builder(view.context)
+                            1 -> AlertDialog.Builder(view.context)
                                     .setTitle("确认删除？")
                                     .setPositiveButton("确定") { _, _ ->
                                         FileDownloader.deleteVideo(it)
                                         list.remove(it)
-                                        notifyItemRemoved(adapterPosition)
+                                        notifyItemRemoved(absoluteAdapterPosition)
                                     }.setNegativeButton("取消", null)
                                     .show()
-                        } else {
-                            play(it)
+                            else -> play(it)
                         }
                     }
                     builder.create().show()
@@ -226,7 +218,8 @@ class DownloadActivity : BaseActivity<ActivityDownloadBinding>() {
             fun updateProgress(data: VideoDownloadEntity) {
                 this.data = data
                 currentSize.text = FileUtil.getFormatSize(data.currentSize.toDouble())
-                speed.text = "${DecimalFormat("#.##%").format(data.currentProgress)}|${data.currentSpeed}"
+                val text = "${DecimalFormat("#.##%").format(data.currentProgress)}|${data.currentSpeed}"
+                speed.text = text
 
                 when (data.status) {
                     NO_START -> {
