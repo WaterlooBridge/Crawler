@@ -1,5 +1,6 @@
 package com.zhenl.crawler.utils
 
+import tv.danmaku.ijk.media.cache.ProxyCacheUtils
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -14,6 +15,10 @@ object FileUtil {
         } else {
             url.substring(url.lastIndexOf("/") + 1)
         }
+    }
+
+    fun md5(url: String): String {
+        return ProxyCacheUtils.computeMD5(url)
     }
 
     private val units = arrayOf("B", "KB", "MB", "GB", "TB")

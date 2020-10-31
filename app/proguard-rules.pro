@@ -28,3 +28,8 @@
 -keepclassmembers class ** {
     @android.webkit.JavascriptInterface <methods>;
 }
+
+-keepnames class com.liulishuo.okdownload.core.connection.DownloadOkHttp3Connection
+
+-keepclassmembers class * implements java.io.Serializable {*;}
+-keepclassmembers class * implements android.os.Parcelable {*;}

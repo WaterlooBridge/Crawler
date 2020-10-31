@@ -7,6 +7,13 @@ static def releaseAppName() {
     return "Crawler"
 }
 
+static def loadProperties() {
+    def propsFile = new File('./local.properties')
+    Properties properties = new Properties()
+    properties.load(new FileInputStream(propsFile))
+    return properties
+}
+
 android {
     compileSdkVersion rootProject.compileSdkVersion
     buildToolsVersion rootProject.buildToolsVersion
@@ -29,12 +36,29 @@ android {
         jvmTarget = "1.8"
     }
 
-    buildTypes {
-        release {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+    def properties = loadProperties()
+
+    signingConfigs {
+        r {
+            storeFile file(properties['storeFile'])
+            storePassword properties['storePassword']
+            keyAlias properties['keyAlias']
+            keyPassword properties['keyPassword']
         }
     }
+
+    buildTypes {
+        debug {
+            minifyEnabled false
+            signingConfig signingConfigs.r
+        }
+        release {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.r
+        }
+    }
+
     splits {
         abi {
             enable true
@@ -59,6 +83,7 @@ android {
         exclude 'META-INF/LICENSE.txt'
         exclude 'META-INF/NOTICE.txt'
     }
+
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8

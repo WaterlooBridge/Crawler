@@ -66,7 +66,7 @@ class DownloadActivity : BaseActivity<ActivityDownloadBinding>() {
                     if (data.status == DELETE) {
                         it.deleteRecursively()
                     } else {
-                        if (data.status == DOWNLOADING && data.downloadContext == null)
+                        if (data.status == DOWNLOADING)
                             data.status = PAUSE
                         videoList.add(data)
                     }
@@ -102,10 +102,10 @@ class DownloadActivity : BaseActivity<ActivityDownloadBinding>() {
                 .setView(editText)
                 .setTitle("新建下载")
                 .setPositiveButton("确定") { _, _ ->
-                    if (editText.text.isNullOrEmpty()) {
+                    val url = editText.text.toString()
+                    if (!url.matches(Regex("(http|ftp|https)://.+"))) {
                         return@setPositiveButton
                     }
-                    val url = editText.text.toString()
                     val name = FileUtil.getFileNameFromUrl(url)
                     val entity = VideoDownloadEntity(url, name)
                     entity.toFile()
@@ -175,7 +175,7 @@ class DownloadActivity : BaseActivity<ActivityDownloadBinding>() {
                         dialog.dismiss()
                         when (which) {
                             0 -> when (it.status) {
-                                DOWNLOADING -> it.downloadContext?.stop()
+                                DOWNLOADING -> it.stopDownload()
                                 COMPLETE -> play(it)
                                 else -> VideoDownloadService.downloadVideo(it)
                             }

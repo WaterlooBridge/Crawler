@@ -5,6 +5,7 @@ import android.util.Log
 import com.liulishuo.okdownload.DownloadTask
 import com.liulishuo.okdownload.core.cause.EndCause
 import com.liulishuo.okdownload.core.listener.DownloadListener2
+import com.zhenl.crawler.utils.FileUtil
 import java.io.File
 import java.util.regex.Pattern
 
@@ -75,9 +76,8 @@ internal object M3U8ConfigDownloader {
             entity.originalUrl
         }
         Log.d(TAG, "downloadM3U8File-url=$url,fileName=$fileName")
-        val downloadFile = File(path, fileName)
-        DownloadTask.Builder(url, downloadFile.parentFile)
-                .setFilename(downloadFile.name)
+        DownloadTask.Builder(url, path)
+                .setFilename(fileName)
                 .setAutoCallbackToUIThread(false)
                 .build()
                 .execute(object : DownloadListener2() {
@@ -126,28 +126,10 @@ internal object M3U8ConfigDownloader {
         if (list.size > 1) {//直接的m3u8的ts链接
             entity.tsSize = list.size
             entity.toFile()
-            if (file != realM3U8File) {
+            if (file != realM3U8File)
                 file.copyTo(realM3U8File)
-            }
+
             val m3u8ListFile = File(path, "m3u8.list")
-            list.forEach {
-                var hls = it
-                if (it.startsWith(prefix)) {
-                    val m = p.matcher(it)
-                    if (m.find())
-                        hls = m.group()
-                    else
-                        return@forEach
-                }
-                val ts = if (hls.startsWith("http")) {
-                    hls
-                } else if (!hls.startsWith("/")) {
-                    url.substring(0, url.lastIndexOf("/") + 1) + hls
-                } else {
-                    "${uri.scheme}://${uri.host}${if (uri.port != -1) ":${uri.port}" else ""}$hls"
-                }
-                m3u8ListFile.appendText("$ts\n")
-            }
             val localPlaylist = File(path, "localPlaylist.m3u8")
             val localDir = path.absolutePath
             file.readLines().forEach {
@@ -157,18 +139,24 @@ internal object M3U8ConfigDownloader {
                     if (m.find())
                         key = m.group()
                 }
-                var str = key ?: it
-                if (!str.startsWith("#")) {
-                    str = if (str.contains("/")) {
-                        "$localDir/.ts${str.substring(str.lastIndexOf("/"))}"
-                    } else {
-                        "$localDir/.ts/$str"
-                    }
+                if (key == null && it.startsWith("#")) {
+                    localPlaylist.appendText("$it\n")
+                    return@forEach
                 }
+                var hls = key ?: it
+                val ts = if (hls.startsWith("http")) {
+                    hls
+                } else if (!hls.startsWith("/")) {
+                    url.substring(0, url.lastIndexOf("/") + 1) + hls
+                } else {
+                    "${uri.scheme}://${uri.host}${if (uri.port != -1) ":${uri.port}" else ""}$hls"
+                }
+                m3u8ListFile.appendText("$ts\n")
+                hls = "$localDir/.ts/${FileUtil.md5(ts)}"
                 key?.apply {
-                    str = it.replace(this, str)
+                    hls = it.replace(this, hls)
                 }
-                localPlaylist.appendText("$str\n")
+                localPlaylist.appendText("$hls\n")
             }
             Log.d(TAG, "start--->$entity")
         } else if (list.size == 1) {//重定向

@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Crawler</string>
+    <string name="app_name" translatable="false">Crawler</string>
 
     <string name="downloads">Downloads</string>
     <string name="wait_download">wait download</string>
@@ -16,5 +16,12 @@
     <string name="option_hardware_decoding">Hardware decoding</string>
     <string name="clear_cache_header">Clear storage cache</string>
     <string name="clear_video_cache">Clear video cache</string>
+
+    <!--Settings -->
+    <string name="settings_theme">Themes</string>
+    <string name="settings_dark_mode_title">Theme Mode</string>
+    <string name="settings_dark_mode_light">Always Light</string>
+    <string name="settings_dark_mode_system">Follow System</string>
+    <string name="settings_dark_mode_dark">Always Dark</string>
 
 </resources>

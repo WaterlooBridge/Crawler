@@ -73,11 +73,11 @@ object FileDownloader {
         if (entity.status == DELETE) {
             return
         }
+        Toast.makeText(MyApplication.instance, "已加入下载队列", Toast.LENGTH_SHORT).show()
         if (entity.originalUrl.contains(".m3u8")) {
             downloadM3U8File(entity)
-            Toast.makeText(MyApplication.instance, "已加入下载队列", Toast.LENGTH_SHORT).show()
         } else {
-            Toast.makeText(MyApplication.instance, "当前仅支持m3u8下载", Toast.LENGTH_SHORT).show()
+            downloadSingleVideo(entity)
         }
     }
 
@@ -104,5 +104,14 @@ object FileDownloader {
                 Log.d(TAG, "file===null")
             }
         }
+    }
+
+    @JvmStatic
+    private fun downloadSingleVideo(entity: VideoDownloadEntity) {
+        if (entity.status == DELETE) {//删除状态的忽略
+            Log.d(TAG, "downloadSingleVideo---DELETE")
+            return
+        }
+        SingleVideoDownloader.fileDownloader(entity)
     }
 }

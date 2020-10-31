@@ -5,12 +5,13 @@ import android.os.Build
 import android.os.Bundle
 import android.view.Window
 import android.view.WindowManager
-import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.lifecycleScope
 import com.zhenl.crawler.Constants
 import com.zhenl.crawler.MyApplication
 import com.zhenl.crawler.R
+import com.zhenl.crawler.base.BaseActivity
+import com.zhenl.crawler.databinding.ActivitySplashBinding
 import com.zhenl.crawler.services.ACTION_FOO
 import com.zhenl.crawler.services.DownloadService
 import com.zhenl.crawler.services.EXTRA_PARAM1
@@ -18,19 +19,12 @@ import com.zhenl.crawler.utils.HttpUtil
 import kotlinx.coroutines.*
 import org.json.JSONObject
 
-class SplashActivity : AppCompatActivity() {
+class SplashActivity : BaseActivity<ActivitySplashBinding>() {
+
+    override val layoutRes: Int = R.layout.activity_splash
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        /*set it to be no title*/
-        requestWindowFeature(Window.FEATURE_NO_TITLE)
-
-        /*set it to be full screen*/
-        window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN or WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P)
-            window.attributes.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
-
-        setContentView(R.layout.activity_splash)
 
         val startHome = MutableLiveData<Boolean>().also {
             it.observe(this, {

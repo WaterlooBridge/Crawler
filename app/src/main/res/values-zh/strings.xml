@@ -15,4 +15,12 @@
     <string name="option_hardware_decoding">系统硬解</string>
     <string name="clear_cache_header">清理存储空间</string>
     <string name="clear_video_cache">清除视频缓存</string>
+
+    <!--Settings -->
+    <string name="settings_theme">主题</string>
+    <string name="settings_dark_mode_title">主题模式</string>
+    <string name="settings_dark_mode_light">明亮模式</string>
+    <string name="settings_dark_mode_system">跟随系统</string>
+    <string name="settings_dark_mode_dark">深色模式</string>
+
 </resources>

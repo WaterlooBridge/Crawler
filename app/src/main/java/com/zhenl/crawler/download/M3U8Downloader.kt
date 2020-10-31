@@ -9,6 +9,7 @@ import com.liulishuo.okdownload.core.cause.EndCause
 import com.liulishuo.okdownload.core.cause.ResumeFailedCause
 import com.liulishuo.okdownload.core.listener.DownloadListener1
 import com.liulishuo.okdownload.core.listener.assist.Listener1Assist
+import com.zhenl.crawler.utils.FileUtil
 import java.io.File
 
 /**
@@ -88,7 +89,7 @@ internal object M3U8Downloader {
         Log.d(TAG, "ts.size===>${urls.size}")
         if (entity.fileSize > urls.size)
             entity.fileSize = 0
-        urls.subList(entity.fileSize, urls.size).forEach { builder.bind(it) }
+        urls.subList(entity.fileSize, urls.size).forEach { builder.bind(DownloadTask.Builder(it, tsDirectory.absolutePath, FileUtil.md5(it))) }
         val downloadContext = builder.setListener(object : DownloadContextListener {
             override fun taskEnd(
                     context: DownloadContext, task: DownloadTask, cause: EndCause,

@@ -38,10 +38,12 @@ class VideoDownloadEntity(
             }
             if (value == DELETE) {
                 downloadContext?.stop()
+                downloadTask?.cancel()
             }
         }
 
     var downloadContext: DownloadContext? = null
+    var downloadTask: DownloadTask? = null
 
     constructor(parcel: Parcel) : this(
             parcel.readString() ?: "",
@@ -109,6 +111,11 @@ class VideoDownloadEntity(
             this.createTime = System.currentTimeMillis()
         }
         config.writeText(toString())
+    }
+
+    fun stopDownload() {
+        downloadContext?.stop()
+        downloadTask?.cancel()
     }
 
     override fun compareTo(other: VideoDownloadEntity) =

@@ -3,7 +3,9 @@ package com.zhenl.crawler.ui
 import android.os.Bundle
 import android.view.MenuItem
 import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.lifecycle.lifecycleScope
+import androidx.preference.ListPreference
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import com.zhenl.crawler.MyApplication
@@ -38,6 +40,11 @@ class SettingsActivity : BaseActivity<SettingsActivityBinding>() {
     class SettingsFragment : PreferenceFragmentCompat() {
         override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
             setPreferencesFromResource(R.xml.settings_preferences, rootKey)
+
+            findPreference<ListPreference>("dark_theme")?.setOnPreferenceChangeListener { _, newValue ->
+                AppCompatDelegate.setDefaultNightMode(newValue.toString().toInt())
+                true
+            }
 
             findPreference<Preference>("clear_video_cache")?.let {
                 lifecycleScope.launch { it.summary = calcSummary() }

@@ -4,6 +4,7 @@ import android.app.Dialog
 import android.graphics.Color
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.databinding.DataBindingUtil
 import androidx.databinding.ViewDataBinding
 import androidx.lifecycle.Observer
@@ -11,6 +12,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelStoreOwner
 import com.zhenl.crawler.MyApplication
 import com.zhenl.crawler.R
+import com.zhenl.crawler.core.Config
 import com.zhenl.violet.widget.CircleImageView
 import com.zhenl.violet.widget.CircularProgressDrawable
 
@@ -21,6 +23,11 @@ abstract class BaseActivity<T : ViewDataBinding> : AppCompatActivity() {
 
     protected lateinit var binding: T
     protected abstract val layoutRes: Int
+
+    init {
+        val theme = Config.darkTheme
+        AppCompatDelegate.setDefaultNightMode(theme.toInt())
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
