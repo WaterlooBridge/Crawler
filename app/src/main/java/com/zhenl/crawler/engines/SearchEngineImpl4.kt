@@ -39,7 +39,7 @@ class SearchEngineImpl4 : SearchEngine() {
         val summary = document.select(".txtDesc").text()
         val list: MutableList<DramasModel> = ArrayList()
         document.select(".am-tab-panel").forEach {
-            val elements = it.select(".mvlist a").reversed()
+            val elements = it.select(".mvlist a")
             for (element in elements) {
                 if (element.attr("rel") == "nofollow")
                     continue

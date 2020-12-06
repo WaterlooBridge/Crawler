@@ -23,4 +23,10 @@
     <string name="settings_dark_mode_system">跟随系统</string>
     <string name="settings_dark_mode_dark">深色模式</string>
 
+    <string name="settings_background_play">后台播放</string>
+    <string name="settings_double_speed">倍速</string>
+    <string name="settings_play_with_browser">使用浏览器播放</string>
+    <string name="settings_copy_play_link">复制播放链接</string>
+    <string name="settings_download_video">下载视频</string>
+
 </resources>

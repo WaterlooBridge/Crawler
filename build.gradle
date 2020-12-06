@@ -34,7 +34,8 @@ ext {
     targetSdkVersion = 28
     appcompatLibraryVersion = '1.2.0'
     coreLibraryVersion = '1.3.2'
+    materialLibraryVersion = '1.2.1'
     okhttpLibraryVersion = '4.9.0'
     glideLibraryVersion = '4.11.0'
-    pagingLibraryVersion = '3.0.0-alpha07'
+    pagingLibraryVersion = '3.0.0-alpha10'
 }
