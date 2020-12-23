@@ -4,6 +4,7 @@ import com.zhenl.crawler.Constants
 import com.zhenl.crawler.models.DramasModel
 import com.zhenl.crawler.models.MovieModel
 import org.jsoup.Jsoup
+import java.net.URLEncoder
 import java.util.*
 
 /**
@@ -15,13 +16,21 @@ class SearchEngineImpl4 : SearchEngine() {
         var js: String? = null
     }
 
-    override fun search(page: Int, keyword: String?): MutableList<MovieModel> {
+    private var prevMovie: String? = null
+
+    override suspend fun search(page: Int, keyword: String?): MutableList<MovieModel> {
         val list: MutableList<MovieModel> = ArrayList()
-        if (page > 1)
-            return list
-        val document = Jsoup.connect(Constants.API_HOST4 + "/search.asp")
-                .postDataCharset("gb2312").data("searchword", keyword).post()
+        val url = "${Constants.API_HOST4}/search.asp?page=$page&searchword=${URLEncoder.encode(keyword, "gb2312")}"
+        val document = Jsoup.connect(url).get()
         val elements = document.select(".am-gallery-item a")
+        if (elements.size == 0)
+            return list
+        val first = elements[0].attr("href")
+        if (page == 1)
+            prevMovie = null
+        if (prevMovie == first)
+            return list
+        prevMovie = first
         for (element in elements) {
             val model = MovieModel()
             model.url = element.attr("href")

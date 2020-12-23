@@ -57,7 +57,7 @@ class HomeActivity : BaseActivity<ActivityHomeBinding>() {
         lifecycleScope.launchWhenCreated {
             adapter.loadStateFlow.distinctUntilChangedBy { it.refresh }
                     .filter { it.refresh is LoadState.NotLoading }
-                    .collect { binding.recyclerView.scrollToPosition(0) }
+                    .collect { binding.recyclerView.layoutManager?.onAdapterChanged(null, null) }
         }
 
         binding.navView.setNavigationItemSelectedListener { menuItem: MenuItem ->
