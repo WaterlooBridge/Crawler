@@ -23,11 +23,11 @@ class SearchEngineImpl1 : SearchEngine() {
     override suspend fun search(page: Int, keyword: String?): List<MovieModel> {
         val url = if (page > 1) Constants.API_HOST + "/s/" + keyword + "/" + page + ".html" else Constants.API_HOST + "/search?wd=" + keyword
         val document = Jsoup.connect(url).userAgent(Constants.USER_AGENT).get()
-        val elements = document.select(".p1")
+        val elements = document.select(".vbox>a")
         val list: MutableList<MovieModel> = ArrayList()
         if (elements.size == 0)
             return list
-        val first = elements[0].select("a").attr("href")
+        val first = elements[0].attr("href")
         if (page == 1)
             prevMovie = null
         if (prevMovie == first)
@@ -35,10 +35,10 @@ class SearchEngineImpl1 : SearchEngine() {
         prevMovie = first
         for (element in elements) {
             val model = MovieModel()
-            model.url = element.select("a").attr("href")
-            model.img = element.select("img").attr("src")
-            model.title = element.select(".name").text()
-            model.date = element.select(".other i").text()
+            model.url = element.attr("href")
+            model.img = element.attr("style").findBackgroundImage()
+            model.title = element.attr("title")
+            model.date = element.text()
             list.add(model)
         }
         return list
@@ -46,9 +46,9 @@ class SearchEngineImpl1 : SearchEngine() {
 
     override fun detail(url: String?, callback: DetailCallback?) {
         val document = Jsoup.connect(Constants.API_HOST + url).userAgent(Constants.USER_AGENT).get()
-        val img = document.select(".lazy").attr("src")
-        val summary = document.select(".tab-jq").text()
-        val elements = document.select(".show_player_gogo a")
+        val img = document.select(".dbox .img").attr("style").findBackgroundImage()
+        val summary = document.select(".tbox_js").text()
+        val elements = document.select(".show a")
         val list: MutableList<DramasModel> = ArrayList()
         for (element in elements) {
             val model = DramasModel()
@@ -62,15 +62,7 @@ class SearchEngineImpl1 : SearchEngine() {
     override fun load(url: String?, callback: Callback?) {
         this.url = url
         this.callback = callback
-        Dispatcher.getInstance().enqueue {
-            try {
-                loadData()
-            } catch (e: Exception) {
-                e.printStackTrace()
-            } finally {
-                handler.sendEmptyMessage(0)
-            }
-        }
+        load(url)
     }
 
     override fun loadJs(): String {

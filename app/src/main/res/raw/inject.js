@@ -1,63 +1,52 @@
-if (window.vid && (vid.indexOf('.mp4') > 0 || vid.indexOf('.m3u8') > 0)) {
-    console.log('type=1;' + vid);
-    window.bridge.loadVideo(vid);
-} else if (window.ckplayerLoad) {
-    window.ckplayerLoad = function(data) {
-            console.log('type=2;' + data.url);
-            window.bridge.loadVideo(data.url);
-        };
-} else if (window.player) {
-    if (player instanceof Function) {
-        var _send = XMLHttpRequest.prototype.send;
-        XMLHttpRequest.prototype.send = function() {
-            var _onload = this.onload;
-            this.onload = function() {
-                console.log(this.responseText);
-                var data = {}
-                try {
-                    data = JSON.parse(this.responseText);
-                } catch(e) {
-                    eval(this.responseText);
+var mplayer = document.getElementsByClassName("mplayer");
+if (mplayer.length > 0)
+    var iframe = mplayer[0].getElementsByTagName("iframe");
+if (iframe && iframe.length > 0) {
+    window.bridge.loadUrl(iframe[0].getAttribute("src"));
+} else if (window.player && player instanceof Function) {
+    var _send = XMLHttpRequest.prototype.send;
+    XMLHttpRequest.prototype.send = function() {
+        var _onload = this.onload;
+        this.onload = function() {
+            console.log(this.responseText);
+            var data = {}
+            try {
+                data = JSON.parse(this.responseText);
+            } catch(e) {
+                eval(this.responseText);
+                if (window.tvInfoJs && tvInfoJs.data)
                     data = {"url":tvInfoJs.data.m3u};
-                }
-                if (data.ext && (data.ext == 'xml' || data.ext == 'xml_client')) {
-                    console.log("type=5")
-                    intercept();
-                } else if (data.ext && data.ext == 'link') {
-                    console.log("type=6;" + data.url);
-                    window.bridge.loadUrl(data.url);
-                } else if (data.url) {
-                    if (data.url.indexOf('//') == 0)
-                        data.url = window.location.protocol + data.url;
-                    console.log('type=3;' + data.url);
-                    window.bridge.loadVideo(data.url);
-                }
             }
-            return _send.apply(this, arguments);
+            if (data.ext && (data.ext == 'xml' || data.ext == 'xml_client')) {
+                console.log("type=1");
+                intercept();
+            } else if (data.ext && data.ext == 'link') {
+                console.log("type=2;" + data.url);
+                window.bridge.loadUrl(data.url);
+            } else if (data.url) {
+                if (data.url.indexOf('//') == 0)
+                    data.url = window.location.protocol + data.url;
+                console.log('type=3;' + data.url);
+                window.bridge.loadVideo(data.url);
+            } else {
+                console.log("type=4");
+                intercept();
+            }
         }
-        player();
-    } else {
-        if (window.xyplayer)
-            setInterval(scanFrame, 1000);
-        else {
-            var a = document.getElementsByTagName('a');
-            if (a.length > 0) {
-                console.log("type=7;" + a[0].getAttribute('href'));
-                window.bridge.reload(a[0].getAttribute('href'));
-            } else
-                window.bridge.destroy();
-        }
+        return _send.apply(this, arguments);
     }
-} else if (window.vid) {
-    console.log('type=4;' + vid);
-    window.bridge.loadVideo(vid);
+    player();
+} else if (window.lele && lele.start) {
+    function leleplayer(config) {
+        console.log("type=5;" + config.video.url);
+        window.bridge.loadVideo(config.video.url);
+    }
+    lele.start();
 } else {
-    var video = document.getElementsByTagName('video');
-    if (video.length > 0)
-        window.bridge.loadVideo(video[0].getAttribute('src'));
-    else
-        window.bridge.destroy();
+    intercept();
+    scanFrame();
 }
+
 var _open = XMLHttpRequest.prototype.open;
 XMLHttpRequest.prototype.open = function() {
     if ('GET' == arguments[0]) {
@@ -66,6 +55,7 @@ XMLHttpRequest.prototype.open = function() {
     }
     return _open.apply(this, arguments);
 }
+
 function intercept() {
     function scanPage()
     {
@@ -119,12 +109,17 @@ function intercept() {
 }
 
 function scanFrame() {
-    for (var i = 0; i < player.children.length; i++) {
-        if (player.children[i].nodeName == 'IFRAME') {
-            var url = player.children[i].src;
-            console.log('type=8;' + url);
-            window.bridge.loadUrl(url);
+    var iframe = document.getElementsByTagName('iframe');
+    for (var i = 0; i < iframe.length; i++) {
+        if (iframe[i].id == 'player_swf') {
+            window.bridge.loadUrl(iframe[i].getAttribute("src"));
             break;
+        } else if (i == iframe.length - 1) {
+            window.bridge.loadUrl(iframe[0].getAttribute("src"));
         }
     }
 }
+
+setTimeout(function(){
+    window.bridge.destroy();
+}, 5000);

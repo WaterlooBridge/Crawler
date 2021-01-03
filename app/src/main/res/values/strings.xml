@@ -25,7 +25,7 @@
     <string name="settings_dark_mode_dark">Always Dark</string>
 
     <string name="settings_background_play">Background play</string>
-    <string name="settings_double_speed">Double speed</string>
+    <string name="settings_double_speed">Playback speed</string>
     <string name="settings_play_with_browser">Play with browser</string>
     <string name="settings_copy_play_link">Copy play link</string>
     <string name="settings_download_video">Download video</string>

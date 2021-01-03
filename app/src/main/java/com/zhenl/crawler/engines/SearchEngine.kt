@@ -16,6 +16,7 @@ import com.zhenl.crawler.MyApplication
 import com.zhenl.crawler.models.DramasModel
 import com.zhenl.crawler.models.MovieModel
 import java.util.*
+import java.util.regex.Pattern
 
 /**
  * Created by lin on 2018/8/22.
@@ -177,5 +178,12 @@ abstract class SearchEngine : WebViewClient() {
 
     companion object {
         private const val TAG = "SearchEngine"
+
+        private val backgroundImagePattern = Pattern.compile("(?<=url\\().*?(?=\\))")
+
+        fun String.findBackgroundImage(): String {
+            val matcher = backgroundImagePattern.matcher(this)
+            return if (matcher.find()) matcher.group() else ""
+        }
     }
 }

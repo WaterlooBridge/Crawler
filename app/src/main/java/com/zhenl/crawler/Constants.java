@@ -8,7 +8,7 @@ public class Constants {
 
     public static final boolean DEBUG = false;
 
-    public static String API_HOST = "http://www.meiaiya.com";
+    public static String API_HOST = "http://www.yc2050.com";
     public static String API_HOST2 = "http://yyyy4480.cc";
     public static String API_HOST3 = "http://bywz123.com";
     public static String API_HOST4 = "http://m.imomoe.ai";

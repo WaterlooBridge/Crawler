@@ -1,5 +1,7 @@
 package com.zhenl.crawler;
 
+import com.zhenl.crawler.engines.SearchEngine;
+
 import org.junit.Test;
 
 import java.net.URI;
@@ -33,5 +35,11 @@ public class UnitTest {
         uri = URI.create("http://g.co/androidstudio/not-mocked");
         redirectUrl = uri.getScheme() + "://" + uri.getHost() + (uri.getPort() != -1 ? ":" + uri.getPort() : "") + newUrl;
         System.out.println(redirectUrl);
+    }
+
+    @Test
+    public void testBackgroundImagePattern() {
+        String style = "background-image: url(https://inews.gtimg.com/newsapp_ls/0/12878905411/0);";
+        System.out.println(SearchEngine.Companion.findBackgroundImage(style));
     }
 }

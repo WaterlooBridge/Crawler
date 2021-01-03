@@ -3,6 +3,8 @@ package com.zhenl.crawler.paging
 import android.net.Uri
 import androidx.paging.PagingSource
 import com.zhenl.crawler.Constants
+import com.zhenl.crawler.engines.SearchEngine
+import com.zhenl.crawler.engines.SearchEngine.Companion.findBackgroundImage
 import com.zhenl.crawler.models.MovieModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -20,14 +22,16 @@ class HomePagingSource(private val type: Int) : PagingSource<Int, MovieModel>() 
             val document = Jsoup.connect(Constants.API_HOST + "/type/" + type + "/" + params.key + ".html")
                     .userAgent(Constants.USER_AGENT).get()
             if (document.location().startsWith(Constants.API_HOST)) {
-                val elements = document.select(".p1")
+                val elements = document.select(".vbox>a")
+                if (elements.size == 0)
+                    return@withContext LoadResult.Error(RuntimeException())
                 val list: MutableList<MovieModel> = ArrayList()
                 for (element in elements) {
                     val model = MovieModel()
-                    model.url = element.select("a").attr("href")
-                    model.img = element.select("img").attr("src")
-                    model.title = element.select(".name").text()
-                    model.date = element.select(".other i").text()
+                    model.url = element.attr("href")
+                    model.img = element.attr("style").findBackgroundImage()
+                    model.title = element.attr("title")
+                    model.date = element.text()
                     list.add(model)
                 }
                 LoadResult.Page(list, null, params.key?.plus(1))
