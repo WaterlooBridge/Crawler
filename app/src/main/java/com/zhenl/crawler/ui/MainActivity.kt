@@ -32,6 +32,7 @@ import com.zhenl.crawler.download.VideoDownloadService.Companion.downloadVideo
 import com.zhenl.crawler.engines.SearchEngine
 import com.zhenl.crawler.engines.SearchEngineFactory
 import com.zhenl.crawler.models.VideoModel
+import com.zhenl.crawler.utils.NetworkUtil
 import com.zhenl.crawler.views.FloatVideoView.Companion.getVideoView
 import com.zhenl.crawler.views.FloatVideoView.Companion.isFloatWindowOpAllowed
 import com.zhenl.crawler.views.FloatVideoView.Companion.showFloatWindow
@@ -93,6 +94,8 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), IPCVideoView.OnInfoLis
         val options = AVOptions()
         options.setOption(IjkMediaPlayer.OPT_CATEGORY_FORMAT, "user_agent", Constants.USER_AGENT)
         options.setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "soundtouch", 1)
+        if (NetworkUtil.isWifi(applicationContext))
+            options.setOption(IjkMediaPlayer.OPT_CATEGORY_FORMAT, "cache_file_forwards_capacity", 512 * 1024 * 1024)
         mVideoView.setOptions(options)
         mVideoView.setOnErrorListener { mp: IIjkMediaPlayer, what: Int, _: Int ->
             isLock = false
@@ -138,10 +141,12 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), IPCVideoView.OnInfoLis
             mVideoView.setSpeed(adapter.getDefItem(position)!!.toFloat())
         }
 
-        videoModel = intent.getParcelableExtra("video") ?: return
-        title = videoModel.title
-        supportActionBar!!.subtitle = videoModel.subtitle
-        url = videoModel.url
+        intent.getParcelableExtra<VideoModel>("video")?.let {
+            videoModel = it
+            title = videoModel.title
+            supportActionBar!!.subtitle = videoModel.subtitle
+            url = videoModel.url
+        }
 
         if (isFromFloatWindow) {
             mVideoView.setMediaController(controller)
@@ -177,7 +182,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), IPCVideoView.OnInfoLis
                     Manifest.permission.WRITE_EXTERNAL_STORAGE), REQUEST_CODE_FILE)
             return
         }
-        url = uri.toString()
+        url = uri.toString().also { videoModel = VideoModel(null, null, it) }
         Log.e(TAG, url)
         play(uri)
     }

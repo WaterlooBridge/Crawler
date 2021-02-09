@@ -39,8 +39,8 @@ function scanPage()
     var dp = document.getElementById('dplayer');
     if (dp && window.onload) {
         window.onload();
-    } else if (window.huiid) {
-        window.bridge.loadVideo(window.huiid);
+    } else if (window.qs && qs.url) {
+        window.bridge.loadVideo(window.bridge.makeAbsoluteUrl(qs.url));
     }
 }
 
@@ -51,13 +51,21 @@ function DPlayer(data) {
     }
 }
 
-function urlParam(name) {
+window.bridge.urlParam = function(name) {
   var results = new RegExp('[\\?&]' + name + '=([^&#]*)').exec(window.location.href);
   if(!results || results.length <= 1) {
     return "";
   }
   return results[1] || 0;
-};
+}
+
+window.bridge.makeAbsoluteUrl = function(url) {
+    if (url.startsWith('//'))
+        url = window.location.protocol + url;
+    else if (url.startsWith('/'))
+        url = window.location.protocol + '//' + window.location.host + url;
+    return url;
+}
 
 var scan = function() {
     scanFrame(document);
@@ -77,6 +85,10 @@ function scanFrame(document) {
             else
                 scanFrame(iframe[i].contentWindow.document);
         } else if (iframe[i].id == 'player_swf') {
+            window.bridge.loadUrl(src);
+            break;
+        } else if (iframe[i].id == 'age_playfram') {
+            src = window.bridge.makeAbsoluteUrl(src);
             window.bridge.loadUrl(src);
             break;
         } else if (i == iframe.length - 1) {

@@ -104,9 +104,10 @@ abstract class SearchEngine : WebViewClient() {
 
     protected fun loadJs(name: String?): String? {
         val context: Context = MyApplication.instance
-        var js = context.getSharedPreferences("search_engine", Context.MODE_PRIVATE)
-                .getString(name, null)
-        if (!Constants.DEBUG && !TextUtils.isEmpty(js)) return js
+        val sp = context.getSharedPreferences("search_engine", Context.MODE_PRIVATE)
+        val versionCode = sp.getInt("versionCode", 0)
+        var js = sp.getString(name, null)
+        if (!Constants.DEBUG && !TextUtils.isEmpty(js) && versionCode >= Constants.API_VERSION) return js
         val resId = context.resources.getIdentifier(name, "raw", context.packageName)
         try {
             val inputStream = context.resources.openRawResource(resId)

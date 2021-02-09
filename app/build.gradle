@@ -1,3 +1,5 @@
+import org.json.JSONObject
+
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
@@ -26,6 +28,14 @@ android {
         ndk {
             abiFilters 'armeabi-v7a', 'arm64-v8a'
         }
+
+        def configFile = new File('config.json')
+        def json = new JSONObject(configFile.text)
+        buildConfigField "int", "API_VERSION", "${json.getInt("versionCode")}"
+        buildConfigField "String", "API_HOST", "\"${json.getString("crawler_host")}\""
+        buildConfigField "String", "API_HOST2", "\"${json.getString("crawler_host2")}\""
+        buildConfigField "String", "API_HOST3", "\"${json.getString("crawler_host3")}\""
+        buildConfigField "String", "API_HOST4", "\"${json.getString("crawler_host4")}\""
     }
 
     dataBinding {

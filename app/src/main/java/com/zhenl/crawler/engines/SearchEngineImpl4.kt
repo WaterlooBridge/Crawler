@@ -20,9 +20,9 @@ class SearchEngineImpl4 : SearchEngine() {
 
     override suspend fun search(page: Int, keyword: String?): MutableList<MovieModel> {
         val list: MutableList<MovieModel> = ArrayList()
-        val url = "${Constants.API_HOST4}/search.asp?page=$page&searchword=${URLEncoder.encode(keyword, "gb2312")}"
+        val url = "${Constants.API_HOST4}/search?page=$page&query=${URLEncoder.encode(keyword)}"
         val document = Jsoup.connect(url).get()
-        val elements = document.select(".am-gallery-item a")
+        val elements = document.select("a.cell_poster")
         if (elements.size == 0)
             return list
         val first = elements[0].attr("href")
@@ -34,9 +34,9 @@ class SearchEngineImpl4 : SearchEngine() {
         for (element in elements) {
             val model = MovieModel()
             model.url = element.attr("href")
-            model.img = element.select("img").attr("data-original")
-            model.title = element.select(".am-gallery-title").text()
-            model.date = element.select(".am-gallery-desc").text().split(" ").last()
+            model.img = element.select("img").attr("src")
+            model.title = element.select("img").attr("alt")
+            model.date = element.select("span").text()
             list.add(model)
         }
         return list
@@ -44,11 +44,11 @@ class SearchEngineImpl4 : SearchEngine() {
 
     override fun detail(url: String?, callback: DetailCallback?) {
         val document = Jsoup.connect(Constants.API_HOST4 + url).get()
-        val img = document.select(".am-intro-left img").attr("src")
-        val summary = document.select(".txtDesc").text()
+        val img = document.select("img.poster").attr("src")
+        val summary = document.select(".detail_imform_desc_pre").text()
         val list: MutableList<DramasModel> = ArrayList()
-        document.select(".am-tab-panel").forEach {
-            val elements = it.select(".mvlist a")
+        document.select(".movurl").forEach {
+            val elements = it.select("a")
             for (element in elements) {
                 if (element.attr("rel") == "nofollow")
                     continue
