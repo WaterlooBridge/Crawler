@@ -2,6 +2,7 @@ package com.zhenl.crawler.paging
 
 import android.net.Uri
 import androidx.paging.PagingSource
+import androidx.paging.PagingState
 import com.zhenl.crawler.Constants
 import com.zhenl.crawler.engines.SearchEngine
 import com.zhenl.crawler.engines.SearchEngine.Companion.findBackgroundImage
@@ -44,4 +45,6 @@ class HomePagingSource(private val type: Int) : PagingSource<Int, MovieModel>() 
             LoadResult.Error(e)
         }
     }
+
+    override fun getRefreshKey(state: PagingState<Int, MovieModel>): Int? = null
 }

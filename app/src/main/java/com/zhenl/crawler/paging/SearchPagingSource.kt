@@ -1,6 +1,7 @@
 package com.zhenl.crawler.paging
 
 import androidx.paging.PagingSource
+import androidx.paging.PagingState
 import com.zhenl.crawler.engines.SearchEngineFactory
 import com.zhenl.crawler.models.MovieModel
 import kotlinx.coroutines.Dispatchers
@@ -24,4 +25,6 @@ class SearchPagingSource(private val keyword: String) : PagingSource<Int, MovieM
             LoadResult.Error(e)
         }
     }
+
+    override fun getRefreshKey(state: PagingState<Int, MovieModel>): Int? = null
 }
