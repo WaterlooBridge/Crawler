@@ -92,7 +92,11 @@ abstract class SearchEngine : WebViewClient() {
         view?.evaluateJavascript("javascript:" + loadJs(), null)
     }
 
-    override fun onReceivedError(view: WebView?, request: WebResourceRequest?, error: WebResourceError?) {
+    override fun onReceivedError(
+        view: WebView?,
+        request: WebResourceRequest?,
+        error: WebResourceError?
+    ) {
         super.onReceivedError(view, request, error)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && request?.isForMainFrame == true)
             callback?.finish()
@@ -153,7 +157,7 @@ abstract class SearchEngine : WebViewClient() {
         @JavascriptInterface
         fun loadVideo(url: String?) {
             val msg = handler.obtainMessage(1)
-            msg.obj = url
+            msg.obj = url ?: return
             msg.sendToTarget()
         }
 
@@ -165,14 +169,14 @@ abstract class SearchEngine : WebViewClient() {
         @JavascriptInterface
         fun loadUrl(url: String?) {
             val msg = handler.obtainMessage(3)
-            msg.obj = url
+            msg.obj = url ?: return
             msg.sendToTarget()
         }
 
         @JavascriptInterface
         fun reload(url: String?) {
             val msg = handler.obtainMessage(4)
-            msg.obj = url
+            msg.obj = url ?: return
             msg.sendToTarget()
         }
     }

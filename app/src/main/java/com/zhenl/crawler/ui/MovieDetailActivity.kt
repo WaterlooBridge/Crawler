@@ -39,7 +39,7 @@ class MovieDetailActivity : BaseActivity<ActivityMovieDetailBinding>() {
         binding.gv.isNestedScrollingEnabled = false
         adapter.setOnItemClickListener { _: BasePagedListAdapter<*>?, view: View, position: Int ->
             val model = adapter.getDefItem(position)
-            MainActivity.start(view.context, VideoModel(title, model!!.text, SearchEngineFactory.getHost() + model.url))
+            MainActivity.start(view.context, VideoModel(title, model!!.text, model.url))
         }
     }
 

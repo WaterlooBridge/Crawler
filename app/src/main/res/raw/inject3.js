@@ -78,6 +78,7 @@ function scanFrame(document) {
     var iframe = document.getElementsByTagName('iframe');
     for (var i = 0; i < iframe.length; i++) {
         var src = iframe[i].getAttribute("src");
+        src = window.bridge.makeAbsoluteUrl(src);
         console.log("iframe src=" + src);
         if (window.now) {
             if (src.indexOf(now) != -1)
@@ -88,11 +89,10 @@ function scanFrame(document) {
             window.bridge.loadUrl(src);
             break;
         } else if (iframe[i].id == 'age_playfram') {
-            src = window.bridge.makeAbsoluteUrl(src);
             window.bridge.loadUrl(src);
             break;
         } else if (i == iframe.length - 1) {
-            window.bridge.loadUrl(iframe[0].getAttribute("src"));
+            window.bridge.loadUrl(window.bridge.makeAbsoluteUrl(iframe[0].getAttribute("src")));
         }
     }
 }

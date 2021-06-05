@@ -25,7 +25,7 @@ import kotlinx.coroutines.launch
 class HomeActivity : BaseActivity<ActivityHomeBinding>() {
 
     private val TAG = javaClass.simpleName
-    private val types = intArrayOf(7, 1, 2, 4, 6, 9)
+    private val types = intArrayOf(4, 1, 2, 3, 6)
 
     private lateinit var viewModel: HomeViewModel
     private lateinit var adapter: MovieAdapter

@@ -3,6 +3,7 @@ package com.zhenl.crawler.engines
 import com.zhenl.crawler.Constants
 import com.zhenl.crawler.models.DramasModel
 import com.zhenl.crawler.models.MovieModel
+import com.zhenl.crawler.utils.UrlHelper
 import org.jsoup.Jsoup
 import java.util.*
 
@@ -46,7 +47,7 @@ class SearchEngineImpl2 : SearchEngine() {
         for (element in elements) {
             val model = DramasModel()
             model.text = element.text()
-            model.url = element.attr("href")
+            model.url = UrlHelper.makeAbsoluteUrl(Constants.API_HOST2, element.attr("href"))
             list.add(model)
         }
         callback?.onSuccess(img, summary, list)

@@ -12,7 +12,7 @@ class HomeViewModel : BaseViewModel() {
 
     private var latestSource: HomePagingSource? = null
 
-    var type = 7
+    var type = 4
         set(value) {
             field = value
             latestSource?.invalidate()

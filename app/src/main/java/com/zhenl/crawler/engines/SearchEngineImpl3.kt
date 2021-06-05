@@ -8,6 +8,7 @@ import com.zhenl.crawler.Constants
 import com.zhenl.crawler.MyApplication
 import com.zhenl.crawler.models.DramasModel
 import com.zhenl.crawler.models.MovieModel
+import com.zhenl.crawler.utils.UrlHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -76,16 +77,17 @@ class SearchEngineImpl3 internal constructor() : SearchEngine() {
             throw RuntimeException()
         val url = "$baseUrl/search"
         var res = Jsoup.connect(url).method(Connection.Method.GET).data("wd", keyword)
-                .data("page", page.toString())
-                .userAgent(Constants.USER_AGENT)
-                .followRedirects(false).execute()
+            .data("page", page.toString())
+            .userAgent(Constants.USER_AGENT)
+            .followRedirects(false).execute()
         while (res.hasHeader("Location")) {
             var location = res.header("Location")
-            if (location != null && location.startsWith("http:/") && location[6] != '/') location = location.substring(6)
+            if (location != null && location.startsWith("http:/") && location[6] != '/') location =
+                location.substring(6)
             val redir = StringUtil.resolve(url, location)
             val connection = Jsoup.connect(redir).method(Connection.Method.GET).data("wd", keyword)
-                    .data("page", page.toString())
-                    .userAgent(Constants.USER_AGENT)
+                .data("page", page.toString())
+                .userAgent(Constants.USER_AGENT)
             for ((key, value) in res.cookies()) connection.cookie(key, value)
             res = connection.followRedirects(false).execute()
         }
@@ -106,14 +108,14 @@ class SearchEngineImpl3 internal constructor() : SearchEngine() {
     override fun detail(url: String?, callback: DetailCallback?) {
         val document = Jsoup.connect(baseUrl + url).userAgent(Constants.USER_AGENT).get()
         val img = document.select(".ct-l").select("img").attr("data-original")
-                .replace("\n", "")
+            .replace("\n", "")
         val summary = document.select(".tab-jq.ctc").text()
         val elements = document.select(".show_player_gogo a")
         val list: MutableList<DramasModel> = ArrayList()
         for (element in elements) {
             val model = DramasModel()
             model.text = element.text()
-            model.url = element.attr("href")
+            model.url = UrlHelper.makeAbsoluteUrl(baseUrl!!, element.attr("href"))
             list.add(model)
         }
         callback?.onSuccess(img, summary, list)
