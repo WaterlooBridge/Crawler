@@ -4,4 +4,44 @@
     <attr name="dramas_bg_color" format="color" />
     <attr name="splash_background" format="reference|color" />
 
+    <attr format="dimension" name="search_icon_padding"/>
+    <attr format="reference" name="search_view_ic_back"/>
+    <attr format="reference" name="search_view_ic_clear"/>
+    <attr format="reference" name="search_view_ic_video"/>
+    <attr format="color" name="search_view_layover_bg_color"/>
+    <attr format="color" name="search_view_text_color"/>
+    <attr format="color" name="search_view_text_color_hint"/>
+    <attr format="dimension" name="search_view_text_padding"/>
+    <attr format="dimension" name="search_view_text_size"/>
+
+    <declare-styleable name="StoreHouseHeader">
+        <attr name="shhText" format="string" />
+        <attr name="shhLineWidth" format="dimension" />
+        <attr name="shhDropHeight" format="dimension" />
+        <attr name="shhEnableFadeAnimation" format="boolean" />
+        <attr name="srlText" format="string" />
+        <attr name="srlLineWidth" format="dimension" />
+        <attr name="srlDropHeight" format="dimension" />
+        <attr name="srlEnableFadeAnimation" format="boolean" />
+    </declare-styleable>
+
+    <declare-styleable name="MaterialSearchView">
+        <!--搜索框背景资源的id-->
+        <attr format="integer" name="msv_searchBackground"/>
+        <!--语音按钮图标的资源id-->
+        <attr format="integer" name="msv_searchVoiceIcon"/>
+        <!--清空按钮图标的资源id-->
+        <attr format="integer" name="msv_searchClearIcon"/>
+        <!--返回按钮图标的资源id-->
+        <attr format="integer" name="msv_searchBackIcon"/>
+        <!--搜索输入框提示信息-->
+        <attr name="android:hint"/>
+        <!--搜索输入框文字颜色-->
+        <attr name="android:textColor"/>
+        <!--搜索输入框提示文字颜色-->
+        <attr name="android:textColorHint"/>
+        <!--搜索输入框输入的类型-->
+        <attr name="android:inputType"/>
+    </declare-styleable>
+
 </resources>

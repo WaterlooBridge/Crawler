@@ -29,4 +29,21 @@
     <string name="settings_copy_play_link">复制播放链接</string>
     <string name="settings_download_video">下载视频</string>
 
+    <string-array name="home_category">
+        <item>动漫</item>
+        <item>电影</item>
+        <item>电视剧</item>
+        <item>综艺</item>
+        <item>音乐</item>
+    </string-array>
+
+    <string name="home_search">搜索</string>
+
+    <string-array name="home_search_engine">
+        <item>搜索引擎 1</item>
+        <item>搜索引擎 2</item>
+        <item>搜索引擎 3</item>
+        <item>二次元领域</item>
+    </string-array>
+
 </resources>

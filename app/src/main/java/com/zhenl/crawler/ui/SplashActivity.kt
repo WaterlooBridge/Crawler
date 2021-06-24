@@ -1,10 +1,7 @@
 package com.zhenl.crawler.ui
 
 import android.content.Intent
-import android.os.Build
 import android.os.Bundle
-import android.view.Window
-import android.view.WindowManager
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.lifecycleScope
 import com.zhenl.crawler.Constants
@@ -15,6 +12,7 @@ import com.zhenl.crawler.databinding.ActivitySplashBinding
 import com.zhenl.crawler.services.ACTION_FOO
 import com.zhenl.crawler.services.DownloadService
 import com.zhenl.crawler.services.EXTRA_PARAM1
+import com.zhenl.crawler.ui.home.HomeActivity
 import com.zhenl.crawler.utils.HttpUtil
 import kotlinx.coroutines.*
 import org.json.JSONObject

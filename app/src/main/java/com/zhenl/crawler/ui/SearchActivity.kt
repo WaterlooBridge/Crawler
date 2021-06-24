@@ -7,8 +7,10 @@ import com.zhenl.crawler.R
 import com.zhenl.crawler.adapter.MovieAdapter
 import com.zhenl.crawler.base.BaseActivity
 import com.zhenl.crawler.databinding.ActivitySearchBinding
+import com.zhenl.crawler.views.MaterialSearchView
 import com.zhenl.crawler.vm.SearchViewModel
 import com.zhenl.violet.base.BasePagedListAdapter
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 
 /**
@@ -31,8 +33,28 @@ class SearchActivity : BaseActivity<ActivitySearchBinding>() {
             val model = adapter.getDefItem(position)
             MovieDetailActivity.start(view.context, model!!.title, model.url)
         }
-        binding.et.addTextChangedListener {
-            viewModel.keyword = it.toString()
+
+        supportActionBar?.hide()
+        binding.msv.setOnQueryTextListener(object : MaterialSearchView.OnQueryTextListener {
+            override fun onQueryTextSubmit(query: String?): Boolean = false
+
+            override fun onQueryTextChange(newText: String?): Boolean {
+                viewModel.keyword = newText ?: return false
+                return true
+            }
+        })
+        binding.msv.setOnSearchViewListener(object : MaterialSearchView.SearchViewListener {
+            override fun onSearchViewShown() {
+            }
+
+            override fun onSearchViewClosed() {
+                finish()
+            }
+        })
+
+        lifecycleScope.launchWhenResumed {
+            delay(200)
+            binding.msv.showSearch(true)
         }
     }
 

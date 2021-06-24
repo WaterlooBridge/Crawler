@@ -268,6 +268,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), IPCVideoView.OnInfoLis
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
         if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or View.SYSTEM_UI_FLAG_IMMERSIVE
             controller.onFullscreenChanged(true)
             mOrientationListener.enable()
         } else {

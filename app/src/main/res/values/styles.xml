@@ -1,7 +1,7 @@
 <resources>
 
     <!-- Base application theme. -->
-    <style name="AppTheme" parent="Theme.MaterialComponents.Light.DarkActionBar">
+    <style name="AppTheme" parent="Theme.MaterialComponents.DayNight.DarkActionBar">
         <!-- Customize your theme here. -->
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
@@ -9,6 +9,16 @@
 
         <item name="dramas_bg_color">@color/dramas_bg_color</item>
         <item name="splash_background">@mipmap/violet</item>
+
+        <item name="search_icon_padding">@dimen/default_search_icon_padding</item>
+        <item name="search_view_text_padding">@dimen/default_search_view_text_padding</item>
+        <item name="search_view_text_size">@dimen/default_search_view_text_size</item>
+        <item name="search_view_text_color">@color/default_search_view_text_color</item>
+        <item name="search_view_text_color_hint">@color/default_search_view_text_color_hint</item>
+        <item name="search_view_layover_bg_color">@color/default_search_view_layover_bg_color</item>
+        <item name="search_view_ic_back">@drawable/ic_action_navigation_arrow_back</item>
+        <item name="search_view_ic_video">@drawable/ic_action_voice_search</item>
+        <item name="search_view_ic_clear">@drawable/ic_action_navigation_clear</item>
     </style>
 
     <style name="AppTheme.Splash">
@@ -26,6 +36,14 @@
     <style name="loadingDialogStyle" parent="Theme.AppCompat.Dialog">
         <item name="android:background">@android:color/transparent</item>
         <item name="android:windowBackground">@android:color/transparent</item>
+    </style>
+
+    <style name="MSV_ImageButton">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:background">?android:attr/selectableItemBackground</item>
+        <item name="android:paddingStart">?attr/search_icon_padding</item>
+        <item name="android:paddingEnd">?attr/search_icon_padding</item>
     </style>
 
 </resources>

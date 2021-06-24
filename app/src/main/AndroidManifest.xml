@@ -25,7 +25,7 @@
             android:name=".download.VideoDownloadService"
             android:exported="false" />
 
-        <activity android:name=".ui.HomeActivity" />
+        <activity android:name=".ui.home.HomeActivity" />
         <activity
             android:name=".ui.MainActivity"
             android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation"

@@ -2,4 +2,8 @@
 <resources>
 
     <dimen name="loading_dialog_size">56dp</dimen>
+
+    <dimen name="default_search_icon_padding">12dp</dimen>
+    <dimen name="default_search_view_text_padding">65dp</dimen>
+    <dimen name="default_search_view_text_size">16sp</dimen>
 </resources>

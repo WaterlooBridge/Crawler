@@ -1,14 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#3F51B5</color>
-    <color name="colorPrimaryDark">#303F9F</color>
-    <color name="colorAccent">#FF4081</color>
+    <color name="colorPrimary">#33AAFF</color>
+    <color name="colorPrimaryDark">#2299EE</color>
+    <color name="colorAccent">#299EE3</color>
 
     <color name="dramas_bg_color">#e6e6e6</color>
 
-    <color name="colorPrimary_dark">#ff212121</color>
-    <color name="colorPrimaryDark_dark">#ff000000</color>
-    <color name="colorAccent_dark">#ff009688</color>
-
-    <color name="dramas_bg_color_dark">#ff212121</color>
+    <color name="default_search_view_layover_bg_color">@color/colorPrimary</color>
+    <color name="default_search_view_text_color">@color/white</color>
+    <color name="default_search_view_text_color_hint">#727272</color>
 </resources>

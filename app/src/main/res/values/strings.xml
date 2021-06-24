@@ -30,4 +30,21 @@
     <string name="settings_copy_play_link">Copy play link</string>
     <string name="settings_download_video">Download video</string>
 
+    <string-array name="home_category">
+        <item>Anime</item>
+        <item>Movie</item>
+        <item>TV</item>
+        <item>Show</item>
+        <item>Music</item>
+    </string-array>
+
+    <string name="home_search">Search</string>
+
+    <string-array name="home_search_engine">
+        <item>Search Engine 1</item>
+        <item>Search Engine 2</item>
+        <item>Search Engine 3</item>
+        <item>Anime</item>
+    </string-array>
+
 </resources>
