@@ -2,8 +2,8 @@ package com.zhenl.crawler.ui
 
 import android.content.Intent
 import android.os.Bundle
+import androidx.core.net.toUri
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.lifecycleScope
 import com.zhenl.crawler.Constants
 import com.zhenl.crawler.MyApplication
 import com.zhenl.crawler.R
@@ -16,6 +16,7 @@ import com.zhenl.crawler.ui.home.HomeActivity
 import com.zhenl.crawler.utils.HttpUtil
 import kotlinx.coroutines.*
 import org.json.JSONObject
+import java.io.File
 
 class SplashActivity : BaseActivity<ActivitySplashBinding>() {
 
@@ -33,18 +34,31 @@ class SplashActivity : BaseActivity<ActivitySplashBinding>() {
 
         load(startHome)
 
-        lifecycleScope.launch {
-            delay(5000)
-            startHome.value = true
+        binding.videoView.let {
+            val file = File(externalCacheDir, "splash_video.mp4")
+            if (!file.exists())
+                file.writeBytes(assets.open("violet.mp4").readBytes())
+            it.setVideoURI(file.toUri())
+            it.setOnPreparedListener { mp -> mp.setVolume(0f, 0f) }
+            it.setOnCompletionListener { startHome.value = true }
         }
+
+        binding.tvSkip.setOnClickListener { startHome.value = true }
+    }
+
+    override fun onDestroy() {
+        binding.videoView.release(true)
+        super.onDestroy()
     }
 
     companion object {
 
         private fun downloadJs(versionCode: Int) {
-            MyApplication.instance.startService(Intent(MyApplication.instance, DownloadService::class.java)
+            MyApplication.instance.startService(
+                Intent(MyApplication.instance, DownloadService::class.java)
                     .setAction(ACTION_FOO)
-                    .putExtra(EXTRA_PARAM1, versionCode))
+                    .putExtra(EXTRA_PARAM1, versionCode)
+            )
         }
 
         private fun load(startHome: MutableLiveData<Boolean>) {
@@ -64,7 +78,6 @@ class SplashActivity : BaseActivity<ActivitySplashBinding>() {
                     Constants.API_HOST3 = json.optString("crawler_host3")
                     Constants.API_HOST4 = json.optString("crawler_host4")
                 }
-                startHome.value = true
                 downloadJs(versionCode)
             }
         }

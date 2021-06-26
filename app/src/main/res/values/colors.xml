@@ -6,6 +6,8 @@
 
     <color name="dramas_bg_color">#e6e6e6</color>
 
+    <color name="tab_selected_text_color">@color/colorPrimary</color>
+
     <color name="default_search_view_layover_bg_color">@color/colorPrimary</color>
     <color name="default_search_view_text_color">@color/white</color>
     <color name="default_search_view_text_color_hint">#727272</color>

@@ -33,7 +33,7 @@ function scanPage()
     }
 
     console.log(JSON.stringify(allUrlsList));
-    if (allUrlsList.length > 0)
+    if (allUrlsList.length > 0 && allUrlsList[0].url.startsWith('http'))
         window.bridge.loadVideo(allUrlsList[0].url);
 
     var dp = document.getElementById('dplayer');
@@ -41,14 +41,23 @@ function scanPage()
         window.onload();
     } else if (window.qs && qs.url) {
         window.bridge.loadVideo(window.bridge.makeAbsoluteUrl(qs.url));
+    } else if (window.lele && lele.start) {
+        lele.start();
+    } else if (window.player && player.getSourceUrl) {
+        window.bridge.loadVideo(player.getSourceUrl());
     }
 }
 
 function DPlayer(data) {
     console.log(JSON.stringify(data));
     if (data.video && data.video.url) {
-        window.bridge.loadVideo(data.video.url);
+        window.bridge.loadVideo(window.bridge.makeAbsoluteUrl(data.video.url));
     }
+}
+
+function leleplayer(config) {
+    console.log(config.video.url);
+    window.bridge.loadVideo(config.video.url);
 }
 
 window.bridge.urlParam = function(name) {
@@ -80,15 +89,13 @@ function scanFrame(document) {
         var src = iframe[i].getAttribute("src");
         src = window.bridge.makeAbsoluteUrl(src);
         console.log("iframe src=" + src);
-        if (window.now) {
-            if (src.indexOf(now) != -1)
-                window.bridge.loadUrl(src);
-            else
-                scanFrame(iframe[i].contentWindow.document);
-        } else if (iframe[i].id == 'player_swf') {
+        if (iframe[i].id == 'player_swf') {
             window.bridge.loadUrl(src);
             break;
         } else if (iframe[i].id == 'age_playfram') {
+            window.bridge.loadUrl(src);
+            break;
+        } else if (iframe[i].id == 'Player') {
             window.bridge.loadUrl(src);
             break;
         } else if (i == iframe.length - 1) {

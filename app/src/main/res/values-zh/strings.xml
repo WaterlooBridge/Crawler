@@ -29,6 +29,8 @@
     <string name="settings_copy_play_link">复制播放链接</string>
     <string name="settings_download_video">下载视频</string>
 
+    <string name="splash_skip">跳过</string>
+
     <string-array name="home_category">
         <item>动漫</item>
         <item>电影</item>

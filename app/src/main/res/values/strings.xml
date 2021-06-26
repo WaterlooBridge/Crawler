@@ -30,6 +30,8 @@
     <string name="settings_copy_play_link">Copy play link</string>
     <string name="settings_download_video">Download video</string>
 
+    <string name="splash_skip">Skip</string>
+
     <string-array name="home_category">
         <item>Anime</item>
         <item>Movie</item>

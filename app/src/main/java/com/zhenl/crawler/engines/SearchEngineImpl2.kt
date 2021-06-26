@@ -5,6 +5,7 @@ import com.zhenl.crawler.models.DramasModel
 import com.zhenl.crawler.models.MovieModel
 import com.zhenl.crawler.utils.UrlHelper
 import org.jsoup.Jsoup
+import java.net.URLEncoder
 import java.util.*
 
 /**
@@ -15,13 +16,13 @@ class SearchEngineImpl2 : SearchEngine() {
     private var prevMovie: String? = null
 
     override suspend fun search(page: Int, keyword: String?): List<MovieModel> {
-        val document = Jsoup.connect(Constants.API_HOST2 + "/search.php").data("searchword", keyword)
-                .data("page", page.toString()).get()
-        val elements = document.select(".v-thumb.stui-vodlist__thumb")
+        val wd = URLEncoder.encode(keyword, "UTF-8")
+        val document = Jsoup.connect("${Constants.API_HOST2}/vod/search/-pg-1-wd-${wd}.html").get()
+        val elements = document.select(".itemBox")
         val list: MutableList<MovieModel> = ArrayList()
         if (elements.size == 0)
             return list
-        val first = elements[0].attr("href")
+        val first = elements[0].select(".itemImg a").attr("href")
         if (page == 1)
             prevMovie = null
         if (prevMovie == first)
@@ -29,10 +30,10 @@ class SearchEngineImpl2 : SearchEngine() {
         prevMovie = first
         for (element in elements) {
             val model = MovieModel()
-            model.url = element.attr("href")
-            model.img = element.attr("data-original")
-            model.title = element.attr("title")
-            model.date = element.select(".pic-text").text()
+            model.url = element.select(".itemImg a").attr("href")
+            model.img = element.select(".itemImg img").attr("src")
+            model.title = element.select(".itemTxt .title").text()
+            model.date = element.select(".itemTxt .date").text()
             list.add(model)
         }
         return list
@@ -40,9 +41,9 @@ class SearchEngineImpl2 : SearchEngine() {
 
     override fun detail(url: String?, callback: DetailCallback?) {
         val document = Jsoup.connect(Constants.API_HOST2 + url).get()
-        val img = document.select(".stui-vodlist__thumb img").attr("data-original")
+        val img = document.select(".Introduct_Sub .pic img").attr("src")
         val summary = document.select("meta[name=description]").attr("content")
-        val elements = document.select(".stui-content__playlist a")
+        val elements = document.select(".Drama a")
         val list: MutableList<DramasModel> = ArrayList()
         for (element in elements) {
             val model = DramasModel()
@@ -61,7 +62,7 @@ class SearchEngineImpl2 : SearchEngine() {
 
     override fun loadJs(): String {
         if (js == null) {
-            js = loadJs("inject2")
+            js = loadJs("inject3")
         }
         return js!!
     }

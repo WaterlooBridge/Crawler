@@ -226,10 +226,6 @@ class MaterialSearchView : FrameLayout {
         imm?.showSoftInput(view, 0)
     }
 
-    override fun addView(child: View?) {
-        mSearchLayout.addView(child)
-    }
-
     //Public Attributes
     override fun setBackground(background: Drawable?) {
         mSearchTopBar.background = background

@@ -10,6 +10,7 @@ import com.zhenl.crawler.models.DramasModel
 import com.zhenl.crawler.models.MovieModel
 import com.zhenl.crawler.utils.UrlHelper
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.jsoup.Connection
@@ -44,7 +45,7 @@ class SearchEngineImpl3 internal constructor() : SearchEngine() {
                 override fun onPageFinished(view: WebView?, url: String?) {
                     super.onPageFinished(view, url)
                     wv.evaluateJavascript("document.getElementsByClassName('link')[0].innerHTML") { html: String ->
-                        launch { c.resume(ping(html)) }
+                        GlobalScope.launch { c.resume(ping(html)) }
                     }
                 }
             }
