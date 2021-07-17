@@ -92,6 +92,13 @@ abstract class SearchEngine : WebViewClient() {
         view?.evaluateJavascript("javascript:" + loadJs(), null)
     }
 
+    override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
+        val scheme = request?.url?.scheme
+        if (scheme == "http" || scheme == "https")
+            return super.shouldOverrideUrlLoading(view, request)
+        return true
+    }
+
     override fun onReceivedError(
         view: WebView?,
         request: WebResourceRequest?,

@@ -30,16 +30,19 @@ class SearchActivity : BaseActivity<ActivitySearchBinding>() {
         binding.rv.adapter = adapter
         adapter.isEnableLoadMore = true
         adapter.setOnItemClickListener { _: BasePagedListAdapter<*>?, view: View, position: Int ->
-            val model = adapter.getDefItem(position)
-            MovieDetailActivity.start(view.context, model!!.title, model.url)
+            val model = adapter.getDefItem(position) ?: return@setOnItemClickListener
+            MovieDetailActivity.start(view.context, model.title, model.url)
         }
 
         supportActionBar?.hide()
         binding.msv.setOnQueryTextListener(object : MaterialSearchView.OnQueryTextListener {
-            override fun onQueryTextSubmit(query: String?): Boolean = false
+            override fun onQueryTextSubmit(query: String): Boolean {
+                viewModel.keyword = query
+                return true
+            }
 
-            override fun onQueryTextChange(newText: String?): Boolean {
-                viewModel.keyword = newText ?: return false
+            override fun onQueryTextChange(newText: String): Boolean {
+                viewModel.keyword = newText
                 return true
             }
         })

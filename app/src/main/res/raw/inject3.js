@@ -95,11 +95,9 @@ function scanFrame(document) {
         } else if (iframe[i].id == 'age_playfram') {
             window.bridge.loadUrl(src);
             break;
-        } else if (iframe[i].id == 'Player') {
+        } else if (iframe[i].id == 'playiframe') {
             window.bridge.loadUrl(src);
             break;
-        } else if (i == iframe.length - 1) {
-            window.bridge.loadUrl(window.bridge.makeAbsoluteUrl(iframe[0].getAttribute("src")));
         }
     }
 }

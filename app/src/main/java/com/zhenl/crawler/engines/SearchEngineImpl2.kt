@@ -1,11 +1,13 @@
 package com.zhenl.crawler.engines
 
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import com.zhenl.crawler.Constants
 import com.zhenl.crawler.models.DramasModel
 import com.zhenl.crawler.models.MovieModel
+import com.zhenl.crawler.utils.HttpUtil
 import com.zhenl.crawler.utils.UrlHelper
 import org.jsoup.Jsoup
-import java.net.URLEncoder
 import java.util.*
 
 /**
@@ -13,42 +15,60 @@ import java.util.*
  */
 class SearchEngineImpl2 : SearchEngine() {
 
-    private var prevMovie: String? = null
+    companion object {
+
+        private const val SEARCH = "my_search='"
+        private var searchUrl: String? = null
+        private var js: String? = null
+
+        private fun extractSearchUrl() {
+            val document = Jsoup.connect("${Constants.API_HOST2}/search.php").post()
+            document.select(".wrap").select("script").forEach {
+                var script = it.data()
+                if (script.contains(SEARCH)) {
+                    script = script.substring(script.indexOf(SEARCH) + SEARCH.length)
+                    searchUrl = script.substring(0, script.indexOf("'"))
+                    return
+                }
+            }
+        }
+    }
 
     override suspend fun search(page: Int, keyword: String?): List<MovieModel> {
-        val wd = URLEncoder.encode(keyword, "UTF-8")
-        val document = Jsoup.connect("${Constants.API_HOST2}/vod/search/-pg-1-wd-${wd}.html").get()
-        val elements = document.select(".itemBox")
         val list: MutableList<MovieModel> = ArrayList()
-        if (elements.size == 0)
+        if (page > 1)
             return list
-        val first = elements[0].select(".itemImg a").attr("href")
-        if (page == 1)
-            prevMovie = null
-        if (prevMovie == first)
+        if (searchUrl == null)
+            extractSearchUrl()
+        if (searchUrl == null)
             return list
-        prevMovie = first
-        for (element in elements) {
-            val model = MovieModel()
-            model.url = element.select(".itemImg a").attr("href")
-            model.img = element.select(".itemImg img").attr("src")
-            model.title = element.select(".itemTxt .title").text()
-            model.date = element.select(".itemTxt .date").text()
-            list.add(model)
-        }
+        val json = HttpUtil.getSync("${searchUrl}?q=${keyword}") ?: return list
+        Gson().fromJson<List<SearchModel>>(json, (object : TypeToken<List<SearchModel>>() {}).type)
+            .forEach {
+                val model = MovieModel()
+                model.url = it.url
+                model.img = it.thumb
+                model.title = it.title
+                model.date = if (it.lianzaijs.isNullOrEmpty()) it.beizhu else "连载至${it.lianzaijs}集"
+                list.add(model)
+            }
         return list
     }
 
     override fun detail(url: String?, callback: DetailCallback?) {
-        val document = Jsoup.connect(Constants.API_HOST2 + url).get()
-        val img = document.select(".Introduct_Sub .pic img").attr("src")
+        val detailUrl = UrlHelper.makeAbsoluteUrl(Constants.API_HOST2, url ?: return)
+        val document = Jsoup.connect(detailUrl).get()
+        val img = document.select(".content .pic img").attr("data-original")
         val summary = document.select("meta[name=description]").attr("content")
-        val elements = document.select(".Drama a")
+        val elements = document.select(".urlli a")
         val list: MutableList<DramasModel> = ArrayList()
-        for (element in elements) {
+        elements.forEach {
+            val href = it.attr("href")
+            if (href.isNullOrEmpty() || it.attr("target") == "_self")
+                return@forEach
             val model = DramasModel()
-            model.text = element.text()
-            model.url = UrlHelper.makeAbsoluteUrl(Constants.API_HOST2, element.attr("href"))
+            model.text = it.text()
+            model.url = UrlHelper.makeAbsoluteUrl(detailUrl, href)
             list.add(model)
         }
         callback?.onSuccess(img, summary, list)
@@ -67,7 +87,11 @@ class SearchEngineImpl2 : SearchEngine() {
         return js!!
     }
 
-    companion object {
-        private var js: String? = null
-    }
+    private data class SearchModel(
+        val url: String?,
+        val thumb: String?,
+        val title: String?,
+        val lianzaijs: String?,
+        val beizhu: String?
+    )
 }
