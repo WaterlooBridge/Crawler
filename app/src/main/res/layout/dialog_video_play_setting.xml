@@ -66,6 +66,14 @@
                 android:text="@string/settings_download_video"
                 android:textColor="@color/white" />
 
+            <TextView
+                android:id="@+id/view_cast"
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:gravity="center_vertical"
+                android:text="@string/settings_dlna_cast"
+                android:textColor="@color/white" />
+
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>
 </layout>

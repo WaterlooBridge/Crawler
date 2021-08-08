@@ -29,6 +29,7 @@
     <string name="settings_play_with_browser">Play with browser</string>
     <string name="settings_copy_play_link">Copy play link</string>
     <string name="settings_download_video">Download video</string>
+    <string name="settings_dlna_cast">DLNA</string>
 
     <string name="splash_skip">Skip</string>
 

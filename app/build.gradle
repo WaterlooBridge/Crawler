@@ -92,6 +92,7 @@ android {
         exclude 'META-INF/LICENSE'
         exclude 'META-INF/LICENSE.txt'
         exclude 'META-INF/NOTICE.txt'
+        exclude 'META-INF/beans.xml'
     }
 
     compileOptions {
@@ -115,6 +116,11 @@ dependencies {
     implementation 'com.liulishuo.okdownload:okhttp:1.0.7'
     implementation 'com.google.code.gson:gson:2.8.6'
     implementation 'com.scwang.smart:refresh-layout-kernel:2.0.3'
+    implementation 'org.fourthline.cling:cling-core:2.1.1'
+    implementation 'org.fourthline.cling:cling-support:2.1.1'
+    implementation 'org.eclipse.jetty:jetty-server:8.1.22.v20160922'
+    implementation 'org.eclipse.jetty:jetty-servlet:8.1.22.v20160922'
+    implementation 'org.eclipse.jetty:jetty-client:8.1.22.v20160922'
 
     testImplementation 'junit:junit:4.13'
 }

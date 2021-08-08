@@ -3,12 +3,12 @@ package com.zhenl.crawler.ui
 import android.content.Context
 import android.content.Intent
 import android.view.View
+import androidx.lifecycle.ViewModel
 import androidx.paging.PagingData
 import com.zhenl.crawler.R
 import com.zhenl.crawler.adapter.DramasAdapter
 import com.zhenl.crawler.base.BaseActivity
 import com.zhenl.crawler.databinding.ActivityMovieDetailBinding
-import com.zhenl.crawler.engines.SearchEngineFactory
 import com.zhenl.crawler.models.VideoModel
 import com.zhenl.crawler.ui.MovieDetailActivity
 import com.zhenl.crawler.vm.MovieViewModel
@@ -38,8 +38,16 @@ class MovieDetailActivity : BaseActivity<ActivityMovieDetailBinding>() {
         binding.gv.adapter = adapter
         binding.gv.isNestedScrollingEnabled = false
         adapter.setOnItemClickListener { _: BasePagedListAdapter<*>?, view: View, position: Int ->
-            val model = adapter.getDefItem(position)
-            MainActivity.start(view.context, VideoModel(title, model!!.text, model.url))
+            var current: VideoModel? = null
+            val list = ArrayList<VideoModel>()
+            for (i in 0 until adapter.getDefItemCount()) {
+                val model = adapter.getDefItem(i) ?: continue
+                list.add(VideoModel(title, model.text, model.url).apply {
+                    if (i == position)
+                        current = this
+                })
+            }
+            MainActivity.start(view.context, current ?: return@setOnItemClickListener, list)
         }
     }
 

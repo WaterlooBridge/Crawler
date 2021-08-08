@@ -28,6 +28,7 @@
     <string name="settings_play_with_browser">使用浏览器播放</string>
     <string name="settings_copy_play_link">复制播放链接</string>
     <string name="settings_download_video">下载视频</string>
+    <string name="settings_dlna_cast">DLNA 投屏</string>
 
     <string name="splash_skip">跳过</string>
 

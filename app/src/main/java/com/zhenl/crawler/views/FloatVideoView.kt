@@ -28,14 +28,19 @@ import tv.danmaku.ijk.media.widget.IPCVideoView
 class FloatVideoView : FrameLayout, View.OnClickListener {
 
     companion object {
-        private val IC_MEDIA_PAUSE_ID = Resources.getSystem().getIdentifier("ic_media_pause", "drawable", "android")
-        private val IC_MEDIA_PLAY_ID = Resources.getSystem().getIdentifier("ic_media_play", "drawable", "android")
+        private val IC_MEDIA_PAUSE_ID =
+            Resources.getSystem().getIdentifier("ic_media_pause", "drawable", "android")
+        private val IC_MEDIA_PLAY_ID =
+            Resources.getSystem().getIdentifier("ic_media_play", "drawable", "android")
 
         fun isFloatWindowOpAllowed(): Boolean {
             val context = MyApplication.instance
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(context)) {
                 try {
-                    val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:" + context.packageName))
+                    val intent = Intent(
+                        Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                        Uri.parse("package:" + context.packageName)
+                    )
                     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                     context.startActivity(intent)
                 } catch (e: Exception) {
@@ -46,10 +51,14 @@ class FloatVideoView : FrameLayout, View.OnClickListener {
             return true
         }
 
-        fun showFloatWindow(videoView: IPCVideoView, model: VideoModel) {
+        fun showFloatWindow(
+            videoView: IPCVideoView,
+            model: VideoModel,
+            playlist: ArrayList<VideoModel>? = null
+        ) {
             val context = MyApplication.instance
             val floatView = FloatVideoView(context)
-            floatView.showFloatWindow(videoView, model)
+            floatView.showFloatWindow(videoView, model, playlist)
         }
 
         private fun windowType(): Int {
@@ -70,13 +79,19 @@ class FloatVideoView : FrameLayout, View.OnClickListener {
     private lateinit var videoView: IPCVideoView
     private lateinit var wm: WindowManager
     private lateinit var wmParams: WindowManager.LayoutParams
-    private val controller: View = LayoutInflater.from(context).inflate(R.layout.layout_float_video, this, false)
+    private val controller: View =
+        LayoutInflater.from(context).inflate(R.layout.layout_float_video, this, false)
     private var videoModel: VideoModel? = null
+    private var playlist: ArrayList<VideoModel>? = null
     private var initialWidth = -2
 
     constructor(context: Context) : super(context)
     constructor(context: Context, attrs: AttributeSet?) : super(context, attrs)
-    constructor(context: Context, attrs: AttributeSet?, defStyleAttr: Int) : super(context, attrs, defStyleAttr)
+    constructor(context: Context, attrs: AttributeSet?, defStyleAttr: Int) : super(
+        context,
+        attrs,
+        defStyleAttr
+    )
 
     init {
         addView(controller)
@@ -99,6 +114,7 @@ class FloatVideoView : FrameLayout, View.OnClickListener {
                 intent.putExtra("isFromFloatWindow", true)
                 intent.putExtra("viewId", videoView.toString())
                 intent.putExtra("video", videoModel)
+                intent.putParcelableArrayListExtra("playlist", playlist)
                 context.startActivity(intent)
             }
             R.id.btn_play -> {
@@ -113,7 +129,8 @@ class FloatVideoView : FrameLayout, View.OnClickListener {
                 handler.removeCallbacks(fadeOut)
             }
             else -> {
-                controller.visibility = if (controller.visibility == View.GONE) View.VISIBLE else View.GONE
+                controller.visibility =
+                    if (controller.visibility == View.GONE) View.VISIBLE else View.GONE
                 btn_play.setImageResource(if (videoView.isPlaying) IC_MEDIA_PAUSE_ID else IC_MEDIA_PLAY_ID)
                 handler.removeCallbacks(fadeOut)
                 handler.postDelayed(fadeOut, 3000)
@@ -121,8 +138,13 @@ class FloatVideoView : FrameLayout, View.OnClickListener {
         }
     }
 
-    fun showFloatWindow(videoView: IPCVideoView, model: VideoModel?) {
+    fun showFloatWindow(
+        videoView: IPCVideoView,
+        model: VideoModel?,
+        playlist: ArrayList<VideoModel>? = null
+    ) {
         this.videoModel = model
+        this.playlist = playlist
         this.videoView = videoView
         addView(videoView, 0)
         wm = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
@@ -133,7 +155,8 @@ class FloatVideoView : FrameLayout, View.OnClickListener {
         wmParams.gravity = Gravity.CENTER
         val dm = DisplayMetrics()
         wm.defaultDisplay.getMetrics(dm)
-        initialWidth = (if (dm.heightPixels < dm.widthPixels) dm.heightPixels else dm.widthPixels) / 5 * 4
+        initialWidth =
+            (if (dm.heightPixels < dm.widthPixels) dm.heightPixels else dm.widthPixels) / 5 * 4
         wmParams.width = initialWidth
         wmParams.height = WindowManager.LayoutParams.WRAP_CONTENT
         wm.addView(this, wmParams)
@@ -149,37 +172,49 @@ class FloatVideoView : FrameLayout, View.OnClickListener {
         return true
     }
 
-    private val mGestureDetector = GestureDetector(context, object : GestureDetector.SimpleOnGestureListener() {
-        override fun onSingleTapUp(e: MotionEvent?): Boolean {
-            if (isClickable)
-                return performClick()
-            return super.onSingleTapUp(e)
-        }
+    private val mGestureDetector =
+        GestureDetector(context, object : GestureDetector.SimpleOnGestureListener() {
+            override fun onSingleTapUp(e: MotionEvent?): Boolean {
+                if (isClickable)
+                    return performClick()
+                return super.onSingleTapUp(e)
+            }
 
-        override fun onScroll(e1: MotionEvent?, e2: MotionEvent?, distanceX: Float, distanceY: Float): Boolean {
-            wmParams.x -= distanceX.toInt()
-            wmParams.y -= distanceY.toInt()
-            wm.updateViewLayout(this@FloatVideoView, wmParams)
-            return true
-        }
+            override fun onScroll(
+                e1: MotionEvent?,
+                e2: MotionEvent?,
+                distanceX: Float,
+                distanceY: Float
+            ): Boolean {
+                wmParams.x -= distanceX.toInt()
+                wmParams.y -= distanceY.toInt()
+                wm.updateViewLayout(this@FloatVideoView, wmParams)
+                return true
+            }
 
-        override fun onFling(e1: MotionEvent?, e2: MotionEvent?, velocityX: Float, velocityY: Float): Boolean {
-            fling(velocityX.toInt(), velocityY.toInt())
-            return true
-        }
-    })
+            override fun onFling(
+                e1: MotionEvent?,
+                e2: MotionEvent?,
+                velocityX: Float,
+                velocityY: Float
+            ): Boolean {
+                fling(velocityX.toInt(), velocityY.toInt())
+                return true
+            }
+        })
 
-    private val mScaleGestureDetector = ScaleGestureDetector(context, object : ScaleGestureDetector.SimpleOnScaleGestureListener() {
+    private val mScaleGestureDetector =
+        ScaleGestureDetector(context, object : ScaleGestureDetector.SimpleOnScaleGestureListener() {
 
-        private var mScaleFactor = 1f
+            private var mScaleFactor = 1f
 
-        override fun onScale(detector: ScaleGestureDetector?): Boolean {
-            mScaleFactor *= detector?.scaleFactor ?: 1f
-            wmParams.width = (initialWidth * mScaleFactor).toInt()
-            wm.updateViewLayout(this@FloatVideoView, wmParams)
-            return true
-        }
-    })
+            override fun onScale(detector: ScaleGestureDetector?): Boolean {
+                mScaleFactor *= detector?.scaleFactor ?: 1f
+                wmParams.width = (initialWidth * mScaleFactor).toInt()
+                wm.updateViewLayout(this@FloatVideoView, wmParams)
+                return true
+            }
+        })
 
     private fun fling(velocityX: Int, velocityY: Int) {
         if (mFlingRunnable != null) {
@@ -190,9 +225,11 @@ class FloatVideoView : FrameLayout, View.OnClickListener {
         val startY = wmParams.y
         val dm = DisplayMetrics()
         wm.defaultDisplay.getRealMetrics(dm)
-        mScroller.fling(startX, startY, velocityX, velocityY,
-                (width - dm.widthPixels) / 2, (dm.widthPixels - width) / 2,
-                (height - dm.heightPixels) / 2, (dm.heightPixels - height) / 2)
+        mScroller.fling(
+            startX, startY, velocityX, velocityY,
+            (width - dm.widthPixels) / 2, (dm.widthPixels - width) / 2,
+            (height - dm.heightPixels) / 2, (dm.heightPixels - height) / 2
+        )
         if (mScroller.computeScrollOffset()) {
             mFlingRunnable = FlingRunnable()
             ViewCompat.postOnAnimation(this, mFlingRunnable)
@@ -215,7 +252,8 @@ class FloatVideoView : FrameLayout, View.OnClickListener {
 
     private fun release() {
         handler.removeCallbacks(fadeOut)
-        RecordAgent.getInstance().record(videoModel?.url, videoView.duration, videoView.currentPosition)
+        RecordAgent.getInstance()
+            .record(videoModel?.url, videoView.duration, videoView.currentPosition)
         videoMap.remove(videoView.toString())
         videoView.release(true)
         wm.removeViewImmediate(this)

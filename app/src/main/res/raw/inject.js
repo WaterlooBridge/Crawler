@@ -1,8 +1,11 @@
 var mplayer = document.getElementsByClassName("mplayer");
 if (mplayer.length > 0)
     var iframe = mplayer[0].getElementsByTagName("iframe");
+
 if (iframe && iframe.length > 0) {
     window.bridge.loadUrl(iframe[0].getAttribute("src"));
+} else if (window.config && config.url) {
+    window.bridge.loadVideo(config.url);
 } else if (window.player && player instanceof Function) {
     var _send = XMLHttpRequest.prototype.send;
     XMLHttpRequest.prototype.send = function() {

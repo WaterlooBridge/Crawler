@@ -33,9 +33,11 @@ import com.zhenl.crawler.engines.SearchEngine
 import com.zhenl.crawler.engines.SearchEngineFactory
 import com.zhenl.crawler.models.VideoModel
 import com.zhenl.crawler.utils.NetworkUtil
+import com.zhenl.crawler.utils.VideoHelper
 import com.zhenl.crawler.views.FloatVideoView.Companion.getVideoView
 import com.zhenl.crawler.views.FloatVideoView.Companion.isFloatWindowOpAllowed
 import com.zhenl.crawler.views.FloatVideoView.Companion.showFloatWindow
+import com.zhenl.crawler.views.RemoteDeviceDialog
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -48,7 +50,8 @@ import tv.danmaku.ijk.media.widget.IPCVideoView
 import tv.danmaku.ijk.media.widget.VideoControlHelper
 import java.net.URLEncoder
 
-class MainActivity : BaseActivity<ActivityMainBinding>(), IPCVideoView.OnInfoListener, IPCVideoView.OnPreparedListener {
+class MainActivity : BaseActivity<ActivityMainBinding>(), IPCVideoView.OnInfoListener,
+    IPCVideoView.OnPreparedListener, IPCVideoView.OnCompletionListener {
 
     private val TAG = javaClass.simpleName
 
@@ -57,6 +60,8 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), IPCVideoView.OnInfoLis
     private lateinit var mVideoView: IPCVideoView
     private lateinit var controller: AndroidMediaController
     private lateinit var controlHelper: VideoControlHelper
+
+    private var playlist: ArrayList<VideoModel>? = null
 
     private var url: String? = null
     private var engine: SearchEngine? = null
@@ -87,7 +92,9 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), IPCVideoView.OnInfoLis
             wm.removeViewImmediate(parent)
         } else {
             mVideoView = IPCVideoView(MyApplication.instance)
-            if ("1" == PreferenceManager.getDefaultSharedPreferences(MyApplication.instance).getString("decoding_settings", null))
+            if ("1" == PreferenceManager.getDefaultSharedPreferences(MyApplication.instance)
+                    .getString("decoding_settings", null)
+            )
                 mVideoView.setMediaCodecEnable(true)
         }
         videoParent.addView(mVideoView, -1, -1)
@@ -95,7 +102,11 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), IPCVideoView.OnInfoLis
         options.setOption(IjkMediaPlayer.OPT_CATEGORY_FORMAT, "user_agent", Constants.USER_AGENT)
         options.setOption(IjkMediaPlayer.OPT_CATEGORY_PLAYER, "soundtouch", 1)
         if (NetworkUtil.isWifi(applicationContext))
-            options.setOption(IjkMediaPlayer.OPT_CATEGORY_FORMAT, "cache_file_forwards_capacity", 512 * 1024 * 1024)
+            options.setOption(
+                IjkMediaPlayer.OPT_CATEGORY_FORMAT,
+                "cache_file_forwards_capacity",
+                512 * 1024 * 1024
+            )
         mVideoView.setOptions(options)
         mVideoView.setOnErrorListener { mp: IIjkMediaPlayer, what: Int, _: Int ->
             isLock = false
@@ -106,8 +117,9 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), IPCVideoView.OnInfoLis
             }
             if (what == -10000) {
                 AlertDialog.Builder(this).setMessage("播放异常，是否尝试浏览器播放")
-                        .setNegativeButton("否") { _: DialogInterface?, _: Int -> finish() }
-                        .setPositiveButton("是") { _: DialogInterface?, _: Int -> jumpBrowser() }.create().show()
+                    .setNegativeButton("否") { _: DialogInterface?, _: Int -> finish() }
+                    .setPositiveButton("是") { _: DialogInterface?, _: Int -> jumpBrowser() }
+                    .create().show()
                 return@setOnErrorListener true
             }
             false
@@ -117,12 +129,13 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), IPCVideoView.OnInfoLis
         controller.setInstantSeeking(false)
         controller.setSupportActionBar(supportActionBar)
         controller.setOnFullscreenClickListener {
-            requestedOrientation = if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-                mOrientationListener.disable()
-                ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
-            } else {
-                ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
-            }
+            requestedOrientation =
+                if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+                    mOrientationListener.disable()
+                    ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+                } else {
+                    ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+                }
         }
         controlHelper = VideoControlHelper(mVideoView, window)
         controlHelper.setMediaController(controller)
@@ -144,15 +157,17 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), IPCVideoView.OnInfoLis
         intent.getParcelableExtra<VideoModel>("video")?.let {
             videoModel = it
             title = videoModel.title
-            supportActionBar!!.subtitle = videoModel.subtitle
+            supportActionBar?.subtitle = videoModel.subtitle
             url = videoModel.url
         }
+        playlist = intent.getParcelableArrayListExtra("playlist")
 
         if (isFromFloatWindow) {
             mVideoView.setMediaController(controller)
             mVideoView.setControlHelper(controlHelper)
             mVideoView.setOnInfoListener(this)
             mVideoView.setOnPreparedListener(this)
+            mVideoView.setOnCompletionListener(this)
             binding.probar.visibility = View.GONE
             return
         }
@@ -162,7 +177,30 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), IPCVideoView.OnInfoLis
             return
         }
 
-        Log.e(TAG, "[INFO:CONSOLE]$url")
+        fetchVideoPath()
+    }
+
+    private fun handleVideoFileIntent(uri: Uri) {
+        if (ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.READ_EXTERNAL_STORAGE
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            ActivityCompat.requestPermissions(
+                this, arrayOf(
+                    Manifest.permission.READ_EXTERNAL_STORAGE,
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE
+                ), REQUEST_CODE_FILE
+            )
+            return
+        }
+        url = uri.toString().also { videoModel = VideoModel(null, null, it) }
+        Log.d(TAG, url)
+        play(uri)
+    }
+
+    private fun fetchVideoPath() {
+        Log.d(TAG, "[INFO:CONSOLE]$url")
         engine = SearchEngineFactory.create()
         engine?.load(url, object : SearchEngine.Callback {
             override fun play(path: String) {
@@ -174,17 +212,6 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), IPCVideoView.OnInfoLis
                 this@MainActivity.finish()
             }
         })
-    }
-
-    private fun handleVideoFileIntent(uri: Uri) {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE,
-                    Manifest.permission.WRITE_EXTERNAL_STORAGE), REQUEST_CODE_FILE)
-            return
-        }
-        url = uri.toString().also { videoModel = VideoModel(null, null, it) }
-        Log.e(TAG, url)
-        play(uri)
     }
 
     private fun play(path: String) {
@@ -200,6 +227,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), IPCVideoView.OnInfoLis
         mVideoView.requestFocus()
         mVideoView.setOnInfoListener(this)
         mVideoView.setOnPreparedListener(this)
+        mVideoView.setOnCompletionListener(this)
 
         val pos = RecordAgent.getInstance().getRecord(url)
         if (pos > 0) mVideoView.seekTo(pos)
@@ -220,6 +248,20 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), IPCVideoView.OnInfoLis
             if (!mStopped || bgEnable) mp.start() else mp.pause()
         } catch (e: RemoteException) {
             e.printStackTrace()
+        }
+    }
+
+    override fun onCompletion(mp: IIjkMediaPlayer?) {
+        VideoHelper.getNextVideo(videoModel, playlist)?.let {
+            lifecycleScope.launch {
+                Toast.makeText(this@MainActivity, "即将播放：${it.subtitle}", Toast.LENGTH_SHORT).show()
+                delay(200)
+                supportActionBar?.subtitle = it.subtitle
+                videoModel = it
+                url = it.url
+                binding.probar.visibility = View.VISIBLE
+                fetchVideoPath()
+            }
         }
     }
 
@@ -258,8 +300,9 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), IPCVideoView.OnInfoLis
         mVideoView.setControlHelper(null)
         mVideoView.setOnInfoListener(null)
         mVideoView.setOnPreparedListener(null)
+        mVideoView.setOnCompletionListener(null)
         videoParent.removeView(mVideoView)
-        showFloatWindow(mVideoView, videoModel)
+        showFloatWindow(mVideoView, videoModel, playlist)
         engine?.destroy()
         controller.release()
         super.finish()
@@ -268,7 +311,8 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), IPCVideoView.OnInfoLis
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
         if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-            window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or View.SYSTEM_UI_FLAG_IMMERSIVE
+            window.decorView.systemUiVisibility =
+                View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or View.SYSTEM_UI_FLAG_IMMERSIVE
             controller.onFullscreenChanged(true)
             mOrientationListener.enable()
         } else {
@@ -285,7 +329,11 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), IPCVideoView.OnInfoLis
         super.finish()
     }
 
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<String>,
+        grantResults: IntArray
+    ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == REQUEST_CODE_FILE) play(intent.data)
     }
@@ -339,9 +387,10 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), IPCVideoView.OnInfoLis
 
     private lateinit var mOrientationListener: OrientationEventListener
 
-    internal inner class OrientationListener(context: Context?) : OrientationEventListener(context) {
+    internal inner class OrientationListener(context: Context?) :
+        OrientationEventListener(context) {
         override fun onOrientationChanged(orientation: Int) {
-            Log.e(TAG, "Orientation changed to $orientation")
+            Log.d(TAG, "Orientation changed to $orientation")
             if (orientation in 81..99) { //90度
                 requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE
             } else if (orientation in 261..279) { //270度
@@ -356,9 +405,16 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), IPCVideoView.OnInfoLis
 
     private val settingDialog by lazy {
         Dialog(this, R.style.TransparentDialog).also { dialog ->
-            val binding = DataBindingUtil.inflate<DialogVideoPlaySettingBinding>(layoutInflater, R.layout.dialog_video_play_setting, null, false)
+            val binding = DataBindingUtil.inflate<DialogVideoPlaySettingBinding>(
+                layoutInflater,
+                R.layout.dialog_video_play_setting,
+                null,
+                false
+            )
             dialog.setContentView(binding.root)
-            binding.switchPlayBackground.setOnCheckedChangeListener { _: CompoundButton?, isChecked: Boolean -> bgEnable = isChecked }
+            binding.switchPlayBackground.setOnCheckedChangeListener { _: CompoundButton?, isChecked: Boolean ->
+                bgEnable = isChecked
+            }
             binding.viewDoubleSpeed.setOnClickListener {
                 this.binding.flDoubleSpeed.visibility = View.VISIBLE
                 dialog.dismiss()
@@ -374,13 +430,19 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), IPCVideoView.OnInfoLis
                 manager.setPrimaryClip(ClipData.newPlainText("link", generateUrl()))
                 Toast.makeText(applicationContext, "Link Copied", Toast.LENGTH_SHORT).show()
             }
-            if (TextUtils.isEmpty(videoModel.videoPath) || !videoModel.videoPath!!.startsWith("http")) {
+            val videoPath = videoModel.videoPath
+            if (videoPath.isNullOrEmpty() || !videoPath.startsWith("http")) {
                 binding.viewDownload.visibility = View.GONE
+                binding.viewCast.visibility = View.GONE
                 return@also
             }
             binding.viewDownload.setOnClickListener {
                 dialog.dismiss()
                 downloadVideo(videoModel)
+            }
+            binding.viewCast.setOnClickListener {
+                dialog.dismiss()
+                RemoteDeviceDialog(this, videoPath).show()
             }
         }
     }
@@ -398,13 +460,16 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), IPCVideoView.OnInfoLis
     }
 
     private fun generateUrl(): String {
-        return "https://waterloobridge.github.io/smile/video.html?path=" + URLEncoder.encode(videoModel.videoPath)
+        return "https://waterloobridge.github.io/smile/video.html?path=" + URLEncoder.encode(
+            videoModel.videoPath
+        )
     }
 
     companion object {
-        fun start(context: Context, model: VideoModel?) {
+        fun start(context: Context, model: VideoModel, playlist: ArrayList<VideoModel>? = null) {
             val intent = Intent(context, MainActivity::class.java)
             intent.putExtra("video", model)
+            intent.putParcelableArrayListExtra("playlist", playlist)
             intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
             context.startActivity(intent)
         }
