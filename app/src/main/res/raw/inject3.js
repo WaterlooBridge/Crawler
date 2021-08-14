@@ -3,37 +3,19 @@ function scanPage()
     var allUrlsList = [];
 
     var a = document.getElementsByTagName('video');
-    for (var i = 0; i < a.length; i++)
-    {
+    for (var i = 0; i < a.length; i++) {
         var link = a[i];
         var u = false;
         if (link.src)
             u = link.src;
-        if (!u && link.hasAttribute('data-thumb'))
-        {
-            u = myTrim(link.getAttribute('data-thumb'));
-            if (u.indexOf("http") == -1)
-                u = "http:" + u;
-        }
-        if ( u)
-        {
-            var title = '';
-            if (link.hasAttribute('alt'))
-                title = myTrim(link.getAttribute('alt'));
-            else if (link.hasAttribute('title'))
-                title = myTrim(link.getAttribute('title'));
-            if (!title)
-                title=document.title;
-            var cl = "";
-            if (link.hasAttribute('class'))
-                cl = myTrim(link.getAttribute('class'));
-
-            allUrlsList.push({'url': u,'title': title});
-        }
+        else if (link.hasAttribute('src'))
+            u = link.getAttribute('src');
+        if (u && u.startsWith('http'))
+            allUrlsList.push({'url': u});
     }
 
     console.log(JSON.stringify(allUrlsList));
-    if (allUrlsList.length > 0 && allUrlsList[0].url.startsWith('http'))
+    if (allUrlsList.length > 0)
         window.bridge.loadVideo(allUrlsList[0].url);
 
     var dp = document.getElementById('dplayer');

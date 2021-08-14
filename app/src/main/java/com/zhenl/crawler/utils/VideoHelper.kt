@@ -28,6 +28,9 @@ object VideoHelper {
     private fun extractNum(text: String?): Int? {
         if (text == null)
             return null
-        return text.filter { it.isDigit() }.toInt()
+        val result = text.filter { it.isDigit() }
+        if (result.isEmpty())
+            return null
+        return result.toInt()
     }
 }

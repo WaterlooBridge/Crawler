@@ -75,7 +75,7 @@ class HomeActivity : BaseActivity<ActivityHomeBinding>() {
 
     private class CategoryAdapter(activity: FragmentActivity) : FragmentStateAdapter(activity) {
 
-        private val types = intArrayOf(4, 1, 2, 3, 6)
+        private val types = intArrayOf(4, 1, 2, 3)
 
         override fun getItemCount(): Int = types.size
 
