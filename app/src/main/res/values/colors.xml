@@ -4,6 +4,8 @@
     <color name="colorPrimaryDark">#2299EE</color>
     <color name="colorAccent">#299EE3</color>
 
+    <color name="ic_launcher_background">#FD7FAA</color>
+
     <color name="dramas_bg_color">#e6e6e6</color>
 
     <color name="tab_selected_text_color">@color/colorPrimary</color>

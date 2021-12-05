@@ -101,7 +101,7 @@ class SearchEngineImpl3 internal constructor() : SearchEngine() {
             model.img = element.select("img").attr("data-original").replace("\n", "")
             model.title = element.select(".name").text()
             model.date = element.select(".actor").first().text()
-            if ("VIP" != model.date) list.add(model)
+            if (filter(model)) list.add(model)
         }
         return list
     }
@@ -132,5 +132,11 @@ class SearchEngineImpl3 internal constructor() : SearchEngine() {
         if (js == null)
             js = loadJs("inject3")
         return js!!
+    }
+
+    private fun filter(model: MovieModel): Boolean {
+        if ("VIP".equals(model.date, true) || "美女图片" == model.date)
+            return false
+        return true
     }
 }
