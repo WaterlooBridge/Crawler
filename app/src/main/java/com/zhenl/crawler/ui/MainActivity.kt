@@ -217,11 +217,11 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), IPCVideoView.OnInfoLis
     private fun play(path: String) {
         videoModel.videoPath = path
         val uri = Uri.parse(path)
-        play(uri)
+        play(uri, mapOf("Referer" to path))
     }
 
-    private fun play(uri: Uri?) {
-        mVideoView.setVideoURI(uri)
+    private fun play(uri: Uri?, headers: Map<String, String>? = null) {
+        mVideoView.setVideoURI(uri, headers)
         mVideoView.setMediaController(controller)
         mVideoView.setControlHelper(controlHelper)
         mVideoView.requestFocus()

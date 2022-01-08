@@ -76,9 +76,8 @@ class SearchEngineImpl3 internal constructor() : SearchEngine() {
             baseUrl = loadLink()
         if (TextUtils.isEmpty(baseUrl))
             throw RuntimeException()
-        val url = "$baseUrl/search"
-        var res = Jsoup.connect(url).method(Connection.Method.GET).data("wd", keyword)
-            .data("page", page.toString())
+        val url = "$baseUrl/s/$keyword/$page.html"
+        var res = Jsoup.connect(url).method(Connection.Method.GET)
             .userAgent(Constants.USER_AGENT)
             .followRedirects(false).execute()
         while (res.hasHeader("Location")) {
