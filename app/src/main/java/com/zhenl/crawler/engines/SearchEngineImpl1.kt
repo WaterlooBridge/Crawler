@@ -1,17 +1,13 @@
 package com.zhenl.crawler.engines
 
-import android.os.Build
 import android.webkit.WebResourceResponse
 import android.webkit.WebView
-import com.zhenl.crawler.BuildConfig
 import com.zhenl.crawler.Constants
 import com.zhenl.crawler.models.DramasModel
 import com.zhenl.crawler.models.MovieModel
+import com.zhenl.crawler.utils.HttpUtil
 import com.zhenl.crawler.utils.UrlHelper
-import com.zhenl.violet.core.Dispatcher
 import org.jsoup.Jsoup
-import java.net.HttpURLConnection
-import java.net.URL
 import java.util.*
 
 /**
@@ -22,7 +18,8 @@ class SearchEngineImpl1 : SearchEngine() {
     private var prevMovie: String? = null
 
     override suspend fun search(page: Int, keyword: String?): List<MovieModel> {
-        val url = if (page > 1) Constants.API_HOST + "/s/" + keyword + "/" + page + ".html" else Constants.API_HOST + "/search?wd=" + keyword
+        val url =
+            if (page > 1) Constants.API_HOST + "/s/" + keyword + "/" + page + ".html" else Constants.API_HOST + "/search?wd=" + keyword
         val document = Jsoup.connect(url).userAgent(Constants.USER_AGENT).get()
         val elements = document.select(".vbox>a")
         val list: MutableList<MovieModel> = ArrayList()
@@ -40,7 +37,8 @@ class SearchEngineImpl1 : SearchEngine() {
             model.img = element.attr("style").findBackgroundImage()
             model.title = element.attr("title")
             model.date = element.text()
-            list.add(model)
+            if (!filter(model))
+                list.add(model)
         }
         return list
     }
@@ -84,30 +82,32 @@ class SearchEngineImpl1 : SearchEngine() {
     }
 
     override fun shouldInterceptRequest(view: WebView, url: String): WebResourceResponse? {
-        val suffix = "package=" + BuildConfig.APPLICATION_ID
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && url.endsWith(suffix)) {
-            try {
-                val uri = URL(url.substring(0, url.length - suffix.length - 1))
-                val connection = uri.openConnection() as HttpURLConnection
-                connection.requestMethod = "GET"
-                connection.connectTimeout = 5000
-                connection.readTimeout = 5000
-                if (connection.responseCode == 200) {
-                    val `is` = connection.inputStream
-                    val map: MutableMap<String, String> = HashMap()
-                    map["Access-Control-Allow-Origin"] = "*"
-                    val response = WebResourceResponse("application/json", "utf-8", `is`)
-                    response.responseHeaders = map
-                    return response
-                }
-            } catch (e: Exception) {
-                e.printStackTrace()
+        try {
+            val response = HttpUtil.loadWebResourceResponse(url)
+            if (response?.code == 200) {
+                val input = response.body?.byteStream()
+                val map: MutableMap<String, String> = HashMap()
+                map["Access-Control-Allow-Origin"] = "*"
+                var mimeType = response.header("content-type", "text/html")
+                if (mimeType?.contains(";") == true)
+                    mimeType = mimeType.substring(0, mimeType.indexOf(";"))
+                val webResponse = WebResourceResponse(mimeType, "utf-8", input)
+                webResponse.responseHeaders = map
+                return webResponse
             }
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
         return super.shouldInterceptRequest(view, url)
     }
 
     companion object {
         private var js: String? = null
+
+        private val sensitiveWords = arrayListOf("玩偶姐姐", "麻豆传媒", "精东传媒", "蜜桃传媒", "天美传媒", "星空传媒", "果冻传媒", "葫芦传媒")
+
+        private fun filter(model: MovieModel): Boolean {
+            return sensitiveWords.contains(model.date)
+        }
     }
 }

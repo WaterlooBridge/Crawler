@@ -121,6 +121,7 @@ dependencies {
     implementation 'org.eclipse.jetty:jetty-server:8.1.22.v20160922'
     implementation 'org.eclipse.jetty:jetty-servlet:8.1.22.v20160922'
     implementation 'org.eclipse.jetty:jetty-client:8.1.22.v20160922'
+    implementation 'com.airbnb.android:lottie:4.2.2'
 
     testImplementation 'junit:junit:4.13'
 }

@@ -34,6 +34,7 @@ import com.zhenl.crawler.engines.SearchEngineFactory
 import com.zhenl.crawler.models.VideoModel
 import com.zhenl.crawler.utils.NetworkUtil
 import com.zhenl.crawler.utils.VideoHelper
+import com.zhenl.crawler.views.AppMediaController
 import com.zhenl.crawler.views.FloatVideoView.Companion.getVideoView
 import com.zhenl.crawler.views.FloatVideoView.Companion.isFloatWindowOpAllowed
 import com.zhenl.crawler.views.FloatVideoView.Companion.showFloatWindow
@@ -45,7 +46,6 @@ import tv.danmaku.ijk.media.player.AVOptions
 import tv.danmaku.ijk.media.player.IIjkMediaPlayer
 import tv.danmaku.ijk.media.player.IMediaPlayer
 import tv.danmaku.ijk.media.player.IjkMediaPlayer
-import tv.danmaku.ijk.media.widget.AndroidMediaController
 import tv.danmaku.ijk.media.widget.IPCVideoView
 import tv.danmaku.ijk.media.widget.VideoControlHelper
 import java.net.URLEncoder
@@ -58,7 +58,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), IPCVideoView.OnInfoLis
     private lateinit var videoModel: VideoModel
     private lateinit var videoParent: ViewGroup
     private lateinit var mVideoView: IPCVideoView
-    private lateinit var controller: AndroidMediaController
+    private lateinit var controller: AppMediaController
     private lateinit var controlHelper: VideoControlHelper
 
     private var playlist: ArrayList<VideoModel>? = null
@@ -125,18 +125,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), IPCVideoView.OnInfoLis
             false
         }
 
-        controller = AndroidMediaController(this, false)
-        controller.setInstantSeeking(false)
-        controller.setSupportActionBar(supportActionBar)
-        controller.setOnFullscreenClickListener {
-            requestedOrientation =
-                if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-                    mOrientationListener.disable()
-                    ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
-                } else {
-                    ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
-                }
-        }
+        initMediaController()
         controlHelper = VideoControlHelper(mVideoView, window)
         controlHelper.setMediaController(controller)
         mVideoView.setBufferingIndicator(binding.probar)
@@ -180,6 +169,29 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), IPCVideoView.OnInfoLis
         fetchVideoPath()
     }
 
+    private fun initMediaController() {
+        controller = AppMediaController(this)
+        controller.setInstantSeeking(false)
+        controller.setSupportActionBar(supportActionBar)
+        controller.setOnFullscreenClickListener {
+            requestedOrientation =
+                if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+                    mOrientationListener.disable()
+                    ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+                } else {
+                    ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+                }
+        }
+        controller.setOnStepForwardClickListener {
+            controller.hide()
+            playNextVideo()
+        }
+        controller.setOnDoubleSpeedClickListener {
+            controller.hide()
+            this.binding.flDoubleSpeed.visibility = View.VISIBLE
+        }
+    }
+
     private fun handleVideoFileIntent(uri: Uri) {
         if (ContextCompat.checkSelfPermission(
                 this,
@@ -216,7 +228,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), IPCVideoView.OnInfoLis
 
     private fun play(path: String) {
         videoModel.videoPath = path
-        val uri = Uri.parse(path)
+        val uri = Uri.parse(Uri.encode(path, ",/?:@&=+$#"))
         play(uri, mapOf("Referer" to path))
     }
 
@@ -252,17 +264,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), IPCVideoView.OnInfoLis
     }
 
     override fun onCompletion(mp: IIjkMediaPlayer?) {
-        VideoHelper.getNextVideo(videoModel, playlist)?.let {
-            lifecycleScope.launch {
-                Toast.makeText(this@MainActivity, "即将播放：${it.subtitle}", Toast.LENGTH_SHORT).show()
-                delay(200)
-                supportActionBar?.subtitle = it.subtitle
-                videoModel = it
-                url = it.url
-                binding.probar.visibility = View.VISIBLE
-                fetchVideoPath()
-            }
-        }
+        playNextVideo()
     }
 
     override fun onBackPressed() {
@@ -313,9 +315,11 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), IPCVideoView.OnInfoLis
         if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
             window.decorView.systemUiVisibility =
                 View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or View.SYSTEM_UI_FLAG_IMMERSIVE
+            window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
             controller.onFullscreenChanged(true)
             mOrientationListener.enable()
         } else {
+            window.clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
             controller.onFullscreenChanged(false)
             mOrientationListener.disable()
         }
@@ -415,10 +419,6 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), IPCVideoView.OnInfoLis
             binding.switchPlayBackground.setOnCheckedChangeListener { _: CompoundButton?, isChecked: Boolean ->
                 bgEnable = isChecked
             }
-            binding.viewDoubleSpeed.setOnClickListener {
-                this.binding.flDoubleSpeed.visibility = View.VISIBLE
-                dialog.dismiss()
-            }
             binding.viewOpenBrowser.setOnClickListener {
                 dialog.dismiss()
                 jumpBrowser()
@@ -463,6 +463,20 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), IPCVideoView.OnInfoLis
         return "https://waterloobridge.github.io/smile/video.html?path=" + URLEncoder.encode(
             videoModel.videoPath
         )
+    }
+
+    private fun playNextVideo() {
+        VideoHelper.getNextVideo(videoModel, playlist)?.let {
+            lifecycleScope.launch {
+                Toast.makeText(this@MainActivity, "即将播放：${it.subtitle}", Toast.LENGTH_SHORT).show()
+                delay(200)
+                supportActionBar?.subtitle = it.subtitle
+                videoModel = it
+                url = it.url
+                binding.probar.visibility = View.VISIBLE
+                fetchVideoPath()
+            }
+        }
     }
 
     companion object {

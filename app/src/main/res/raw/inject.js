@@ -11,15 +11,6 @@ if (iframe && iframe.length > 0) {
     scanFrame();
 }
 
-var _open = XMLHttpRequest.prototype.open;
-XMLHttpRequest.prototype.open = function() {
-    if ('GET' == arguments[0]) {
-        var prefix = arguments[1].indexOf('?') > 0? '&' : '?';
-        arguments[1] = arguments[1] + prefix + "package=com.zhenl.crawler";
-    }
-    return _open.apply(this, arguments);
-}
-
 function intercept() {
     var observer = new window.MutationObserver(function (mutations) {
         scanPage();

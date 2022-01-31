@@ -1,9 +1,7 @@
 package com.zhenl.crawler.utils
 
-import okhttp3.Call
-import okhttp3.Callback
-import okhttp3.OkHttpClient
-import okhttp3.Request
+import com.zhenl.crawler.Constants
+import okhttp3.*
 
 
 object HttpUtil {
@@ -28,6 +26,16 @@ object HttpUtil {
             val response = singleClient.newCall(request.build()).execute()
             if (response.code == 200)
                 return response.body?.string()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        return null
+    }
+
+    fun loadWebResourceResponse(url: String): Response? {
+        val request = Request.Builder().url(url).get().addHeader("user-agent", Constants.USER_AGENT)
+        try {
+            return singleClient.newCall(request.build()).execute()
         } catch (e: Exception) {
             e.printStackTrace()
         }

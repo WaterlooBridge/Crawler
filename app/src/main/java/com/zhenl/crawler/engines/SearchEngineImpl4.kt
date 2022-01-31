@@ -21,7 +21,8 @@ class SearchEngineImpl4 : SearchEngine() {
 
     override suspend fun search(page: Int, keyword: String?): MutableList<MovieModel> {
         val list: MutableList<MovieModel> = ArrayList()
-        val url = "${Constants.API_HOST4}/search?page=$page&query=${URLEncoder.encode(keyword)}"
+        val query = if (keyword.isNullOrEmpty()) " " else keyword
+        val url = "${Constants.API_HOST4}/search?page=$page&query=${URLEncoder.encode(query)}"
         val document = Jsoup.connect(url).get()
         val elements = document.select("a.cell_poster")
         if (elements.size == 0)

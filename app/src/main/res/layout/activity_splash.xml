@@ -6,10 +6,12 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <tv.danmaku.ijk.media.widget.IPCVideoView
-            android:id="@+id/videoView"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent" />
+        <com.airbnb.lottie.LottieAnimationView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            app:lottie_autoPlay="true"
+            app:lottie_rawRes="@raw/go" />
 
         <com.zhenl.violet.widget.ShapeTextView
             android:id="@+id/tv_skip"
@@ -26,7 +28,7 @@
             android:textColor="@color/white"
             android:textSize="16sp"
             app:corner="12dp"
-            app:solid="#80000000" />
+            app:solid="@color/ic_launcher_background" />
 
     </FrameLayout>
 </layout>

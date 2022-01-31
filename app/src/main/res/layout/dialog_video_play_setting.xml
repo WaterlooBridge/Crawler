@@ -35,14 +35,6 @@
             </FrameLayout>
 
             <TextView
-                android:id="@+id/view_double_speed"
-                android:layout_width="match_parent"
-                android:layout_height="40dp"
-                android:gravity="center_vertical"
-                android:text="@string/settings_double_speed"
-                android:textColor="@color/white" />
-
-            <TextView
                 android:id="@+id/view_open_browser"
                 android:layout_width="match_parent"
                 android:layout_height="40dp"

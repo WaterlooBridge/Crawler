@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="#40000000"
+    android:paddingStart="15dp"
+    android:paddingEnd="15dp">
+
+    <TextView
+        android:id="@+id/controller_current_time"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingStart="4dip"
+        android:paddingEnd="4dip"
+        android:textColor="@android:color/white"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="@id/controller_progress_bar"
+        app:layout_constraintEnd_toStartOf="@id/controller_progress_bar"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@id/controller_progress_bar" />
+
+    <SeekBar
+        android:id="@+id/controller_progress_bar"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="0dip"
+        android:layout_height="32dip"
+        android:layout_weight="1"
+        app:layout_constraintEnd_toStartOf="@id/controller_end_time"
+        app:layout_constraintStart_toEndOf="@id/controller_current_time"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/controller_end_time"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:paddingStart="4dip"
+        android:paddingEnd="4dip"
+        android:textColor="@android:color/white"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="@id/controller_progress_bar"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/controller_progress_bar"
+        app:layout_constraintTop_toTopOf="@id/controller_progress_bar" />
+
+    <ImageButton
+        android:id="@+id/controller_stop_play"
+        android:layout_width="50dp"
+        android:layout_height="wrap_content"
+        android:background="@android:color/transparent"
+        android:paddingStart="10dp"
+        android:paddingEnd="20dp"
+        android:scaleType="centerInside"
+        android:src="@android:drawable/ic_media_play"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/controller_progress_bar" />
+
+    <ImageView
+        android:id="@+id/controller_step_forward"
+        android:layout_width="60dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="10dp"
+        android:paddingStart="20dp"
+        android:paddingEnd="20dp"
+        android:src="@drawable/ic_step_forward"
+        app:layout_constraintStart_toEndOf="@id/controller_stop_play"
+        app:layout_constraintTop_toBottomOf="@id/controller_progress_bar" />
+
+
+    <TextView
+        android:id="@+id/controller_double_speed"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="10dp"
+        android:paddingStart="20dp"
+        android:paddingEnd="20dp"
+        android:text="@string/settings_double_speed"
+        android:textColor="@color/white"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="@id/controller_fullscreen"
+        app:layout_constraintEnd_toStartOf="@id/controller_fullscreen"
+        app:layout_constraintTop_toTopOf="@id/controller_fullscreen" />
+
+    <ImageView
+        android:id="@+id/controller_fullscreen"
+        android:layout_width="50dp"
+        android:layout_height="wrap_content"
+        android:paddingStart="20dp"
+        android:paddingEnd="10dp"
+        android:src="@drawable/ic_fullscreen"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/controller_progress_bar" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
