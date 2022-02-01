@@ -33,6 +33,8 @@ import com.zhenl.crawler.engines.SearchEngine
 import com.zhenl.crawler.engines.SearchEngineFactory
 import com.zhenl.crawler.models.VideoModel
 import com.zhenl.crawler.utils.NetworkUtil
+import com.zhenl.crawler.utils.UrlHelper.encode
+import com.zhenl.crawler.utils.UrlHelper.toRefererHeader
 import com.zhenl.crawler.utils.VideoHelper
 import com.zhenl.crawler.views.AppMediaController
 import com.zhenl.crawler.views.FloatVideoView.Companion.getVideoView
@@ -74,7 +76,6 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), IPCVideoView.OnInfoLis
 
     override fun initView() {
         window.addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS)
-        mOrientationListener = OrientationListener(this)
         supportActionBar!!.setBackgroundDrawable(ColorDrawable(0x40000000))
         videoParent = binding.buffer
 
@@ -176,10 +177,9 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), IPCVideoView.OnInfoLis
         controller.setOnFullscreenClickListener {
             requestedOrientation =
                 if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-                    mOrientationListener.disable()
                     ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
                 } else {
-                    ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+                    ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
                 }
         }
         controller.setOnStepForwardClickListener {
@@ -228,8 +228,8 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), IPCVideoView.OnInfoLis
 
     private fun play(path: String) {
         videoModel.videoPath = path
-        val uri = Uri.parse(Uri.encode(path, ",/?:@&=+$#"))
-        play(uri, mapOf("Referer" to path))
+        val uri = Uri.parse(path.encode())
+        play(uri, path.toRefererHeader())
     }
 
     private fun play(uri: Uri?, headers: Map<String, String>? = null) {
@@ -270,7 +270,6 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), IPCVideoView.OnInfoLis
     override fun onBackPressed() {
         if (isLock) return
         if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-            mOrientationListener.disable()
             requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
         } else super.onBackPressed()
     }
@@ -317,11 +316,9 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), IPCVideoView.OnInfoLis
                 View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or View.SYSTEM_UI_FLAG_IMMERSIVE
             window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
             controller.onFullscreenChanged(true)
-            mOrientationListener.enable()
         } else {
             window.clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
             controller.onFullscreenChanged(false)
-            mOrientationListener.disable()
         }
     }
 
@@ -352,18 +349,6 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), IPCVideoView.OnInfoLis
         if (!bgEnable && isPlaying) mVideoView.start()
     }
 
-    override fun onResume() {
-        super.onResume()
-        if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-            mOrientationListener.enable()
-        }
-    }
-
-    override fun onPause() {
-        mOrientationListener.disable()
-        super.onPause()
-    }
-
     override fun onStop() {
         mStopped = true
         isPlaying = mVideoView.isPlaying
@@ -387,20 +372,6 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), IPCVideoView.OnInfoLis
                 binding.flDoubleSpeed.visibility = View.GONE
         }
         return super.dispatchTouchEvent(ev)
-    }
-
-    private lateinit var mOrientationListener: OrientationEventListener
-
-    internal inner class OrientationListener(context: Context?) :
-        OrientationEventListener(context) {
-        override fun onOrientationChanged(orientation: Int) {
-            Log.d(TAG, "Orientation changed to $orientation")
-            if (orientation in 81..99) { //90度
-                requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE
-            } else if (orientation in 261..279) { //270度
-                requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
-            }
-        }
     }
 
     private fun showSettingDialog() {

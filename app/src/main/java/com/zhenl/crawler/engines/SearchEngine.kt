@@ -13,6 +13,7 @@ import android.util.Log
 import android.webkit.*
 import com.zhenl.crawler.Constants
 import com.zhenl.crawler.MyApplication
+import com.zhenl.crawler.R
 import com.zhenl.crawler.models.DramasModel
 import com.zhenl.crawler.models.MovieModel
 import java.util.*
@@ -97,6 +98,16 @@ abstract class SearchEngine : WebViewClient() {
         if (scheme == "http" || scheme == "https")
             return super.shouldOverrideUrlLoading(view, request)
         return true
+    }
+
+    override fun shouldInterceptRequest(view: WebView, url: String): WebResourceResponse? {
+        if (url.contains("DPlayer.min.js")) {
+            return WebResourceResponse(
+                "application/javascript", "utf-8",
+                MyApplication.instance.resources.openRawResource(R.raw.dplayer)
+            )
+        }
+        return super.shouldInterceptRequest(view, url)
     }
 
     override fun onReceivedError(

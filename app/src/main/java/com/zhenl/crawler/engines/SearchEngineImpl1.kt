@@ -8,7 +8,6 @@ import com.zhenl.crawler.models.MovieModel
 import com.zhenl.crawler.utils.HttpUtil
 import com.zhenl.crawler.utils.UrlHelper
 import org.jsoup.Jsoup
-import java.util.*
 
 /**
  * Created by lin on 2018/8/22.
@@ -82,23 +81,26 @@ class SearchEngineImpl1 : SearchEngine() {
     }
 
     override fun shouldInterceptRequest(view: WebView, url: String): WebResourceResponse? {
+        val intercepted = super.shouldInterceptRequest(view, url)
+        if (intercepted != null)
+            return intercepted
         try {
             val response = HttpUtil.loadWebResourceResponse(url)
-            if (response?.code == 200) {
-                val input = response.body?.byteStream()
-                val map: MutableMap<String, String> = HashMap()
-                map["Access-Control-Allow-Origin"] = "*"
-                var mimeType = response.header("content-type", "text/html")
-                if (mimeType?.contains(";") == true)
-                    mimeType = mimeType.substring(0, mimeType.indexOf(";"))
-                val webResponse = WebResourceResponse(mimeType, "utf-8", input)
-                webResponse.responseHeaders = map
-                return webResponse
+            if (response?.code != 200)
+                return intercepted
+            val input = response.body?.byteStream()
+            val map: MutableMap<String, String> = HashMap()
+            map["Access-Control-Allow-Origin"] = "*"
+            var mimeType = response.header("content-type", "text/html")
+            if (mimeType?.contains(";") == true)
+                mimeType = mimeType.substring(0, mimeType.indexOf(";"))
+            return WebResourceResponse(mimeType, "utf-8", input).apply {
+                responseHeaders = map
             }
         } catch (e: Exception) {
             e.printStackTrace()
         }
-        return super.shouldInterceptRequest(view, url)
+        return intercepted
     }
 
     companion object {

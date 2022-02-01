@@ -1,5 +1,6 @@
 package com.zhenl.crawler.utils
 
+import android.net.Uri
 import java.net.URL
 
 /**
@@ -15,5 +16,15 @@ object UrlHelper {
         } catch (e: Exception) {
             basePath + relativePath
         }
+    }
+
+    fun String.encode(): String {
+        return Uri.encode(this, ",/?:@&=+$#%")
+    }
+
+    fun String.toRefererHeader(): Map<String, String>? {
+        if (this.contains("chaxun.truechat365.com"))
+            return mapOf("Referer" to this)
+        return null
     }
 }
