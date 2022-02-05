@@ -2,7 +2,6 @@ package com.zhenl.crawler.views
 
 import android.content.Context
 import android.content.Intent
-import android.content.res.Resources
 import android.graphics.PixelFormat
 import android.net.Uri
 import android.os.Build
@@ -13,11 +12,11 @@ import android.view.*
 import android.widget.FrameLayout
 import android.widget.OverScroller
 import androidx.core.view.ViewCompat
-import com.zhenl.crawler.ui.MainActivity
 import com.zhenl.crawler.MyApplication
 import com.zhenl.crawler.R
 import com.zhenl.crawler.core.RecordAgent
 import com.zhenl.crawler.models.VideoModel
+import com.zhenl.crawler.ui.MainActivity
 import kotlinx.android.synthetic.main.layout_float_video.view.*
 import tv.danmaku.ijk.media.widget.IPCVideoView
 
@@ -28,10 +27,6 @@ import tv.danmaku.ijk.media.widget.IPCVideoView
 class FloatVideoView : FrameLayout, View.OnClickListener {
 
     companion object {
-        private val IC_MEDIA_PAUSE_ID =
-            Resources.getSystem().getIdentifier("ic_media_pause", "drawable", "android")
-        private val IC_MEDIA_PLAY_ID =
-            Resources.getSystem().getIdentifier("ic_media_play", "drawable", "android")
 
         fun isFloatWindowOpAllowed(): Boolean {
             val context = MyApplication.instance
@@ -76,6 +71,9 @@ class FloatVideoView : FrameLayout, View.OnClickListener {
         }
     }
 
+    private val mMediaPauseRes = R.drawable.ic_media_pause
+    private val mMediaPlayRes = R.drawable.ic_media_play
+
     private lateinit var videoView: IPCVideoView
     private lateinit var wm: WindowManager
     private lateinit var wmParams: WindowManager.LayoutParams
@@ -119,10 +117,10 @@ class FloatVideoView : FrameLayout, View.OnClickListener {
             }
             R.id.btn_play -> {
                 if (videoView.isPlaying) {
-                    btn_play.setImageResource(IC_MEDIA_PLAY_ID)
+                    btn_play.setImageResource(mMediaPlayRes)
                     videoView.pause()
                 } else {
-                    btn_play.setImageResource(IC_MEDIA_PAUSE_ID)
+                    btn_play.setImageResource(mMediaPauseRes)
                     videoView.start()
                     fadeOut.run()
                 }
@@ -131,7 +129,7 @@ class FloatVideoView : FrameLayout, View.OnClickListener {
             else -> {
                 controller.visibility =
                     if (controller.visibility == View.GONE) View.VISIBLE else View.GONE
-                btn_play.setImageResource(if (videoView.isPlaying) IC_MEDIA_PAUSE_ID else IC_MEDIA_PLAY_ID)
+                btn_play.setImageResource(if (videoView.isPlaying) mMediaPauseRes else mMediaPlayRes)
                 handler.removeCallbacks(fadeOut)
                 handler.postDelayed(fadeOut, 3000)
             }

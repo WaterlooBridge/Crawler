@@ -190,6 +190,14 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), IPCVideoView.OnInfoLis
             controller.hide()
             this.binding.flDoubleSpeed.visibility = View.VISIBLE
         }
+        controller.setOnShownListener {
+            if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE)
+                window.clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
+        }
+        controller.setOnHiddenListener {
+            if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE)
+                window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
+        }
     }
 
     private fun handleVideoFileIntent(uri: Uri) {
