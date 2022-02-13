@@ -1,5 +1,6 @@
 package com.zhenl.crawler.engines
 
+import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
 import android.webkit.WebView
 import com.zhenl.crawler.Constants
@@ -63,13 +64,6 @@ class SearchEngineImpl1 : SearchEngine() {
         load(url)
     }
 
-    override fun loadJs(): String {
-        if (js == null) {
-            js = loadJs("inject")
-        }
-        return js!!
-    }
-
     @Throws(Exception::class)
     private fun loadData() {
         referer = url
@@ -80,12 +74,16 @@ class SearchEngineImpl1 : SearchEngine() {
         if (elements != null && elements.size > 0) url = document.select("iframe").attr("src")
     }
 
-    override fun shouldInterceptRequest(view: WebView, url: String): WebResourceResponse? {
-        val intercepted = super.shouldInterceptRequest(view, url)
+    override fun shouldInterceptRequest(
+        view: WebView,
+        request: WebResourceRequest
+    ): WebResourceResponse? {
+        val intercepted = super.shouldInterceptRequest(view, request)
         if (intercepted != null)
             return intercepted
         try {
-            val response = HttpUtil.loadWebResourceResponse(url)
+            val url = request.url.toString()
+            val response = HttpUtil.loadWebResourceResponse(url, request.requestHeaders)
             if (response?.code != 200)
                 return intercepted
             val input = response.body?.byteStream()
@@ -106,7 +104,8 @@ class SearchEngineImpl1 : SearchEngine() {
     companion object {
         private var js: String? = null
 
-        private val sensitiveWords = arrayListOf("玩偶姐姐", "麻豆传媒", "精东传媒", "蜜桃传媒", "天美传媒", "星空传媒", "果冻传媒", "葫芦传媒")
+        private val sensitiveWords =
+            arrayListOf("玩偶姐姐", "麻豆传媒", "精东传媒", "蜜桃传媒", "天美传媒", "星空传媒", "果冻传媒", "葫芦传媒")
 
         private fun filter(model: MovieModel): Boolean {
             return sensitiveWords.contains(model.date)

@@ -6,7 +6,6 @@ import com.zhenl.crawler.models.MovieModel
 import com.zhenl.crawler.utils.UrlHelper
 import org.jsoup.Jsoup
 import java.net.URLEncoder
-import java.util.*
 
 /**
  * Created by lin on 2020/10/3.
@@ -67,11 +66,5 @@ class SearchEngineImpl4 : SearchEngine() {
         this.url = url
         this.callback = callback
         load(url)
-    }
-
-    override fun loadJs(): String {
-        if (js == null)
-            js = loadJs("inject3")
-        return js!!
     }
 }

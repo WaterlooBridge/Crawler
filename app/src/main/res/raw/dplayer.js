@@ -5,6 +5,13 @@ function DPlayer(data) {
     }
 }
 
+function Aliplayer(data) {
+    console.log(JSON.stringify(data));
+    if (data.source) {
+        window.bridge.loadVideo(window.bridge.makeAbsoluteUrl(data.source));
+    }
+}
+
 window.bridge.makeAbsoluteUrl = function(url) {
     if (url.startsWith('//'))
         url = window.location.protocol + url;

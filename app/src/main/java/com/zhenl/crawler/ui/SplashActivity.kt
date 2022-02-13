@@ -28,10 +28,15 @@ class SplashActivity : BaseActivity<ActivitySplashBinding>() {
         super.onCreate(savedInstanceState)
 
         val startHome = MutableLiveData<Boolean>().also {
-            it.observe(this, {
+            it.observe(this) {
                 startActivity(Intent(this, HomeActivity::class.java))
                 finish()
-            })
+            }
+        }
+
+        if (PreloadHelper.hasPreload) {
+            startHome.value = true
+            return
         }
 
         PreloadHelper.preload()

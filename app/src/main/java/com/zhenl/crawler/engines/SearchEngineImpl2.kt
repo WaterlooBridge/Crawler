@@ -80,13 +80,6 @@ class SearchEngineImpl2 : SearchEngine() {
         load(url)
     }
 
-    override fun loadJs(): String {
-        if (js == null) {
-            js = loadJs("inject3")
-        }
-        return js!!
-    }
-
     private data class SearchModel(
         val url: String?,
         val thumb: String?,

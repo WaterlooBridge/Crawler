@@ -2,6 +2,7 @@ package com.zhenl.crawler.utils
 
 import com.zhenl.crawler.Constants
 import okhttp3.*
+import okhttp3.Headers.Companion.toHeaders
 
 
 object HttpUtil {
@@ -32,8 +33,9 @@ object HttpUtil {
         return null
     }
 
-    fun loadWebResourceResponse(url: String): Response? {
-        val request = Request.Builder().url(url).get().addHeader("user-agent", Constants.USER_AGENT)
+    fun loadWebResourceResponse(url: String, headers: MutableMap<String, String>): Response? {
+        headers["User-Agent"] = Constants.USER_AGENT
+        val request = Request.Builder().url(url).get().headers(headers.toHeaders())
         try {
             return singleClient.newCall(request.build()).execute()
         } catch (e: Exception) {

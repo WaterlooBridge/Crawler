@@ -19,24 +19,28 @@ import org.json.JSONObject
  */
 object PreloadHelper {
 
+    private var _hasPreload = false
+    val hasPreload: Boolean
+        get() = _hasPreload
+
     fun preload() {
+        if (Constants.DEBUG) {
+            _hasPreload = true
+            return
+        }
         GlobalScope.launch(Dispatchers.Main.immediate) {
             val response = withContext(Dispatchers.IO) {
                 val baseUrl = "https://gitee.com/lin037/sunmi/raw/master/"
                 HttpUtil.getSync(baseUrl + "crawler.json")
             }
-            var versionCode = 0
             response?.let {
                 val json = JSONObject(it)
-                versionCode = json.optInt("versionCode")
-                if (Constants.DEBUG)
-                    return@let
                 Constants.API_HOST = json.optString("crawler_host")
                 Constants.API_HOST2 = json.optString("crawler_host2")
                 Constants.API_HOST4 = json.optString("crawler_host4")
                 SearchEngineImpl3.baseUrl = json.optString("crawler_host3")
+                _hasPreload = true
             }
-            downloadJs(versionCode)
         }
     }
 

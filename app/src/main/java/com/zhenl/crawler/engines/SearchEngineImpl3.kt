@@ -127,12 +127,6 @@ class SearchEngineImpl3 internal constructor() : SearchEngine() {
         load(url)
     }
 
-    override fun loadJs(): String {
-        if (js == null)
-            js = loadJs("inject3")
-        return js!!
-    }
-
     private fun filter(model: MovieModel): Boolean {
         if ("VIP".equals(model.date, true) || "美女图片" == model.date)
             return false

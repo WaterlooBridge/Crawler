@@ -2,21 +2,19 @@ package com.zhenl.crawler.engines
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.graphics.Bitmap
 import android.net.http.SslError
-import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.os.Message
 import android.text.TextUtils
-import android.util.Log
 import android.webkit.*
 import com.zhenl.crawler.Constants
 import com.zhenl.crawler.MyApplication
 import com.zhenl.crawler.R
 import com.zhenl.crawler.models.DramasModel
 import com.zhenl.crawler.models.MovieModel
-import java.util.*
+import com.zhenl.crawler.utils.HttpUtil
+import java.io.ByteArrayInputStream
 import java.util.regex.Pattern
 
 /**
@@ -39,8 +37,6 @@ abstract class SearchEngine : WebViewClient() {
 
     abstract fun load(url: String?, callback: Callback?)
 
-    abstract fun loadJs(): String
-
     interface Callback {
         fun play(path: String)
         fun finish()
@@ -56,15 +52,14 @@ abstract class SearchEngine : WebViewClient() {
             wv = WebView(MyApplication.instance).also {
                 it.settings.javaScriptEnabled = true
                 it.settings.blockNetworkImage = true
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
-                    it.settings.mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
+                it.settings.mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
                 it.addJavascriptInterface(JsBridge(), "bridge")
                 it.webViewClient = this
             }
         }
         val map: MutableMap<String, String?> = HashMap()
         map["referer"] = referer
-        wv!!.loadUrl(url, map)
+        wv?.loadUrl(url, map)
         referer = url
     }
 
@@ -75,21 +70,14 @@ abstract class SearchEngine : WebViewClient() {
     }
 
     private fun destroyWebView() {
-        if (wv != null) {
-            wv!!.removeAllViews()
-            wv!!.destroy()
+        wv?.let {
+            it.removeAllViews()
+            it.destroy()
             wv = null
         }
     }
 
-    override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
-        handler.removeMessages(5)
-        handler.sendEmptyMessageDelayed(5, 5000)
-    }
-
     override fun onPageFinished(view: WebView?, url: String?) {
-        Log.e(TAG, "[INFO:CONSOLE]$url")
-        handler.removeMessages(5)
         view?.evaluateJavascript("javascript:" + loadJs(), null)
     }
 
@@ -100,14 +88,36 @@ abstract class SearchEngine : WebViewClient() {
         return true
     }
 
-    override fun shouldInterceptRequest(view: WebView, url: String): WebResourceResponse? {
-        if (url.contains("DPlayer.min.js")) {
-            return WebResourceResponse(
-                "application/javascript", "utf-8",
-                MyApplication.instance.resources.openRawResource(R.raw.dplayer)
-            )
+    override fun shouldInterceptRequest(
+        view: WebView,
+        request: WebResourceRequest
+    ): WebResourceResponse? {
+        val url = request.url.toString()
+        val accept = request.requestHeaders["Accept"]
+        if (url.contains("DPlayer.min.js") || url.contains("aliplayer-min.js")) {
+            return loadPlayerJs(R.raw.dplayer)
+        } else if (accept?.startsWith("text/html") == true) {
+            try {
+                val response = HttpUtil.loadWebResourceResponse(url, request.requestHeaders)
+                if (response?.code != 200)
+                    return super.shouldInterceptRequest(view, request)
+                val data = response.body?.string() + loadJs("scan")
+                return WebResourceResponse(
+                    "text/html", "utf-8",
+                    ByteArrayInputStream(data.toByteArray())
+                )
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
-        return super.shouldInterceptRequest(view, url)
+        return super.shouldInterceptRequest(view, request)
+    }
+
+    private fun loadPlayerJs(resId: Int): WebResourceResponse {
+        return WebResourceResponse(
+            "application/javascript", "utf-8",
+            MyApplication.instance.resources.openRawResource(resId)
+        )
     }
 
     override fun onReceivedError(
@@ -116,12 +126,16 @@ abstract class SearchEngine : WebViewClient() {
         error: WebResourceError?
     ) {
         super.onReceivedError(view, request, error)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && request?.isForMainFrame == true)
+        if (request?.isForMainFrame == true)
             callback?.finish()
     }
 
     override fun onReceivedSslError(view: WebView?, handler: SslErrorHandler?, error: SslError?) {
         handler?.proceed()
+    }
+
+    protected fun loadJs(): String {
+        return loadJs("inject") ?: ""
     }
 
     protected fun loadJs(name: String?): String? {
@@ -151,15 +165,15 @@ abstract class SearchEngine : WebViewClient() {
                 0 -> load(url)
                 1 -> {
                     val path = msg.obj as String
-                    callback!!.play(path)
+                    callback?.play(path)
                     destroy()
                 }
-                2 -> callback!!.finish()
+                2 -> callback?.finish()
                 3 -> {
                     val url = msg.obj as String
                     val map: MutableMap<String, String?> = HashMap()
                     map["referer"] = referer
-                    wv!!.loadUrl(url, map)
+                    wv?.loadUrl(url, map)
                     referer = url
                 }
                 4 -> {
