@@ -8,10 +8,12 @@ import okhttp3.Headers.Companion.toHeaders
 object HttpUtil {
 
     private val singleClient: OkHttpClient
+    private val webClient: OkHttpClient
 
     init {
         val okHttpClientBuilder = OkHttpClient.Builder()
         singleClient = okHttpClientBuilder.build()
+        webClient = okHttpClientBuilder.followRedirects(false).followSslRedirects(false).build()
     }
 
     fun getAsync(url: String, callback: Callback): Call {
@@ -37,7 +39,7 @@ object HttpUtil {
         headers["User-Agent"] = Constants.USER_AGENT
         val request = Request.Builder().url(url).get().headers(headers.toHeaders())
         try {
-            return singleClient.newCall(request.build()).execute()
+            return webClient.newCall(request.build()).execute()
         } catch (e: Exception) {
             e.printStackTrace()
         }

@@ -93,10 +93,9 @@ abstract class SearchEngine : WebViewClient() {
         request: WebResourceRequest
     ): WebResourceResponse? {
         val url = request.url.toString()
-        val accept = request.requestHeaders["Accept"]
         if (url.contains("DPlayer.min.js") || url.contains("aliplayer-min.js")) {
             return loadPlayerJs(R.raw.dplayer)
-        } else if (accept?.startsWith("text/html") == true) {
+        } else if (request.requestHeaders["Accept"]?.startsWith("text/html") == true) {
             try {
                 val response = HttpUtil.loadWebResourceResponse(url, request.requestHeaders)
                 if (response?.code != 200)

@@ -1,12 +1,8 @@
 package com.zhenl.crawler.engines
 
-import android.webkit.WebResourceRequest
-import android.webkit.WebResourceResponse
-import android.webkit.WebView
 import com.zhenl.crawler.Constants
 import com.zhenl.crawler.models.DramasModel
 import com.zhenl.crawler.models.MovieModel
-import com.zhenl.crawler.utils.HttpUtil
 import com.zhenl.crawler.utils.UrlHelper
 import org.jsoup.Jsoup
 
@@ -72,33 +68,6 @@ class SearchEngineImpl1 : SearchEngine() {
         document = Jsoup.connect(url).referrer(referer).get()
         val elements = document.select("iframe")
         if (elements != null && elements.size > 0) url = document.select("iframe").attr("src")
-    }
-
-    override fun shouldInterceptRequest(
-        view: WebView,
-        request: WebResourceRequest
-    ): WebResourceResponse? {
-        val intercepted = super.shouldInterceptRequest(view, request)
-        if (intercepted != null)
-            return intercepted
-        try {
-            val url = request.url.toString()
-            val response = HttpUtil.loadWebResourceResponse(url, request.requestHeaders)
-            if (response?.code != 200)
-                return intercepted
-            val input = response.body?.byteStream()
-            val map: MutableMap<String, String> = HashMap()
-            map["Access-Control-Allow-Origin"] = "*"
-            var mimeType = response.header("content-type", "text/html")
-            if (mimeType?.contains(";") == true)
-                mimeType = mimeType.substring(0, mimeType.indexOf(";"))
-            return WebResourceResponse(mimeType, "utf-8", input).apply {
-                responseHeaders = map
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-        return intercepted
     }
 
     companion object {
