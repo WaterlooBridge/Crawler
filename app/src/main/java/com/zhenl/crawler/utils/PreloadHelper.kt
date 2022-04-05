@@ -34,12 +34,16 @@ object PreloadHelper {
                 HttpUtil.getSync(baseUrl + "crawler.json")
             }
             response?.let {
-                val json = JSONObject(it)
-                Constants.API_HOST = json.optString("crawler_host")
-                Constants.API_HOST2 = json.optString("crawler_host2")
-                Constants.API_HOST4 = json.optString("crawler_host4")
-                SearchEngineImpl3.baseUrl = json.optString("crawler_host3")
-                _hasPreload = true
+                try {
+                    val json = JSONObject(it)
+                    Constants.API_HOST = json.optString("crawler_host")
+                    Constants.API_HOST2 = json.optString("crawler_host2")
+                    Constants.API_HOST4 = json.optString("crawler_host4")
+                    SearchEngineImpl3.baseUrl = json.optString("crawler_host3")
+                    _hasPreload = true
+                } catch (e: Throwable) {
+                    e.printStackTrace()
+                }
             }
         }
     }

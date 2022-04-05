@@ -3,14 +3,17 @@ package com.zhenl.crawler.ui
 import android.content.Context
 import android.content.Intent
 import android.view.View
-import androidx.lifecycle.ViewModel
+import androidx.databinding.DataBindingUtil
 import androidx.paging.PagingData
+import androidx.recyclerview.widget.ConcatAdapter
+import androidx.recyclerview.widget.GridLayoutManager
 import com.zhenl.crawler.R
 import com.zhenl.crawler.adapter.DramasAdapter
+import com.zhenl.crawler.adapter.HeaderAdapter
 import com.zhenl.crawler.base.BaseActivity
 import com.zhenl.crawler.databinding.ActivityMovieDetailBinding
+import com.zhenl.crawler.databinding.ItemMovieSummaryBinding
 import com.zhenl.crawler.models.VideoModel
-import com.zhenl.crawler.ui.MovieDetailActivity
 import com.zhenl.crawler.vm.MovieViewModel
 import com.zhenl.violet.base.BasePagedListAdapter
 
@@ -32,11 +35,28 @@ class MovieDetailActivity : BaseActivity<ActivityMovieDetailBinding>() {
         setTitle(title)
 
         viewModel = getViewModel(MovieViewModel::class.java)
-        binding.vm = viewModel
+
+        val header = DataBindingUtil.inflate<ItemMovieSummaryBinding>(
+            layoutInflater,
+            R.layout.item_movie_summary,
+            null,
+            false
+        )
+        header.lifecycleOwner = this
+        header.vm = viewModel
 
         adapter = DramasAdapter()
-        binding.gv.adapter = adapter
-        binding.gv.isNestedScrollingEnabled = false
+        binding.gv.adapter = ConcatAdapter().apply {
+            addAdapter(HeaderAdapter(header.root))
+            addAdapter(adapter)
+        }
+        binding.gv.layoutManager = GridLayoutManager(this, 4).apply {
+            spanSizeLookup = object : GridLayoutManager.SpanSizeLookup() {
+                override fun getSpanSize(position: Int): Int {
+                    return if (position == 0) 4 else 1
+                }
+            }
+        }
         adapter.setOnItemClickListener { _: BasePagedListAdapter<*>?, view: View, position: Int ->
             var current: VideoModel? = null
             val list = ArrayList<VideoModel>()
@@ -52,9 +72,9 @@ class MovieDetailActivity : BaseActivity<ActivityMovieDetailBinding>() {
     }
 
     override fun initData() {
-        viewModel.dsList.observe(this, {
+        viewModel.dsList.observe(this) {
             adapter.submitData(lifecycle, PagingData.from(it))
-        })
+        }
 
         viewModel.loadMovieDetail(url ?: return)
     }
