@@ -16,6 +16,8 @@ import com.zhenl.crawler.databinding.ItemMovieSummaryBinding
 import com.zhenl.crawler.models.VideoModel
 import com.zhenl.crawler.vm.MovieViewModel
 import com.zhenl.violet.base.BasePagedListAdapter
+import kotlin.math.max
+import kotlin.math.min
 
 /**
  * Created by lin on 2018/6/8.
@@ -60,7 +62,9 @@ class MovieDetailActivity : BaseActivity<ActivityMovieDetailBinding>() {
         adapter.setOnItemClickListener { _: BasePagedListAdapter<*>?, view: View, position: Int ->
             var current: VideoModel? = null
             val list = ArrayList<VideoModel>()
-            for (i in 0 until adapter.getDefItemCount()) {
+            val start = max(position - 100, 0)
+            val end = min(position + 100, adapter.getDefItemCount())
+            for (i in start until end) {
                 val model = adapter.getDefItem(i) ?: continue
                 list.add(VideoModel(title, model.text, model.url).apply {
                     if (i == position)

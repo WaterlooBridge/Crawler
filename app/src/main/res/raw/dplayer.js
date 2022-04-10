@@ -12,6 +12,12 @@ function Aliplayer(data) {
     }
 }
 
+function MuiPlayer(config) {
+    if (config.src) {
+        window.bridge.loadVideo(window.bridge.makeAbsoluteUrl(config.src));
+    }
+}
+
 window.bridge.makeAbsoluteUrl = function(url) {
     if (url.startsWith('//'))
         url = window.location.protocol + url;
