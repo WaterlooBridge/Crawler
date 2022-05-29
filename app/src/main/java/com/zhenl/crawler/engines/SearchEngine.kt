@@ -59,8 +59,10 @@ abstract class SearchEngine : WebViewClient() {
         }
         val map: MutableMap<String, String?> = HashMap()
         map["referer"] = referer
-        wv?.loadUrl(url, map)
-        referer = url
+        url?.let {
+            wv?.loadUrl(it, map)
+            referer = it
+        }
     }
 
     fun destroy() {

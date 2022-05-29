@@ -215,7 +215,6 @@ class MainActivity : BaseActivity<ActivityMainBinding>(), IPCVideoView.OnInfoLis
             return
         }
         url = uri.toString().also { videoModel = VideoModel(null, null, it) }
-        Log.d(TAG, url)
         play(uri)
     }
 

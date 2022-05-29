@@ -17,6 +17,7 @@ import com.zhenl.crawler.engines.SearchEngineFactory
 import com.zhenl.crawler.ui.DownloadActivity
 import com.zhenl.crawler.ui.SearchActivity
 import com.zhenl.crawler.ui.SettingsActivity
+import com.zhenl.crawler.utils.setScrollingTouchSlop
 
 class HomeActivity : BaseActivity<ActivityHomeBinding>() {
 
@@ -41,6 +42,7 @@ class HomeActivity : BaseActivity<ActivityHomeBinding>() {
             false
         }
 
+        binding.vp.setScrollingTouchSlop(2)
         binding.vp.adapter = CategoryAdapter(this)
         TabLayoutMediator(binding.tabLayout, binding.vp) { tab, position ->
             tab.text = resources.getStringArray(R.array.home_category)[position]

@@ -26,6 +26,7 @@ import androidx.recyclerview.widget.*
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.bitmap.CenterCrop
 import com.bumptech.glide.load.resource.bitmap.CircleCrop
+import com.bumptech.glide.load.resource.bitmap.FitCenter
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners
 import com.bumptech.glide.request.RequestOptions
 import com.google.android.material.button.MaterialButton
@@ -33,6 +34,7 @@ import com.google.android.material.card.MaterialCardView
 import com.google.android.material.chip.Chip
 import com.google.android.material.textfield.TextInputLayout
 import com.zhenl.violet.ktx.replaceRandomWithSpecial
+import com.zhenl.violet.ktx.toPx
 import kotlinx.coroutines.*
 import kotlin.math.roundToInt
 
@@ -76,20 +78,23 @@ fun setImageResource(view: ImageView, drawable: Drawable) {
 }
 
 @BindingAdapter(
-        "imgRes",
-        "defaultId",
-        "errorId",
-        "optionType",
-        requireAll = false
+    "imgRes",
+    "defaultId",
+    "errorId",
+    "optionType",
+    "roundingRadius",
+    requireAll = false
 )
-fun setImgResource(view: ImageView, res: Any?, defaultId: Drawable?, errorId: Drawable?, optionType: Int = 0) {
-    val builder = Glide.with(view.context).load(res)
+fun setImgResource(view: ImageView, res: Any?, defaultId: Drawable?, errorId: Drawable?, optionType: Int, roundingRadius: Int) {
+    var builder = Glide.with(view.context).load(res)
     defaultId?.let { builder.placeholder(it) }
     errorId?.let { builder.error(it) }
-    when (optionType) {
+    builder = when (optionType) {
         1 -> builder.apply(RequestOptions.bitmapTransform(CircleCrop()))
-        2 -> builder.apply(RequestOptions.bitmapTransform(RoundedCorners(10)))
-        3 -> builder.apply(RequestOptions().transform(CenterCrop(), RoundedCorners(10)))
+        2 -> builder.apply(RequestOptions.bitmapTransform(RoundedCorners(roundingRadius.toPx())))
+        3 -> builder.apply(RequestOptions().transform(CenterCrop(), RoundedCorners(roundingRadius.toPx())))
+        4 -> builder.apply(RequestOptions().transform(FitCenter(), RoundedCorners(roundingRadius.toPx())))
+        else -> builder
     }
     builder.into(view)
 }

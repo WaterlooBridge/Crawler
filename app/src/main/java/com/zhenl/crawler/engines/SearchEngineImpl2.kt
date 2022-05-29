@@ -8,6 +8,7 @@ import com.zhenl.crawler.models.MovieModel
 import com.zhenl.crawler.utils.HttpUtil
 import com.zhenl.crawler.utils.UrlHelper
 import org.jsoup.Jsoup
+import java.io.Serializable
 import java.util.*
 
 /**
@@ -86,5 +87,5 @@ class SearchEngineImpl2 : SearchEngine() {
         val title: String?,
         val lianzaijs: String?,
         val beizhu: String?
-    )
+    ) : Serializable
 }

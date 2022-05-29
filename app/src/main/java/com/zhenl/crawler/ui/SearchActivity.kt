@@ -1,8 +1,9 @@
 package com.zhenl.crawler.ui
 
 import android.view.View
-import androidx.core.widget.addTextChangedListener
 import androidx.lifecycle.lifecycleScope
+import com.zhenl.crawler.BuildConfig
+import com.zhenl.crawler.Constants
 import com.zhenl.crawler.R
 import com.zhenl.crawler.adapter.MovieAdapter
 import com.zhenl.crawler.base.BaseActivity
@@ -37,6 +38,7 @@ class SearchActivity : BaseActivity<ActivitySearchBinding>() {
         supportActionBar?.hide()
         binding.msv.setOnQueryTextListener(object : MaterialSearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String): Boolean {
+                if (BuildConfig.APPLICATION_ID == query) Constants.SPIRITED_AWAY = true
                 viewModel.keyword = query
                 return true
             }

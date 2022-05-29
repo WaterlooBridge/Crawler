@@ -1,13 +1,9 @@
 package com.zhenl.crawler.utils
 
-import android.content.Intent
+import android.content.Context
 import com.zhenl.crawler.Constants
 import com.zhenl.crawler.MyApplication
 import com.zhenl.crawler.engines.SearchEngineImpl3
-import com.zhenl.crawler.services.ACTION_FOO
-import com.zhenl.crawler.services.DownloadService
-import com.zhenl.crawler.services.EXTRA_PARAM1
-import com.zhenl.crawler.ui.SplashActivity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -48,11 +44,20 @@ object PreloadHelper {
         }
     }
 
-    private fun downloadJs(versionCode: Int) {
-        MyApplication.instance.startService(
-            Intent(MyApplication.instance, DownloadService::class.java)
-                .setAction(ACTION_FOO)
-                .putExtra(EXTRA_PARAM1, versionCode)
-        )
+    private fun downloadJs(originVersionCode: Int) {
+        val baseUrl = "https://raw.githubusercontent.com/WaterlooBridge/Crawler/master/"
+        val sp = MyApplication.instance.getSharedPreferences("search_engine", Context.MODE_PRIVATE)
+        val versionCode = sp.getInt("versionCode", 0)
+        if (originVersionCode > versionCode) {
+            val inject = HttpUtil.getSync(baseUrl + "app/src/main/res/raw/inject.js")
+            val inject2 = HttpUtil.getSync(baseUrl + "app/src/main/res/raw/inject2.js")
+            val inject3 = HttpUtil.getSync(baseUrl + "app/src/main/res/raw/inject3.js")
+            if (inject != null && inject2 != null && inject3 != null)
+                sp.edit().putInt("versionCode", originVersionCode)
+                    .putString("inject", inject)
+                    .putString("inject2", inject2)
+                    .putString("inject3", inject3)
+                    .apply()
+        }
     }
 }

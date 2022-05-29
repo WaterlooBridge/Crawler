@@ -93,7 +93,7 @@ class VideoDownloadService : Service() {
 
         private var foreground = false
 
-        override fun handleMessage(msg: Message?) {
+        override fun handleMessage(msg: Message) {
             val service = wr.get() ?: return
             if (M3U8ConfigDownloader.downloadList.isEmpty()
                     && M3U8Downloader.downloadList.isEmpty()) {

@@ -229,8 +229,9 @@ class FloatVideoView : FrameLayout, View.OnClickListener {
             (height - dm.heightPixels) / 2, (dm.heightPixels - height) / 2
         )
         if (mScroller.computeScrollOffset()) {
-            mFlingRunnable = FlingRunnable()
-            ViewCompat.postOnAnimation(this, mFlingRunnable)
+            mFlingRunnable = FlingRunnable().also {
+                ViewCompat.postOnAnimation(this, it)
+            }
         }
     }
 

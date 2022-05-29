@@ -103,25 +103,26 @@ android {
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
-    implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.3'
     implementation "androidx.swiperefreshlayout:swiperefreshlayout:1.1.0"
-    implementation 'androidx.preference:preference-ktx:1.1.1'
+    implementation 'androidx.preference:preference-ktx:1.2.0'
     implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.3.1'
+    implementation "com.google.android.material:material:$materialLibraryVersion"
 
     implementation project(':Violet')
     implementation project(':Player')
     implementation 'org.jsoup:jsoup:1.13.1'
     implementation "com.squareup.okhttp3:okhttp:$okhttpLibraryVersion"
+    implementation "com.github.bumptech.glide:glide:$glideLibraryVersion"
     implementation 'com.liulishuo.okdownload:okdownload:1.0.7'
     implementation 'com.liulishuo.okdownload:okhttp:1.0.7'
-    implementation 'com.google.code.gson:gson:2.8.6'
+    implementation 'com.google.code.gson:gson:2.8.9'
     implementation 'com.scwang.smart:refresh-layout-kernel:2.0.3'
-    implementation 'org.fourthline.cling:cling-core:2.1.1'
-    implementation 'org.fourthline.cling:cling-support:2.1.1'
-    implementation 'org.eclipse.jetty:jetty-server:8.1.22.v20160922'
-    implementation 'org.eclipse.jetty:jetty-servlet:8.1.22.v20160922'
-    implementation 'org.eclipse.jetty:jetty-client:8.1.22.v20160922'
-    implementation 'com.airbnb.android:lottie:4.2.2'
+    implementation 'org.fourthline.cling:cling-support:2.1.2'
+    implementation "org.eclipse.jetty:jetty-server:$jettyLibraryVersion"
+    implementation "org.eclipse.jetty:jetty-servlet:$jettyLibraryVersion"
+    implementation "org.eclipse.jetty:jetty-client:$jettyLibraryVersion"
+    implementation 'com.airbnb.android:lottie:5.0.3'
 
     testImplementation 'junit:junit:4.13'
 }

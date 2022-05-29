@@ -37,9 +37,9 @@ abstract class BaseActivity<T : ViewDataBinding> : AppCompatActivity() {
         initView()
         initData()
 
-        MyApplication.globalLoading.observe(this, {
+        MyApplication.globalLoading.observe(this) {
             if (it) showLoading() else hideLoading()
-        })
+        }
     }
 
     open fun initView() {}

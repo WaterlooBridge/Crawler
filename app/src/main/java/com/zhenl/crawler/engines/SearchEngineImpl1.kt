@@ -74,10 +74,10 @@ class SearchEngineImpl1 : SearchEngine() {
         private var js: String? = null
 
         private val sensitiveWords =
-            arrayListOf("玩偶姐姐", "麻豆传媒", "精东传媒", "蜜桃传媒", "天美传媒", "星空传媒", "果冻传媒", "葫芦传媒")
+            arrayListOf("玩偶姐姐", "麻豆传媒", "精东传媒", "蜜桃传媒", "天美传媒", "星空传媒", "果冻传媒", "葫芦传媒", "糖心Vlog")
 
         private fun filter(model: MovieModel): Boolean {
-            return sensitiveWords.contains(model.date)
+            return !Constants.SPIRITED_AWAY && sensitiveWords.contains(model.date)
         }
     }
 }

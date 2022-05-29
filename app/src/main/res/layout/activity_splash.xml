@@ -13,7 +13,7 @@
             app:lottie_autoPlay="true"
             app:lottie_rawRes="@raw/go" />
 
-        <com.zhenl.violet.widget.ShapeTextView
+        <com.zhenl.violet.widget.RoundTextView
             android:id="@+id/tv_skip"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -27,8 +27,8 @@
             android:text="@string/splash_skip"
             android:textColor="@color/white"
             android:textSize="16sp"
-            app:corner="12dp"
-            app:solid="@color/ic_launcher_background" />
+            app:rw_backgroundColor="@color/ic_launcher_background"
+            app:rw_radius="30dp" />
 
     </FrameLayout>
 </layout>

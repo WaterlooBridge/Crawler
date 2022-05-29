@@ -2,23 +2,15 @@ package com.zhenl.crawler.ui
 
 import android.content.Intent
 import android.os.Bundle
-import androidx.core.net.toUri
 import androidx.lifecycle.MutableLiveData
-import com.zhenl.crawler.Constants
-import com.zhenl.crawler.MyApplication
 import com.zhenl.crawler.R
 import com.zhenl.crawler.base.BaseActivity
 import com.zhenl.crawler.databinding.ActivitySplashBinding
-import com.zhenl.crawler.engines.SearchEngineImpl3
-import com.zhenl.crawler.services.ACTION_FOO
-import com.zhenl.crawler.services.DownloadService
-import com.zhenl.crawler.services.EXTRA_PARAM1
 import com.zhenl.crawler.ui.home.HomeActivity
-import com.zhenl.crawler.utils.HttpUtil
 import com.zhenl.crawler.utils.PreloadHelper
-import kotlinx.coroutines.*
-import org.json.JSONObject
-import java.io.File
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 class SplashActivity : BaseActivity<ActivitySplashBinding>() {
 
