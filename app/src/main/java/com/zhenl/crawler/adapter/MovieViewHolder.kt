@@ -1,17 +1,22 @@
 package com.zhenl.crawler.adapter
 
+import android.view.ViewGroup
 import android.widget.ImageView
 import androidx.recyclerview.widget.DiffUtil
 import com.bumptech.glide.Glide
 import com.zhenl.crawler.R
+import com.zhenl.crawler.engines.SearchEngineFactory
 import com.zhenl.crawler.models.MovieModel
-import com.zhenl.violet.base.BasePagedListAdapter
+import com.zhenl.crawler.ui.MovieDetailActivity
 import com.zhenl.violet.base.BaseViewHolder
+import com.zhenl.violet.ktx.getItemView
 
 /**
- * Created by lin on 2020/10/3.
+ * Created by lin on 2022/7/9.
  */
-class MovieAdapter : BasePagedListAdapter<MovieModel>(MOVIE_COMPARATOR) {
+class MovieViewHolder(parent: ViewGroup, home: Boolean = false) : BaseViewHolder<MovieModel>(
+    parent.getItemView(R.layout.item_movie)
+) {
 
     companion object {
         val MOVIE_COMPARATOR = object : DiffUtil.ItemCallback<MovieModel>() {
@@ -25,12 +30,20 @@ class MovieAdapter : BasePagedListAdapter<MovieModel>(MOVIE_COMPARATOR) {
         }
     }
 
-    override fun getLayoutResId(viewType: Int): Int = R.layout.item_movie
+    init {
+        itemView.setOnClickListener {
+            this.item?.apply {
+                if (home) SearchEngineFactory.type = 1
+                MovieDetailActivity.start(itemView.context, title, url)
+            }
+        }
+    }
 
-    override fun convert(holder: BaseViewHolder, item: MovieModel) {
-        val iv = holder.getView<ImageView>(R.id.iv)
+    override fun bind(item: MovieModel?) {
+        item ?: return
+        val iv = getView<ImageView>(R.id.iv)
         Glide.with(iv.context).load(item.img).centerCrop().into(iv)
-        holder.setText(R.id.tv_title, item.title)
-        holder.setText(R.id.tv_date, item.date)
+        setText(R.id.tv_title, item.title)
+        setText(R.id.tv_date, item.date)
     }
 }

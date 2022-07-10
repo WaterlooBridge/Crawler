@@ -6,14 +6,16 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.os.Bundle
 import android.os.IBinder
+import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatDialog
 import androidx.databinding.DataBindingUtil
 import androidx.paging.PagingData
 import com.zhenl.crawler.R
 import com.zhenl.crawler.databinding.DialogRemoteDeviceBinding
 import com.zhenl.crawler.utils.CastHelper
-import com.zhenl.violet.base.BasePagedListAdapter
 import com.zhenl.violet.base.BaseViewHolder
+import com.zhenl.violet.base.SimplePagingDataAdapter
+import com.zhenl.violet.ktx.getItemView
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import org.fourthline.cling.android.AndroidUpnpService
@@ -37,7 +39,7 @@ import java.util.concurrent.CopyOnWriteArrayList
 class RemoteDeviceDialog(context: Context, private val url: String) :
     AppCompatDialog(context, R.style.TransparentDialog), RegistryListener {
 
-    private lateinit var adapter: DeviceAdapter
+    private lateinit var adapter: SimplePagingDataAdapter<RemoteDevice, DeviceViewHolder>
     private lateinit var serviceConnection: ServiceConnection
 
     private val deviceList = CopyOnWriteArrayList<RemoteDevice>()
@@ -77,12 +79,13 @@ class RemoteDeviceDialog(context: Context, private val url: String) :
     }
 
     private fun initView(binding: DialogRemoteDeviceBinding) {
-        adapter = DeviceAdapter().apply {
-            setOnItemClickListener { adapter, view, position ->
-                val device = adapter.getDefItem(position) ?: return@setOnItemClickListener
-                play(device as RemoteDevice)
+        adapter = SimplePagingDataAdapter({ parent ->
+            DeviceViewHolder(parent).apply {
+                itemView.setOnClickListener {
+                    item?.let { play(it) }
+                }
             }
-        }
+        })
         binding.rv.adapter = adapter
     }
 
@@ -121,11 +124,12 @@ class RemoteDeviceDialog(context: Context, private val url: String) :
         context.unbindService(serviceConnection)
     }
 
-    private class DeviceAdapter : BasePagedListAdapter<RemoteDevice>() {
-        override fun getLayoutResId(viewType: Int): Int = R.layout.item_remote_device
+    private class DeviceViewHolder(parent: ViewGroup) : BaseViewHolder<RemoteDevice>(
+        parent.getItemView(R.layout.item_remote_device)
+    ) {
 
-        override fun convert(holder: BaseViewHolder, item: RemoteDevice) {
-            holder.setText(R.id.tv, item.details?.friendlyName ?: item.displayString)
+        override fun bind(item: RemoteDevice?) {
+            setText(R.id.tv, item?.details?.friendlyName ?: item?.displayString)
         }
     }
 

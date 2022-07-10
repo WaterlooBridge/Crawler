@@ -18,7 +18,7 @@ import com.zhenl.crawler.core.RecordAgent
 import com.zhenl.crawler.models.VideoModel
 import com.zhenl.crawler.ui.MainActivity
 import kotlinx.android.synthetic.main.layout_float_video.view.*
-import tv.danmaku.ijk.media.widget.IPCVideoView
+import tv.zhenl.media.VideoPlayerView
 
 
 /**
@@ -47,7 +47,7 @@ class FloatVideoView : FrameLayout, View.OnClickListener {
         }
 
         fun showFloatWindow(
-            videoView: IPCVideoView,
+            videoView: VideoPlayerView,
             model: VideoModel,
             playlist: ArrayList<VideoModel>? = null
         ) {
@@ -64,9 +64,9 @@ class FloatVideoView : FrameLayout, View.OnClickListener {
             }
         }
 
-        private val videoMap = HashMap<String, IPCVideoView>()
+        private val videoMap = HashMap<String, VideoPlayerView>()
 
-        fun getVideoView(id: String): IPCVideoView? {
+        fun getVideoView(id: String): VideoPlayerView? {
             return videoMap.remove(id)
         }
     }
@@ -74,7 +74,7 @@ class FloatVideoView : FrameLayout, View.OnClickListener {
     private val mMediaPauseRes = R.drawable.ic_media_pause
     private val mMediaPlayRes = R.drawable.ic_media_play
 
-    private lateinit var videoView: IPCVideoView
+    private lateinit var videoView: VideoPlayerView
     private lateinit var wm: WindowManager
     private lateinit var wmParams: WindowManager.LayoutParams
     private val controller: View =
@@ -105,6 +105,7 @@ class FloatVideoView : FrameLayout, View.OnClickListener {
                 release()
             }
             R.id.iv_fullscreen -> {
+                videoView.useController = true
                 videoMap[videoView.toString()] = videoView
                 val context = MyApplication.instance
                 val intent = Intent(context, MainActivity::class.java)
@@ -137,13 +138,14 @@ class FloatVideoView : FrameLayout, View.OnClickListener {
     }
 
     fun showFloatWindow(
-        videoView: IPCVideoView,
+        videoView: VideoPlayerView,
         model: VideoModel?,
         playlist: ArrayList<VideoModel>? = null
     ) {
         this.videoModel = model
         this.playlist = playlist
         this.videoView = videoView
+        videoView.useController = false
         addView(videoView, 0)
         wm = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
         wmParams = WindowManager.LayoutParams()

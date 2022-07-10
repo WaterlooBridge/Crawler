@@ -16,7 +16,7 @@ import com.zhenl.crawler.utils.FileUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import tv.danmaku.ijk.media.services.IPCPlayerControl
+import tv.zhenl.media.IPCPlayerControl
 
 class SettingsActivity : BaseActivity<SettingsActivityBinding>() {
 

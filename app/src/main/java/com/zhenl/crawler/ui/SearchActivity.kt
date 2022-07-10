@@ -1,16 +1,18 @@
 package com.zhenl.crawler.ui
 
-import android.view.View
 import androidx.lifecycle.lifecycleScope
 import com.zhenl.crawler.BuildConfig
 import com.zhenl.crawler.Constants
 import com.zhenl.crawler.R
-import com.zhenl.crawler.adapter.MovieAdapter
+import com.zhenl.crawler.adapter.MovieViewHolder
 import com.zhenl.crawler.base.BaseActivity
 import com.zhenl.crawler.databinding.ActivitySearchBinding
+import com.zhenl.crawler.models.MovieModel
 import com.zhenl.crawler.views.MaterialSearchView
 import com.zhenl.crawler.vm.SearchViewModel
-import com.zhenl.violet.base.BasePagedListAdapter
+import com.zhenl.violet.base.SimpleLoadStateAdapter
+import com.zhenl.violet.base.SimplePagingDataAdapter
+import com.zhenl.violet.ktx.withNetworkLoadStateFooter
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 
@@ -20,20 +22,18 @@ import kotlinx.coroutines.flow.collectLatest
 class SearchActivity : BaseActivity<ActivitySearchBinding>() {
 
     private lateinit var viewModel: SearchViewModel
-    private lateinit var adapter: MovieAdapter
+    private lateinit var adapter: SimplePagingDataAdapter<MovieModel, MovieViewHolder>
 
     override val layoutRes: Int = R.layout.activity_search
 
     override fun initView() {
         viewModel = getViewModel(SearchViewModel::class.java)
 
-        adapter = MovieAdapter()
-        binding.rv.adapter = adapter
-        adapter.isEnableLoadMore = true
-        adapter.setOnItemClickListener { _: BasePagedListAdapter<*>?, view: View, position: Int ->
-            val model = adapter.getDefItem(position) ?: return@setOnItemClickListener
-            MovieDetailActivity.start(view.context, model.title, model.url)
-        }
+        adapter = SimplePagingDataAdapter(
+            { parent -> MovieViewHolder(parent) },
+            MovieViewHolder.MOVIE_COMPARATOR
+        )
+        binding.rv.adapter = adapter.withNetworkLoadStateFooter()
 
         supportActionBar?.hide()
         binding.msv.setOnQueryTextListener(object : MaterialSearchView.OnQueryTextListener {

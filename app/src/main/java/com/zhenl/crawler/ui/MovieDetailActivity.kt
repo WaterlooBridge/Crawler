@@ -8,14 +8,15 @@ import androidx.paging.PagingData
 import androidx.recyclerview.widget.ConcatAdapter
 import androidx.recyclerview.widget.GridLayoutManager
 import com.zhenl.crawler.R
-import com.zhenl.crawler.adapter.DramasAdapter
+import com.zhenl.crawler.adapter.DramasViewHolder
 import com.zhenl.crawler.adapter.HeaderAdapter
 import com.zhenl.crawler.base.BaseActivity
 import com.zhenl.crawler.databinding.ActivityMovieDetailBinding
 import com.zhenl.crawler.databinding.ItemMovieSummaryBinding
+import com.zhenl.crawler.models.DramasModel
 import com.zhenl.crawler.models.VideoModel
 import com.zhenl.crawler.vm.MovieViewModel
-import com.zhenl.violet.base.BasePagedListAdapter
+import com.zhenl.violet.base.SimplePagingDataAdapter
 import kotlin.math.max
 import kotlin.math.min
 
@@ -27,7 +28,7 @@ class MovieDetailActivity : BaseActivity<ActivityMovieDetailBinding>() {
     private var url: String? = null
 
     private lateinit var viewModel: MovieViewModel
-    private lateinit var adapter: DramasAdapter
+    private lateinit var adapter: SimplePagingDataAdapter<DramasModel, DramasViewHolder>
 
     override val layoutRes: Int = R.layout.activity_movie_detail
 
@@ -47,7 +48,7 @@ class MovieDetailActivity : BaseActivity<ActivityMovieDetailBinding>() {
         header.lifecycleOwner = this
         header.vm = viewModel
 
-        adapter = DramasAdapter()
+        adapter = SimplePagingDataAdapter({ parent -> DramasViewHolder(parent, title, adapter) })
         binding.gv.adapter = ConcatAdapter().apply {
             addAdapter(HeaderAdapter(header.root))
             addAdapter(adapter)
@@ -58,20 +59,6 @@ class MovieDetailActivity : BaseActivity<ActivityMovieDetailBinding>() {
                     return if (position == 0) 4 else 1
                 }
             }
-        }
-        adapter.setOnItemClickListener { _: BasePagedListAdapter<*>?, view: View, position: Int ->
-            var current: VideoModel? = null
-            val list = ArrayList<VideoModel>()
-            val start = max(position - 100, 0)
-            val end = min(position + 100, adapter.getDefItemCount())
-            for (i in start until end) {
-                val model = adapter.getDefItem(i) ?: continue
-                list.add(VideoModel(title, model.text, model.url).apply {
-                    if (i == position)
-                        current = this
-                })
-            }
-            MainActivity.start(view.context, current ?: return@setOnItemClickListener, list)
         }
     }
 

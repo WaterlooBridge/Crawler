@@ -10,8 +10,8 @@
         android:layout_height="wrap_content"
         android:layout_margin="5dp"
         android:gravity="center"
-        android:paddingTop="5dp"
-        android:paddingBottom="5dp"
+        android:paddingTop="10dp"
+        android:paddingBottom="10dp"
         app:rw_backgroundColor="?attr/dramas_bg_color"
         app:rw_radius="5dp" />
 

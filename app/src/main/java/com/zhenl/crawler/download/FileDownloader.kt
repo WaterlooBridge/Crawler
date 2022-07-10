@@ -4,8 +4,8 @@ import android.util.Log
 import android.widget.Toast
 import androidx.lifecycle.MutableLiveData
 import com.zhenl.crawler.MyApplication
+import com.zhenl.crawler.utils.FileUtil
 import com.zhenl.violet.core.Dispatcher
-import tv.danmaku.ijk.media.cache.file.Md5FileNameGenerator
 import java.io.File
 
 /**
@@ -35,7 +35,7 @@ object FileDownloader {
      */
     @JvmStatic
     fun getDownloadPath(url: String): File {
-        val file = File(getBaseDownloadPath(), Md5FileNameGenerator().generate(url))
+        val file = File(getBaseDownloadPath(), FileUtil.md5FileName(url))
         if (!file.exists()) {
             file.mkdir()
         }

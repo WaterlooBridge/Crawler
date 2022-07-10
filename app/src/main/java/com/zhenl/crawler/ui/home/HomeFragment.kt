@@ -1,17 +1,17 @@
 package com.zhenl.crawler.ui.home
 
 import android.os.Bundle
-import android.view.View
 import androidx.lifecycle.lifecycleScope
 import androidx.paging.LoadState
 import com.zhenl.crawler.R
-import com.zhenl.crawler.adapter.MovieAdapter
+import com.zhenl.crawler.adapter.MovieViewHolder
 import com.zhenl.crawler.base.BaseFragment
 import com.zhenl.crawler.databinding.FragmentHomeBinding
-import com.zhenl.crawler.engines.SearchEngineFactory
-import com.zhenl.crawler.ui.MovieDetailActivity
+import com.zhenl.crawler.models.MovieModel
 import com.zhenl.crawler.vm.HomeViewModel
-import com.zhenl.violet.base.BasePagedListAdapter
+import com.zhenl.violet.base.SimpleLoadStateAdapter
+import com.zhenl.violet.base.SimplePagingDataAdapter
+import com.zhenl.violet.ktx.withNetworkLoadStateFooter
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChangedBy
@@ -36,7 +36,7 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>() {
     }
 
     private lateinit var viewModel: HomeViewModel
-    private lateinit var adapter: MovieAdapter
+    private lateinit var adapter: SimplePagingDataAdapter<MovieModel, MovieViewHolder>
 
     override val layoutRes: Int = R.layout.fragment_home
 
@@ -44,14 +44,11 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>() {
         viewModel = getViewModel(HomeViewModel::class.java)
         arguments?.getInt(KEY_CATEGORY)?.let { viewModel.type = it }
 
-        adapter = MovieAdapter()
-        adapter.isEnableLoadMore = true
-        binding.recyclerView.adapter = adapter
-        adapter.setOnItemClickListener { _: BasePagedListAdapter<*>?, view: View, position: Int ->
-            val model = adapter.getDefItem(position)
-            SearchEngineFactory.type = 1
-            MovieDetailActivity.start(view.context, model!!.title, model.url)
-        }
+        adapter = SimplePagingDataAdapter(
+            { parent -> MovieViewHolder(parent, true) },
+            MovieViewHolder.MOVIE_COMPARATOR
+        )
+        binding.recyclerView.adapter = adapter.withNetworkLoadStateFooter()
         lifecycleScope.launchWhenResumed {
             adapter.loadStateFlow.collectLatest {
                 if (it.refresh is LoadState.Loading)
