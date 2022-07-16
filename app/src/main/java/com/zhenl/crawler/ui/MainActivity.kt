@@ -79,10 +79,9 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
             wm.removeViewImmediate(parent)
         } else {
             mVideoView = VideoPlayerView(MyApplication.instance).apply {
-                setShowBuffering(PlayerView.SHOW_BUFFERING_ALWAYS)
                 controllerAutoShow = false
                 setUserAgent(Constants.USER_AGENT)
-                setNextClickListener {
+                findViewById<View>(R.id.btn_next).setOnClickListener {
                     hideController()
                     playNextVideo()
                 }
@@ -120,6 +119,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
     }
 
     private fun initMediaController() {
+        mVideoView.attachControlHelper(window)
         mVideoView.setFullscreenButtonClickListener {
             requestedOrientation =
                 if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
@@ -171,7 +171,6 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
     }
 
     private fun play(uri: Uri?, headers: Map<String, String>? = null) {
-        binding.probar.visibility = View.GONE
         mVideoView.setVideoUri(uri, headers, RecordAgent.getInstance().getRecord(url))
         mVideoView.addPlayerListener(playerListener)
     }
@@ -183,12 +182,15 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
                 Player.STATE_READY -> if (!mStopped || bgEnable) mVideoView.start() else mVideoView.pause()
                 Player.STATE_ENDED -> playNextVideo()
             }
+            binding.probar.visibility =
+                if (playbackState == Player.STATE_BUFFERING) View.VISIBLE else View.GONE
         }
 
         override fun onPlayerError(error: PlaybackException) {
             isLock = false
             record(mVideoView.duration, mVideoView.currentPosition)
-            AlertDialog.Builder(this@MainActivity).setMessage(error.message + "\n播放异常，是否尝试浏览器播放")
+            AlertDialog.Builder(this@MainActivity)
+                .setMessage("${error.cause?.message ?: error.message}\n播放异常，是否尝试浏览器播放")
                 .setNegativeButton("否") { _: DialogInterface?, _: Int -> finish() }
                 .setPositiveButton("是") { _: DialogInterface?, _: Int -> jumpBrowser() }
                 .create().show()

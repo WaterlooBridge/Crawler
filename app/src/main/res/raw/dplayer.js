@@ -13,6 +13,7 @@ function Aliplayer(data) {
 }
 
 function MuiPlayer(config) {
+    console.log(JSON.stringify(config));
     if (config.src) {
         window.bridge.loadVideo(window.bridge.makeAbsoluteUrl(config.src));
     }

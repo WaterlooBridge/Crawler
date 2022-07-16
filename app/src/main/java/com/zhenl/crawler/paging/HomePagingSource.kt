@@ -7,6 +7,7 @@ import com.zhenl.crawler.Constants
 import com.zhenl.crawler.engines.SearchEngine
 import com.zhenl.crawler.engines.SearchEngine.Companion.findBackgroundImage
 import com.zhenl.crawler.models.MovieModel
+import com.zhenl.crawler.utils.HttpUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.jsoup.Jsoup
@@ -21,7 +22,7 @@ class HomePagingSource(private val type: Int) : PagingSource<Int, MovieModel>() 
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int, MovieModel> = withContext(Dispatchers.IO) {
         try {
             val document = Jsoup.connect(Constants.API_HOST + "/type/" + type + "/" + params.key + ".html")
-                    .userAgent(Constants.USER_AGENT).get()
+                    .userAgent(Constants.USER_AGENT).sslSocketFactory(HttpUtil.ignoreSSLError()).get()
             if (document.location().startsWith(Constants.API_HOST)) {
                 val elements = document.select(".vbox>a")
                 if (elements.size == 0)

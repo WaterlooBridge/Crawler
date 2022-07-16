@@ -3,6 +3,7 @@ package com.zhenl.crawler.engines
 import com.zhenl.crawler.Constants
 import com.zhenl.crawler.models.DramasModel
 import com.zhenl.crawler.models.MovieModel
+import com.zhenl.crawler.utils.HttpUtil
 import com.zhenl.crawler.utils.UrlHelper
 import org.jsoup.Jsoup
 
@@ -16,7 +17,8 @@ class SearchEngineImpl1 : SearchEngine() {
     override suspend fun search(page: Int, keyword: String?): List<MovieModel> {
         val url =
             if (page > 1) Constants.API_HOST + "/s/" + keyword + "/" + page + ".html" else Constants.API_HOST + "/search?wd=" + keyword
-        val document = Jsoup.connect(url).userAgent(Constants.USER_AGENT).get()
+        val document = Jsoup.connect(url).userAgent(Constants.USER_AGENT)
+            .sslSocketFactory(HttpUtil.ignoreSSLError()).get()
         val elements = document.select(".vbox>a")
         val list: MutableList<MovieModel> = ArrayList()
         if (elements.size == 0)
@@ -40,7 +42,8 @@ class SearchEngineImpl1 : SearchEngine() {
     }
 
     override fun detail(url: String?, callback: DetailCallback?) {
-        val document = Jsoup.connect(Constants.API_HOST + url).userAgent(Constants.USER_AGENT).get()
+        val document = Jsoup.connect(Constants.API_HOST + url).userAgent(Constants.USER_AGENT)
+            .sslSocketFactory(HttpUtil.ignoreSSLError()).get()
         val img = document.select(".dbox .img").attr("style").findBackgroundImage()
         val summary = document.select(".tbox_js").text()
         val elements = document.select(".show a")

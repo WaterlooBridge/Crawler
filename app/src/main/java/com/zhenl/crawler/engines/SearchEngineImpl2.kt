@@ -1,15 +1,19 @@
 package com.zhenl.crawler.engines
 
+import android.webkit.WebResourceRequest
+import android.webkit.WebResourceResponse
+import android.webkit.WebView
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.zhenl.crawler.Constants
+import com.zhenl.crawler.R
 import com.zhenl.crawler.models.DramasModel
 import com.zhenl.crawler.models.MovieModel
 import com.zhenl.crawler.utils.HttpUtil
 import com.zhenl.crawler.utils.UrlHelper
 import org.jsoup.Jsoup
+import java.io.ByteArrayInputStream
 import java.io.Serializable
-import java.util.*
 
 /**
  * Created by lin on 2018/8/22.
@@ -79,6 +83,28 @@ class SearchEngineImpl2 : SearchEngine() {
         this.url = url
         this.callback = callback
         load(url)
+    }
+
+    override fun shouldInterceptRequest(
+        view: WebView,
+        request: WebResourceRequest
+    ): WebResourceResponse? {
+        val response = super.shouldInterceptRequest(view, request)
+        if (response != null)
+            return response
+        if (request.url.path?.endsWith(".js") == true) {
+            val res =
+                HttpUtil.loadWebResourceResponse(request.url.toString(), request.requestHeaders)
+            if (res?.code != 200)
+                return response
+            val data = res.body?.string() ?: return response
+            if (data.contains("MuiPlayer.prototype.on"))
+                return loadPlayerJs(R.raw.dplayer)
+            return WebResourceResponse(
+                "application/javascript", "utf-8", ByteArrayInputStream(data.toByteArray())
+            )
+        }
+        return response
     }
 
     private data class SearchModel(

@@ -114,7 +114,7 @@ abstract class SearchEngine : WebViewClient() {
         return super.shouldInterceptRequest(view, request)
     }
 
-    private fun loadPlayerJs(resId: Int): WebResourceResponse {
+    protected fun loadPlayerJs(resId: Int): WebResourceResponse {
         return WebResourceResponse(
             "application/javascript", "utf-8",
             MyApplication.instance.resources.openRawResource(resId)
