@@ -2,12 +2,12 @@ package com.zhenl.crawler.ui
 
 import android.os.Bundle
 import android.view.MenuItem
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.lifecycle.lifecycleScope
 import androidx.preference.ListPreference
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.zhenl.crawler.MyApplication
 import com.zhenl.crawler.R
 import com.zhenl.crawler.base.BaseActivity
@@ -49,7 +49,7 @@ class SettingsActivity : BaseActivity<SettingsActivityBinding>() {
             findPreference<Preference>("clear_video_cache")?.let {
                 lifecycleScope.launch { it.summary = calcSummary() }
                 it.setOnPreferenceClickListener {
-                    AlertDialog.Builder(requireContext())
+                    MaterialAlertDialogBuilder(requireContext())
                             .setTitle("确认清除？")
                             .setPositiveButton("确定") { _, _ ->
                                 clearCache(it)

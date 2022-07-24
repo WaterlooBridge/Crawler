@@ -4,11 +4,11 @@ import android.content.DialogInterface
 import android.content.Intent
 import android.view.Menu
 import android.view.MenuItem
-import androidx.appcompat.app.AlertDialog
 import androidx.core.view.GravityCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.viewpager2.adapter.FragmentStateAdapter
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.tabs.TabLayoutMediator
 import com.zhenl.crawler.R
 import com.zhenl.crawler.base.BaseActivity
@@ -66,7 +66,7 @@ class HomeActivity : BaseActivity<ActivityHomeBinding>() {
     }
 
     private fun showSearchEngines() {
-        val builder = AlertDialog.Builder(this)
+        val builder = MaterialAlertDialogBuilder(this)
         builder.setItems(R.array.home_search_engine) { dialog: DialogInterface, which: Int ->
             dialog.dismiss()
             SearchEngineFactory.type = which + 1

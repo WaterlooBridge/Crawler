@@ -19,7 +19,7 @@ class SearchViewModel : BaseViewModel() {
         }
 
     val movies = Pager(
-            PagingConfig(30), 1
+            PagingConfig(10, 5), 1
     ) {
         SearchPagingSource(keyword).apply {
             latestSource = this

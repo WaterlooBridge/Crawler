@@ -11,12 +11,12 @@ import android.util.Log
 import android.view.*
 import android.widget.CompoundButton
 import android.widget.Toast
-import androidx.appcompat.app.AlertDialog
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.ui.PlayerView
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.zhenl.crawler.Constants
 import com.zhenl.crawler.MyApplication
 import com.zhenl.crawler.R
@@ -58,6 +58,8 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
     private var isLock = false
     private var bgEnable = false
 
+    private var btnNext: View? = null
+
     override val layoutRes: Int = R.layout.activity_main
 
     override fun initView() {
@@ -81,11 +83,12 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
             mVideoView = VideoPlayerView(MyApplication.instance).apply {
                 controllerAutoShow = false
                 setUserAgent(Constants.USER_AGENT)
-                findViewById<View>(R.id.btn_next).setOnClickListener {
-                    hideController()
-                    playNextVideo()
-                }
             }
+        }
+        btnNext = mVideoView.findViewById(R.id.btn_next)
+        btnNext?.setOnClickListener {
+            mVideoView.hideController()
+            playNextVideo()
         }
         videoParent.addView(mVideoView, -1, -1)
 
@@ -189,7 +192,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
         override fun onPlayerError(error: PlaybackException) {
             isLock = false
             record(mVideoView.duration, mVideoView.currentPosition)
-            AlertDialog.Builder(this@MainActivity)
+            MaterialAlertDialogBuilder(this@MainActivity)
                 .setMessage("${error.cause?.message ?: error.message}\n播放异常，是否尝试浏览器播放")
                 .setNegativeButton("否") { _: DialogInterface?, _: Int -> finish() }
                 .setPositiveButton("是") { _: DialogInterface?, _: Int -> jumpBrowser() }
@@ -226,6 +229,8 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
     private fun openFloat() {
         if (!isFloatWindowOpAllowed()) return
         bgEnable = true
+        btnNext?.setOnClickListener(null)
+        mVideoView.detachControlHelper()
         mVideoView.removePlayerListener(playerListener)
         videoParent.removeView(mVideoView)
         showFloatWindow(mVideoView, videoModel, playlist)
@@ -240,6 +245,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
                 View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or View.SYSTEM_UI_FLAG_IMMERSIVE
         } else {
             window.clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
+            supportActionBar?.show()
         }
     }
 

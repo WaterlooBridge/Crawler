@@ -7,11 +7,11 @@ import android.view.LayoutInflater
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.AppCompatEditText
 import androidx.lifecycle.asFlow
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.gson.Gson
 import com.zhenl.crawler.MyApplication
 import com.zhenl.crawler.R
@@ -98,7 +98,7 @@ class DownloadActivity : BaseActivity<ActivityDownloadBinding>() {
     private fun newDownload() {
         val editText = AppCompatEditText(this)
         editText.hint = "请输入下载地址"
-        AlertDialog.Builder(this)
+        MaterialAlertDialogBuilder(this)
                 .setView(editText)
                 .setTitle("新建下载")
                 .setPositiveButton("确定") { _, _ ->
@@ -170,7 +170,7 @@ class DownloadActivity : BaseActivity<ActivityDownloadBinding>() {
                         }
                     }
 
-                    val builder = AlertDialog.Builder(view.context)
+                    val builder = MaterialAlertDialogBuilder(view.context)
                     builder.setItems(items) { dialog: DialogInterface, which: Int ->
                         dialog.dismiss()
                         when (which) {
@@ -179,7 +179,7 @@ class DownloadActivity : BaseActivity<ActivityDownloadBinding>() {
                                 COMPLETE -> play(it)
                                 else -> VideoDownloadService.downloadVideo(it)
                             }
-                            1 -> AlertDialog.Builder(view.context)
+                            1 -> MaterialAlertDialogBuilder(view.context)
                                     .setTitle("确认删除？")
                                     .setPositiveButton("确定") { _, _ ->
                                         FileDownloader.deleteVideo(it)
