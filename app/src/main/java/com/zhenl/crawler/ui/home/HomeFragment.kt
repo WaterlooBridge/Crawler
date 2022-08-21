@@ -57,11 +57,6 @@ class HomeFragment : BaseFragment<FragmentHomeBinding>() {
                     binding.refreshLayout.finishRefresh()
             }
         }
-        lifecycleScope.launchWhenResumed {
-            adapter.loadStateFlow.distinctUntilChangedBy { it.refresh }
-                .filter { it.refresh is LoadState.NotLoading }
-                .collect { binding.recyclerView.layoutManager?.onAdapterChanged(null, null) }
-        }
 
         binding.refreshLayout.setPrimaryColorsId(R.color.transparent)
         binding.refreshLayout.setOnRefreshListener {

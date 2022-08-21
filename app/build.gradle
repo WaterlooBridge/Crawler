@@ -118,7 +118,7 @@ dependencies {
     implementation 'com.liulishuo.okdownload:okhttp:1.0.7'
     implementation 'com.google.code.gson:gson:2.8.9'
     implementation 'com.scwang.smart:refresh-layout-kernel:2.0.3'
-    implementation 'org.fourthline.cling:cling-support:2.1.2'
+    implementation 'org.fourthline.cling:cling-support:2.1.1'
     implementation "org.eclipse.jetty:jetty-server:$jettyLibraryVersion"
     implementation "org.eclipse.jetty:jetty-servlet:$jettyLibraryVersion"
     implementation "org.eclipse.jetty:jetty-client:$jettyLibraryVersion"
