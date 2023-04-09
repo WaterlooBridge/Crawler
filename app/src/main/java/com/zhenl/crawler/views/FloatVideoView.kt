@@ -174,15 +174,15 @@ class FloatVideoView : FrameLayout, View.OnClickListener {
 
     private val mGestureDetector =
         GestureDetector(context, object : GestureDetector.SimpleOnGestureListener() {
-            override fun onSingleTapUp(e: MotionEvent?): Boolean {
+            override fun onSingleTapUp(e: MotionEvent): Boolean {
                 if (isClickable)
                     return performClick()
                 return super.onSingleTapUp(e)
             }
 
             override fun onScroll(
-                e1: MotionEvent?,
-                e2: MotionEvent?,
+                e1: MotionEvent,
+                e2: MotionEvent,
                 distanceX: Float,
                 distanceY: Float
             ): Boolean {
@@ -193,8 +193,8 @@ class FloatVideoView : FrameLayout, View.OnClickListener {
             }
 
             override fun onFling(
-                e1: MotionEvent?,
-                e2: MotionEvent?,
+                e1: MotionEvent,
+                e2: MotionEvent,
                 velocityX: Float,
                 velocityY: Float
             ): Boolean {
@@ -208,8 +208,8 @@ class FloatVideoView : FrameLayout, View.OnClickListener {
 
             private var mScaleFactor = 1f
 
-            override fun onScale(detector: ScaleGestureDetector?): Boolean {
-                mScaleFactor *= detector?.scaleFactor ?: 1f
+            override fun onScale(detector: ScaleGestureDetector): Boolean {
+                mScaleFactor *= detector.scaleFactor
                 wmParams.width = (initialWidth * mScaleFactor).toInt()
                 wm.updateViewLayout(this@FloatVideoView, wmParams)
                 return true

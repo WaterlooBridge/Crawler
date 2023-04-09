@@ -17,7 +17,7 @@ object VideoHelper {
             if (extractNum(next.subtitle) == currentNum + 1)
                 return next
         }
-        if (position - 1 > 0) {
+        if (position - 1 >= 0) {
             val previous = playlist[position - 1]
             if (extractNum(previous.subtitle) == currentNum + 1)
                 return previous
