@@ -42,6 +42,6 @@ ext {
     okhttpLibraryVersion = '4.9.3'
     glideLibraryVersion = '4.11.0'
     pagingLibraryVersion = '3.1.1'
-    media3LibraryVersion = '1.0.0'
+    media3LibraryVersion = '1.0.1'
     jettyLibraryVersion = '8.1.22.v20160922'
 }

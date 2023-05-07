@@ -24,7 +24,7 @@ import com.zhenl.crawler.base.BaseActivity
 import com.zhenl.crawler.core.RecordAgent
 import com.zhenl.crawler.databinding.ActivityMainBinding
 import com.zhenl.crawler.databinding.DialogVideoPlaySettingBinding
-import com.zhenl.crawler.download.VideoDownloadService.Companion.downloadVideo
+import com.zhenl.crawler.download.VideoDownloader
 import com.zhenl.crawler.engines.SearchEngine
 import com.zhenl.crawler.engines.SearchEngineFactory
 import com.zhenl.crawler.models.VideoModel
@@ -335,7 +335,7 @@ class MainActivity : BaseActivity<ActivityMainBinding>() {
             }
             binding.viewDownload.setOnClickListener {
                 dialog.dismiss()
-                downloadVideo(videoModel)
+                VideoDownloader.downloadVideo(videoModel)
             }
             binding.viewCast.setOnClickListener {
                 dialog.dismiss()

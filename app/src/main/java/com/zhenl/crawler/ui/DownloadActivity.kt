@@ -10,24 +10,27 @@ import android.view.ViewGroup
 import androidx.appcompat.widget.AppCompatEditText
 import androidx.lifecycle.asFlow
 import androidx.lifecycle.lifecycleScope
+import androidx.media3.exoplayer.offline.Download
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.google.gson.Gson
 import com.zhenl.crawler.MyApplication
 import com.zhenl.crawler.R
 import com.zhenl.crawler.base.BaseActivity
 import com.zhenl.crawler.databinding.ActivityDownloadBinding
-import com.zhenl.crawler.download.*
 import com.zhenl.crawler.download.VideoDownloadEntity
+import com.zhenl.crawler.download.VideoDownloader
+import com.zhenl.crawler.download.toVideoDownloadEntity
 import com.zhenl.crawler.models.VideoModel
 import com.zhenl.crawler.utils.FileUtil
 import kotlinx.android.synthetic.main.activity_download.*
 import kotlinx.android.synthetic.main.item_download_list.view.*
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.io.File
+import tv.zhenl.media.IPCPlayerControl
 import java.text.DecimalFormat
 import java.text.SimpleDateFormat
 import java.util.*
@@ -39,42 +42,46 @@ class DownloadActivity : BaseActivity<ActivityDownloadBinding>() {
     override val layoutRes: Int = R.layout.activity_download
 
     private lateinit var adapter: VideoDownloadAdapter
-    private val videoList = arrayListOf<VideoDownloadEntity>()
 
     override fun initView() {
         supportActionBar?.setTitle(R.string.downloads)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
-        adapter = VideoDownloadAdapter(videoList)
+        adapter = VideoDownloadAdapter()
         rv_downloads.adapter = adapter
 
         fab_btn.setOnClickListener { newDownload() }
     }
 
     override fun initData() {
+        refreshData()
         lifecycleScope.launch {
-            withContext(Dispatchers.IO) {
-                FileDownloader.getBaseDownloadPath().listFiles()?.forEach {
-                    val file = File(it, "video.config")
-                    if (!file.exists())
-                        return@forEach
-                    val text = file.readText()
-                    if (text.isEmpty())
-                        return@forEach
-                    val data = Gson().fromJson(text, VideoDownloadEntity::class.java)
-                            ?: return@forEach
-                    if (data.status == DELETE) {
-                        it.deleteRecursively()
-                    } else {
-                        if (data.status == DOWNLOADING)
-                            data.status = PAUSE
-                        videoList.add(data)
-                    }
+            VideoDownloader.downloadCallback.asFlow().collect { onProgress(it) }
+        }
+        lifecycleScope.launch {
+            flow {
+                while (true) {
+                    delay(1000)
+                    emit(adapter.list.firstOrNull { it.downloadTask.state == Download.STATE_DOWNLOADING } != null)
                 }
-                videoList.sort()
+            }.collect {
+                if (it) adapter.notifyDataSetChanged()
             }
-            adapter.notifyDataSetChanged()
-            FileDownloader.downloadCallback.asFlow().collect { onProgress(it) }
+        }
+    }
+
+    private fun refreshData(needDelay: Boolean = false) {
+        lifecycleScope.launch {
+            if (needDelay) delay(1000)
+            val list = arrayListOf<VideoDownloadEntity>()
+            withContext(Dispatchers.IO) {
+                VideoDownloader.loadDownloads().forEach {
+                    val entity = it.toVideoDownloadEntity() ?: return@forEach
+                    list.add(entity)
+                }
+                list.sort()
+            }
+            adapter.setData(list)
         }
     }
 
@@ -84,11 +91,12 @@ class DownloadActivity : BaseActivity<ActivityDownloadBinding>() {
         return super.onOptionsItemSelected(item)
     }
 
-    private fun onProgress(entity: VideoDownloadEntity) {
+    private fun onProgress(download: Download) {
+        val videoList = adapter.list
         for ((index, item) in videoList.withIndex()) {
-            if (item.originalUrl == entity.originalUrl) {
-                if (item != entity)
-                    videoList[index] = entity
+            if (item.originalUrl == download.request.uri.toString()) {
+                if (item.downloadTask != download)
+                    item.downloadTask = download
                 adapter.notifyItemChanged(index, 0)
                 break
             }
@@ -99,45 +107,51 @@ class DownloadActivity : BaseActivity<ActivityDownloadBinding>() {
         val editText = AppCompatEditText(this)
         editText.hint = "请输入下载地址"
         MaterialAlertDialogBuilder(this)
-                .setView(editText)
-                .setTitle("新建下载")
-                .setPositiveButton("确定") { _, _ ->
-                    val url = editText.text.toString()
-                    if (!url.matches(Regex("(http|ftp|https)://.+"))) {
-                        return@setPositiveButton
-                    }
-                    val name = FileUtil.getFileNameFromUrl(url)
-                    val entity = VideoDownloadEntity(url, name)
-                    entity.toFile()
-                    videoList.add(0, entity)
-                    adapter.notifyItemInserted(0)
-                    rv_downloads.scrollToPosition(0)
-                    VideoDownloadService.downloadVideo(entity)
-                }.show()
+            .setView(editText)
+            .setTitle("新建下载")
+            .setPositiveButton("确定") { _, _ ->
+                val url = editText.text.toString()
+                if (!url.matches(Regex("(http|ftp|https)://.+"))) {
+                    return@setPositiveButton
+                }
+                val name = FileUtil.getFileNameFromUrl(url)
+                val model = VideoModel(name, null, url, url)
+                VideoDownloader.downloadVideo(model)
+                refreshData(true)
+            }.show()
     }
 
-    class VideoDownloadAdapter(private val list: MutableList<VideoDownloadEntity>) :
-            RecyclerView.Adapter<VideoDownloadAdapter.ViewHolder>() {
+    class VideoDownloadAdapter(var list: MutableList<VideoDownloadEntity> = arrayListOf()) :
+        RecyclerView.Adapter<VideoDownloadAdapter.ViewHolder>() {
 
         companion object {
             private val df = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US)
         }
 
+        fun setData(videoList: MutableList<VideoDownloadEntity>) {
+            list = videoList
+            notifyDataSetChanged()
+        }
+
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
             return ViewHolder(
-                    LayoutInflater.from(parent.context).inflate(
-                            R.layout.item_download_list, parent, false
-                    )
+                LayoutInflater.from(parent.context).inflate(
+                    R.layout.item_download_list, parent, false
+                )
             )
         }
 
         override fun getItemCount() = list.size
 
-        override fun onBindViewHolder(holder: ViewHolder, position: Int, payloads: MutableList<Any>) {
-            if (payloads.isNullOrEmpty()) {
+        override fun onBindViewHolder(
+            holder: ViewHolder,
+            position: Int,
+            payloads: MutableList<Any>
+        ) {
+            if (payloads.isEmpty()) {
                 super.onBindViewHolder(holder, position, payloads)
             } else {
-                holder.updateProgress(list[position])
+                holder.updateProgress(list[position].downloadTask)
             }
         }
 
@@ -157,36 +171,37 @@ class DownloadActivity : BaseActivity<ActivityDownloadBinding>() {
 
             init {
                 view.setOnClickListener { view ->
-                    val it = data!!
-                    val items = Array(if (it.status != COMPLETE) 3 else 2) { pos ->
-                        when (pos) {
-                            0 -> when (it.status) {
-                                DOWNLOADING -> "暂停下载"
-                                COMPLETE -> "播放"
-                                else -> "开始下载"
+                    val it = data ?: return@setOnClickListener
+                    val items =
+                        Array(if (it.downloadTask.state != Download.STATE_COMPLETED) 3 else 2) { pos ->
+                            when (pos) {
+                                0 -> when (it.downloadTask.state) {
+                                    Download.STATE_DOWNLOADING -> "暂停下载"
+                                    Download.STATE_COMPLETED -> "播放"
+                                    else -> "开始下载"
+                                }
+                                1 -> "删除"
+                                else -> "边下边播"
                             }
-                            1 -> "删除"
-                            else -> "边下边播"
                         }
-                    }
 
                     val builder = MaterialAlertDialogBuilder(view.context)
                     builder.setItems(items) { dialog: DialogInterface, which: Int ->
                         dialog.dismiss()
                         when (which) {
-                            0 -> when (it.status) {
-                                DOWNLOADING -> it.stopDownload()
-                                COMPLETE -> play(it)
-                                else -> VideoDownloadService.downloadVideo(it)
+                            0 -> when (it.downloadTask.state) {
+                                Download.STATE_DOWNLOADING -> VideoDownloader.stopDownload(it.downloadTask)
+                                Download.STATE_COMPLETED -> play(it)
+                                else -> VideoDownloader.startDownload(it.downloadTask)
                             }
                             1 -> MaterialAlertDialogBuilder(view.context)
-                                    .setTitle("确认删除？")
-                                    .setPositiveButton("确定") { _, _ ->
-                                        FileDownloader.deleteVideo(it)
-                                        list.remove(it)
-                                        notifyItemRemoved(absoluteAdapterPosition)
-                                    }.setNegativeButton("取消", null)
-                                    .show()
+                                .setTitle("确认删除？")
+                                .setPositiveButton("确定") { _, _ ->
+                                    VideoDownloader.removeDownload(it.downloadTask)
+                                    list.remove(it)
+                                    notifyItemRemoved(absoluteAdapterPosition)
+                                }.setNegativeButton("取消", null)
+                                .show()
                             else -> play(it)
                         }
                     }
@@ -198,8 +213,9 @@ class DownloadActivity : BaseActivity<ActivityDownloadBinding>() {
                 val context = MyApplication.instance
                 val intent = Intent(context, MainActivity::class.java)
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                intent.data = Uri.fromFile(FileDownloader.getLocalPlayFile(entity.originalUrl))
-                intent.putExtra("video", VideoModel(entity.name, entity.subName, intent.data.toString()))
+                val url = IPCPlayerControl.DOWNLOAD_URI_SCHEME + entity.originalUrl
+                intent.data = Uri.parse(url)
+                intent.putExtra("video", VideoModel(entity.name, entity.subName, url))
                 context.startActivity(intent)
             }
 
@@ -209,45 +225,45 @@ class DownloadActivity : BaseActivity<ActivityDownloadBinding>() {
                 }
                 this.data = data
                 val context = view.context
-                title.text = if (data.name.isNotEmpty()) data.name else context.getString(R.string.unknown_movie)
+                title.text =
+                    data.name.ifEmpty { context.getString(R.string.unknown_movie) }
                 subtitle.text = data.subName
-                date.text = df.format(Date(data.createTime))
-                updateProgress(data)
+                date.text = df.format(Date(data.downloadTask.startTimeMs))
+                updateProgress(data.downloadTask)
             }
 
-            fun updateProgress(data: VideoDownloadEntity) {
-                this.data = data
-                currentSize.text = FileUtil.getFormatSize(data.currentSize.toDouble())
-                val text = "${DecimalFormat("#.##%").format(data.currentProgress)}|${data.currentSpeed}"
+            fun updateProgress(downloadTask: Download) {
+                currentSize.text = FileUtil.getFormatSize(downloadTask.bytesDownloaded.toDouble())
+                val text = DecimalFormat("#.##%").format(downloadTask.percentDownloaded / 100)
                 speed.text = text
 
-                when (data.status) {
-                    NO_START -> {
+                when (downloadTask.state) {
+                    Download.STATE_QUEUED -> {
                         currentSize.setText(R.string.wait_download)
                         speed.visibility = View.GONE
                         download.visibility = View.GONE
                     }
-                    DOWNLOADING -> {
+                    Download.STATE_DOWNLOADING -> {
                         speed.visibility = View.VISIBLE
                         download.visibility = View.VISIBLE
                         download.setText(R.string.downloading)
                     }
-                    PAUSE -> {
+                    Download.STATE_STOPPED -> {
                         speed.visibility = View.VISIBLE
                         download.visibility = View.VISIBLE
                         download.setText(R.string.already_paused)
                     }
-                    COMPLETE -> {
+                    Download.STATE_COMPLETED -> {
                         speed.visibility = View.GONE
                         download.visibility = View.GONE
                     }
-                    PREPARE -> {
+                    Download.STATE_RESTARTING -> {
                         currentSize.setText(R.string.wait_download)
                         speed.visibility = View.GONE
                         download.visibility = View.VISIBLE
                         download.setText(R.string.preparing)
                     }
-                    ERROR -> {
+                    Download.STATE_FAILED -> {
                         currentSize.setText(R.string.download_error)
                         speed.visibility = View.GONE
                         download.visibility = View.GONE

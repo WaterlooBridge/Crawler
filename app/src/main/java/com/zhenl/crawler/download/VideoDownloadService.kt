@@ -1,111 +1,37 @@
 package com.zhenl.crawler.download
 
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.app.Service
-import android.content.ComponentName
-import android.content.Context
-import android.content.Intent
-import android.content.ServiceConnection
-import android.os.Build
-import android.os.Handler
-import android.os.IBinder
-import android.os.Message
-import androidx.core.app.NotificationCompat
+import android.app.Notification
+import androidx.media3.exoplayer.offline.Download
+import androidx.media3.exoplayer.offline.DownloadManager
+import androidx.media3.exoplayer.offline.DownloadService
+import androidx.media3.exoplayer.scheduler.PlatformScheduler
+import androidx.media3.exoplayer.scheduler.Scheduler
 import com.zhenl.crawler.BuildConfig
-import com.zhenl.crawler.IVideoDownloader
-import com.zhenl.crawler.MyApplication
-import com.zhenl.crawler.models.VideoModel
-import com.zhenl.crawler.utils.FileUtil
-import java.lang.ref.WeakReference
+import com.zhenl.crawler.R
 
-class VideoDownloadService : Service() {
 
-    companion object {
+class VideoDownloadService : DownloadService(
+    1,
+    DEFAULT_FOREGROUND_NOTIFICATION_UPDATE_INTERVAL,
+    BuildConfig.APPLICATION_ID,
+    R.string.exo_download_notification_channel_name,
+    0
+) {
 
-        private const val CHANNEL_ID = BuildConfig.APPLICATION_ID
-        private const val NOTIFICATION_ID = 10086
-        private const val INTERVAL = 10000L
-
-        private val map = HashMap<String, VideoDownloadEntity>()
-
-        private fun downloadVideo(url: String) {
-            val context = MyApplication.instance
-            val intent = Intent(context, VideoDownloadService::class.java)
-            context.bindService(intent, object : ServiceConnection {
-                override fun onServiceDisconnected(name: ComponentName?) {
-                }
-
-                override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
-                    IVideoDownloader.Stub.asInterface(service).downloadVideo(url)
-                }
-            }, Context.BIND_AUTO_CREATE)
-        }
-
-        fun downloadVideo(entity: VideoDownloadEntity) {
-            val url = entity.originalUrl
-            map[url] = entity
-            downloadVideo(url)
-        }
-
-        fun downloadVideo(model: VideoModel) {
-            val url = model.videoPath ?: return
-            downloadVideo(VideoDownloadEntity(url, model.title
-                    ?: FileUtil.getFileNameFromUrl(url), model.subtitle
-                    ?: "").apply { toFile() })
-        }
+    override fun getDownloadManager(): DownloadManager {
+        return VideoDownloader.getDownloadManager()
     }
 
-    private val binder = ViewDownloaderStub()
-
-    override fun onCreate() {
-        super.onCreate()
-        createNotificationChannel()
-        ForegroundHandler(this).sendEmptyMessageDelayed(0, INTERVAL)
+    override fun getScheduler(): Scheduler {
+        return PlatformScheduler(this, 1)
     }
 
-    override fun onBind(intent: Intent): IBinder {
-        return binder
-    }
-
-    private inner class ViewDownloaderStub : IVideoDownloader.Stub() {
-
-        override fun downloadVideo(url: String?) {
-            url?.let {
-                val entity = map.remove(it) ?: return
-                FileDownloader.downloadVideo(entity)
-            }
-        }
-    }
-
-    private fun createNotificationChannel() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O)
-            return
-        val channel = NotificationChannel(CHANNEL_ID, "视频下载", NotificationManager.IMPORTANCE_LOW)
-        (getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager)
-                .createNotificationChannel(channel)
-    }
-
-    private class ForegroundHandler(service: Service) : Handler() {
-
-        private val wr = WeakReference(service)
-        private val builder = NotificationCompat.Builder(MyApplication.instance, CHANNEL_ID)
-
-        private var foreground = false
-
-        override fun handleMessage(msg: Message) {
-            val service = wr.get() ?: return
-            if (M3U8ConfigDownloader.downloadList.isEmpty()
-                    && M3U8Downloader.downloadList.isEmpty()) {
-                if (foreground) {
-                    service.stopForeground(true)
-                    foreground = false
-                }
-            } else if (!foreground) {
-                service.startForeground(NOTIFICATION_ID, builder.build())
-                foreground = true
-            }
-            sendEmptyMessageDelayed(0, INTERVAL)
-        }
+    override fun getForegroundNotification(
+        downloads: MutableList<Download>,
+        notMetRequirements: Int
+    ): Notification {
+        return VideoDownloader.getDownloadNotificationHelper().buildProgressNotification(
+            this, R.mipmap.bilibili, null, null, downloads, notMetRequirements
+        )
     }
 }
