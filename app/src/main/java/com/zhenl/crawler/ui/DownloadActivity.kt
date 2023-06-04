@@ -192,6 +192,7 @@ class DownloadActivity : BaseActivity<ActivityDownloadBinding>() {
                             0 -> when (it.downloadTask.state) {
                                 Download.STATE_DOWNLOADING -> VideoDownloader.stopDownload(it.downloadTask)
                                 Download.STATE_COMPLETED -> play(it)
+                                Download.STATE_FAILED -> VideoDownloader.restartDownload(it.downloadTask)
                                 else -> VideoDownloader.startDownload(it.downloadTask)
                             }
                             1 -> MaterialAlertDialogBuilder(view.context)

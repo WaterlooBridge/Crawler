@@ -23,7 +23,9 @@ import tv.zhenl.media.DataSourceWrapper
 import tv.zhenl.media.IPCPlayerControl
 import java.io.File
 import java.io.IOException
-import java.util.concurrent.Executors
+import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.ThreadPoolExecutor
+import java.util.concurrent.TimeUnit
 
 /**
  * Created by lin on 2023/5/7.
@@ -57,7 +59,7 @@ object VideoDownloader : DownloadManager.Listener {
             databaseProvider,
             cache,
             getHttpDataSourceFactory(),
-            Executors.newCachedThreadPool()
+            ThreadPoolExecutor(0, 10, 60L, TimeUnit.SECONDS, LinkedBlockingQueue())
         )
         downloadManager.addListener(this)
     }
@@ -145,6 +147,15 @@ object VideoDownloader : DownloadManager.Listener {
             VideoDownloadService::class.java,
             download.request.id,
             1,
+            true
+        )
+    }
+
+    fun restartDownload(download: Download) {
+        DownloadService.sendAddDownload(
+            context,
+            VideoDownloadService::class.java,
+            download.request,
             true
         )
     }

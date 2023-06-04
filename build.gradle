@@ -39,9 +39,9 @@ ext {
     appcompatLibraryVersion = '1.3.1'
     coreLibraryVersion = '1.7.0'
     materialLibraryVersion = '1.6.0'
-    okhttpLibraryVersion = '4.9.3'
+    okhttpLibraryVersion = '4.10.0'
     glideLibraryVersion = '4.11.0'
     pagingLibraryVersion = '3.1.1'
-    media3LibraryVersion = '1.0.1'
+    media3LibraryVersion = '1.0.2'
     jettyLibraryVersion = '8.1.22.v20160922'
 }
