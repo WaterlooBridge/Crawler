@@ -32,7 +32,7 @@ ext {
     packageName = 'com.zhenl.crawler'
     versionCode = 1
     versionName = '1.0.0'
-    compileSdkVersion = 33
+    compileSdkVersion = 34
     buildToolsVersion = '31.0.0'
     minSdkVersion = 21
     targetSdkVersion = 28
@@ -42,6 +42,6 @@ ext {
     okhttpLibraryVersion = '4.10.0'
     glideLibraryVersion = '4.11.0'
     pagingLibraryVersion = '3.1.1'
-    media3LibraryVersion = '1.0.2'
+    media3LibraryVersion = '1.2.0'
     jettyLibraryVersion = '8.1.22.v20160922'
 }

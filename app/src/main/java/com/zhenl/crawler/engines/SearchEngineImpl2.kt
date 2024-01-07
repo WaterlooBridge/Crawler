@@ -47,7 +47,10 @@ class SearchEngineImpl2 : SearchEngine() {
             extractSearchUrl()
         if (searchUrl == null)
             return list
-        val json = HttpUtil.getSync("${searchUrl}?q=${keyword}") ?: return list
+        var searchKeyword = keyword
+        if (searchKeyword.isNullOrEmpty()) searchKeyword = "fate"
+        if (searchKeyword.length < 2) return list
+        val json = HttpUtil.getSync("${searchUrl}?q=${searchKeyword}") ?: return list
         Gson().fromJson<List<SearchModel>>(json, (object : TypeToken<List<SearchModel>>() {}).type)
             .forEach {
                 val model = MovieModel()

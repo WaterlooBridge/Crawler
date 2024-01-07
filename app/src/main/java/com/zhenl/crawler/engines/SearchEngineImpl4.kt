@@ -1,10 +1,11 @@
 package com.zhenl.crawler.engines
 
+import com.google.gson.Gson
+import com.google.gson.JsonObject
 import com.zhenl.crawler.Constants
 import com.zhenl.crawler.models.DramasModel
 import com.zhenl.crawler.models.MovieModel
-import com.zhenl.crawler.utils.UrlHelper
-import org.jsoup.Jsoup
+import com.zhenl.crawler.utils.HttpUtil
 import java.net.URLEncoder
 
 /**
@@ -22,11 +23,12 @@ class SearchEngineImpl4 : SearchEngine() {
         val list: MutableList<MovieModel> = ArrayList()
         val query = if (keyword.isNullOrEmpty()) " " else keyword
         val url = "${Constants.API_HOST4}/search?page=$page&query=${URLEncoder.encode(query)}"
-        val document = Jsoup.connect(url).get()
-        val elements = document.select("a.cell_poster")
-        if (elements.size == 0)
+        val document = HttpUtil.getSync(url) ?: return list
+        val json = Gson().fromJson(document, JsonObject::class.java)
+        val elements = json.getAsJsonObject("data").getAsJsonArray("videos")
+        if (elements.size() == 0)
             return list
-        val first = elements[0].attr("href")
+        val first = elements[0].asJsonObject.get("id").asString
         if (page == 1)
             prevMovie = null
         if (prevMovie == first)
@@ -34,28 +36,30 @@ class SearchEngineImpl4 : SearchEngine() {
         prevMovie = first
         for (element in elements) {
             val model = MovieModel()
-            model.url = element.attr("href")
-            model.img = element.select("img").attr("src")
-            model.title = element.select("img").attr("alt")
-            model.date = element.select("span").text()
+            val item = element.asJsonObject
+            model.url = item.get("id").asString
+            model.img = item.get("cover").asString
+            model.title = item.get("name").asString
+            model.date = item.get("uptodate").asString
             list.add(model)
         }
         return list
     }
 
     override fun detail(url: String?, callback: DetailCallback?) {
-        val document = Jsoup.connect(Constants.API_HOST4 + url).get()
-        val img = document.select("img.poster").attr("src")
-        val summary = document.select(".detail_imform_desc_pre").text()
+        val document = HttpUtil.getSync("${Constants.API_HOST4}/detail/$url") ?: return
+        val json = Gson().fromJson(document, JsonObject::class.java).getAsJsonObject("video")
+        val img = json.get("cover").asString
+        val summary = json.get("intro").asString
         val list: MutableList<DramasModel> = ArrayList()
-        document.select(".movurl").forEach {
-            val elements = it.select("a")
+        json.getAsJsonObject("playlists").entrySet().forEach {
+            val site = if (it.key == "xigua") "vip" else "zj"
+            val elements = it.value.asJsonArray
             for (element in elements) {
-                if (element.attr("rel") == "nofollow")
-                    continue
                 val model = DramasModel()
-                model.text = element.text()
-                model.url = UrlHelper.makeAbsoluteUrl(Constants.API_HOST4, element.attr("href"))
+                val item = element.asJsonArray
+                model.text = item[0].asString
+                model.url = "https://$site.sp-flv.com:8443/?url=${item[1].asString}"
                 list.add(model)
             }
         }
@@ -64,6 +68,7 @@ class SearchEngineImpl4 : SearchEngine() {
 
     override fun load(url: String?, callback: Callback?) {
         this.url = url
+        this.referer = "https://m.agemys.org/"
         this.callback = callback
         load(url)
     }
